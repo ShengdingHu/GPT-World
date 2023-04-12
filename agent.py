@@ -5,6 +5,7 @@ import json
 import copy
 import tiktoken
 
+from environment import Environment
 
 # TODO: the agent dump file is like 'agent_format.json', we may need to polish it.
 
@@ -27,34 +28,34 @@ MAX_LONG_TERM_MEMORY = 1500
 # TODO: the position of these functions need to be re-considered, not sure where to put
 
 @as_tool("Plan")
-def plan(*args, **kwargs):
+def plan(environment: Environment, agent: Agent, **kwargs):
     """ Determine the next task
     """
-    # TODO: 
+    # TODO: implement
     return
 
 @as_tool("Reprioritize")
-def reprioritize(*args, **kwargs):
+def reprioritize(environment: Environment, agent: Agent, **kwargs):
     """ Reprioritize task queue
     """
-    # TODO:
+    # TODO: implement
     return
 
-@as_tool("Reflection")
-def reflection(*args, **kwargs):
-    """ Make reflection on short term memory, and get a reflection text, insert into long term memory
+@as_tool("Reflect")
+def reflect(environment: Environment, agent: Agent, **kwargs):
+    """ Make reflection on current short term memory, and get a reflection text, insert into long term memory
     """
-    # TODO: 
+    # TODO: implement
     return
 
-@as_tool("Interaction")
-def interaction(*args, **kwargs):
+@as_tool("Interact")
+def interact(environment: Environment, agent: Agent, **kwargs):
     """ Interact with other agents
     """
-    # TODO:
+    # TODO: implement
     return
 
-def action_parser(*args):
+def action_parser(environment: Environment, agent: Agent, **kwargs):
     #TODO: need to implement an action parser
     return
 
@@ -62,23 +63,27 @@ def action_parser(*args):
 class Agent:
     """ Simple Implementation of Chain of Thought & Task Based Agent
     """
-    def __init__(self, llm:callable, tools:List[Tool], prompt_template:str, task:str):
+    def __init__(self, llm: callable, tools: List[Tool], prompt_template: str, environment: Environment):
             """ Intialize an agent.
             llm callable: a function which could call llm and return response
             tools List[Tool]: a list of Tool
-            prompt_template str: a template for prompt, it should contain the following 3 keywords: {tool_names_and_descriptions}, {tool_names}, {agent_playground}, {task}
+            prompt_template str: a template for prompt
+            environment: the environment the agent reside in, it is dynamic
             """
             
             # TODO: this agent is currently a tool based agent, we need to adapt it to the form like 'agent_format.json'. 
             # TODO: Note that we hope that it can maintain the tool using ability...
 
+            self.environment = environment
+
             self.llm = llm # caller for large language model
+
             self.tools = tools # a List of Tool
+
             self.iterations = 0 # number of iterations to now
+
             self.prompt_template = prompt_template # template of promot, defined by user 
-            self.task = task # final task
-            self.finish = False # if finish the task / answer the question
-            self.final_answer = "" # final answer (if applicable)
+
             self.tool_map = {} # a mapping from action name to action Tool object
             self.tool_names = [] # a list of tool names
             for tool in self.tools:
@@ -99,7 +104,6 @@ class Agent:
             # TODO: Legacy, replace history by short_term_memory
             self.history = [] # a list of history thoughts, actions, action_inputs, obeservations,...
 
-            self.exception_count = 0 # count the number of exceptions
             return
   
     def compose(self):
@@ -172,25 +176,6 @@ class Agent:
                 continue
 
             print(f"Thought: {response}")
-            
-            if "Final Answer" in response: # in case the final answer is obtained
-                print(f"{BLUE}{BOLD}Task finished!{RESET}")
-                response += "\n"
-                self.finish = True
-                self.final_answer = response
-                self.history.append(response)
-                
-                # extract the final answer
-                pattern = r'Final Answer: (.+?)\n'
-                match = re.search(pattern, response)
-                if match:
-                    action_content = match.group(1)
-                    print(f"{BLUE}{BOLD}Final Answer: {action_content}{RESET}")
-                    self.final_answer = action_content
-                else:
-                    print(f"{RED}{BOLD}Error: cannot find Final Answer{RESET}")
-
-                return
 
             # extract the Action
             pattern = r'Action: (.+?)\n'
@@ -203,6 +188,7 @@ class Agent:
                 continue
             
             # extract the Action Input
+            # TODO: this is legacy, maybe we need to modify this
             pattern = r'Action Input:\s*(\{.*\})'
             match = re.search(pattern, response)
 
@@ -216,9 +202,15 @@ class Agent:
             # find the tool of action
             action_tool = self.tool_map[action_content]
 
+            # TODO: this is a legacy, need to be adapted 
             # pass the Action Input (in JSON format) to the action_tool function, get observation
             try:
                 action_input_content = json.loads(action_input_content) # parse str to json
+
+                # TODO: use tools, need to be adapted
+                action_input_content["environment"] = self.environment
+                action_input_content["agent"] = self
+
                 observation = action_tool(**action_input_content)
             except Exception as e:
                 print(f"{RED}{BOLD}Exception, retrying...{RESET}")
@@ -256,3 +248,7 @@ class Agent:
         return
 
 
+if __name__ == "__main__":
+    agent = Agent(llm=None, tools=[reprioritize, plan, interact, reflect], prompt_template=None, environment=None)
+    agent.action()
+    
