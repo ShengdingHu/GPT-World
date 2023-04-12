@@ -4,26 +4,23 @@
 世界由多个环境构成，使用者可以（1）轻松地创建自己的环境，以及其中的主体和客体并挂载到世界上，（2）创造自己的agent并让其能访问自己或其他的世界。
 
 
-## Create your own environment just using a few sentences.
+## The dump file format of Agent is 
 
-```
-vim environment_creation_utils.py
-```
+See `agent_format.json`
+
+## Create your own environment just using a few sentences
+
+See `environment_creation_utils.py`
 
 
 ## If you need to modify the underlying function agent (if you are user, just skip)
 
-```
-vim agent_tool.py
-vim agent_long_term_memory.py
-vim agent.py
-```
+See `agent_tool.py` and `agent_long_term_memory.py` and `agent.py`
+
 
 ## If you need to modify the underlying function of environment (if you are user, just skip)
 
-```
-vim environment.py
-```
+See `environment.py`.
 
 ## Run a server & environment
 
