@@ -1,5 +1,6 @@
 # import from Auto-GPT at https://github.com/Torantulino/Auto-GPT/blob/master/scripts/memory/local.py
 
+import openai
 import abc
 import dataclasses
 import orjson
@@ -13,8 +14,8 @@ import os
 
 def get_ada_embedding(text):
     text = text.replace("\n", " ")
-    embedding = None
-    # embedding = Embedding.create(input=[text], model="text-embedding-ada-002")["data"][0]["embedding"]
+    # TODO: try to use request to replace openai.Embedding.create
+    embedding = openai.Embedding.create(input=[text], model="text-embedding-ada-002")["data"][0]["embedding"]
     return embedding
 
 
