@@ -6,25 +6,25 @@
 Server 是开源的、分布式的，每个人都可以 host 自己的服务器和朋友们分享。
 
 
-## The dump file format of Agent is 
+The dump file format of Agent is 
 
 See `agent_format.json`
 
-## Create your own environment just using a few sentences
+Create your own environment just using a few sentences
 
 See `environment_creation_utils.py`
 
 
-## If you need to modify the underlying function agent (if you are user, just skip)
+If you need to modify the underlying function agent (if you are user, just skip)
 
 See `agent_tool.py` and `agent_long_term_memory.py` and `agent.py`
 
 
-## If you need to modify the underlying function of environment (if you are user, just skip)
+If you need to modify the underlying function of environment (if you are user, just skip)
 
 See `environment.py`.
 
-## Run a server & environment
+Run a server & environment
 
 ```
 python run_server.py
