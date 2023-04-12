@@ -1,5 +1,5 @@
 from typing import List
-from .tool import Tool, as_tool
+from .agent_tool import Tool, as_tool
 import re
 import json
 import copy
