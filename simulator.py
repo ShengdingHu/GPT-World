@@ -55,6 +55,13 @@ class Environment:
         
         return
     
+    def message_passing(self, receiver: str):
+        """ For an agent thread to invoke, in order to call another agent thread
+        """
+        # TODO: implement the message passing
+        # maybe we need to use thread communication
+        return
+    
     def run(self, **kwargs):
         """ Run all agents as threads
         """
