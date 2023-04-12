@@ -1,9 +1,12 @@
 from typing import List
-from .tool import Tool
+from .tool import Tool, as_tool
 import re
 import json
 import copy
 import tiktoken
+
+
+# TODO: the agent dump file is 'agent_format.json', we need to polish it.
 
 
 # The color for intermediate result
@@ -29,7 +32,8 @@ class Agent:
             prompt_template str: a template for prompt, it should contain the following 3 keywords: {tool_names_and_descriptions}, {tool_names}, {agent_playground}, {task}
             """
             
-            # TODO: this agent is currently a tool based agent, we need to adapt it to the form like 'agent_format.json'. Note that we hope that it can maintain the tool using ability...
+            # TODO: this agent is currently a tool based agent, we need to adapt it to the form like 'agent_format.json'. 
+            # TODO: Note that we hope that it can maintain the tool using ability...
 
             self.llm = llm # caller for large language model
             self.tools = tools # a List of Tool
@@ -215,3 +219,33 @@ class Agent:
         return
 
     
+
+# TODO: we need to add some tools for this agent
+
+@as_tool("Plan")
+def plan(*args, **kwargs):
+    """ Determine the next task
+    """
+    # TODO: 
+    return
+
+@as_tool("Reprioritize")
+def reprioritize(*args, **kwargs):
+    """ Reprioritize task queue
+    """
+    # TODO:
+    return
+
+@as_tool("Reflection")
+def reflection(*args, **kwargs):
+    """ Make reflection on short term memory, and get a reflection text, insert into long term memory
+    """
+    # TODO: 
+    return
+
+@as_tool("Interaction")
+def interaction(*args, **kwargs):
+    """ Interact with other agents
+    """
+    # TODO:
+    return

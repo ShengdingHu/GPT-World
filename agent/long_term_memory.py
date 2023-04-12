@@ -8,6 +8,9 @@ import numpy as np
 import os
 
 
+# TODO: the long term memory module need to be integrated into the agent.
+
+
 def get_ada_embedding(text):
     text = text.replace("\n", " ")
     embedding = None
