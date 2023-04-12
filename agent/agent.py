@@ -6,7 +6,7 @@ import copy
 import tiktoken
 
 
-# TODO: the agent dump file is 'agent_format.json', we need to polish it.
+# TODO: the agent dump file is like 'agent_format.json', we may need to polish it.
 
 
 # The color for intermediate result
@@ -23,6 +23,8 @@ MAX_LONG_TERM_MEMORY = 1500
 
 
 # TODO: we need to add some tools for this agent
+
+# TODO: the position of these functions need to be re-considered, not sure where to put
 
 @as_tool("Plan")
 def plan(*args, **kwargs):
@@ -52,9 +54,8 @@ def interaction(*args, **kwargs):
     # TODO:
     return
 
-
-#TODO: need to implement an action parser
 def action_parser(*args):
+    #TODO: need to implement an action parser
     return
 
 
@@ -165,7 +166,7 @@ class Agent:
         while (not no_exception) and (num_trial < 3):
             num_trial += 1
 
-            # generate response 
+            # generate response
             response = self.llm(formatted_prompt)
             if response == "":
                 continue
