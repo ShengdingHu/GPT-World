@@ -1,9 +1,12 @@
 from typing import List
-from .tool import Tool
+from .tool import Tool, as_tool
 import re
 import json
 import copy
 import tiktoken
+
+
+# TODO: the agent dump file is 'agent_format.json', we need to polish it.
 
 
 # The color for intermediate result
@@ -15,11 +18,12 @@ BOLD = "\033[1m"         # Bold text
 BLUE = "\033[34m"        # Blue text
 
 
-MAX_INPUT_TOKEN = 3500
+MAX_SHORT_TERM_MEMORY = 1500
+MAX_LONG_TERM_MEMORY = 1500
 
 
 class Agent:
-    """ Simple Implementation of Chain of Thought Agent
+    """ Simple Implementation of Chain of Thought & Task Based Agent
     """
     def __init__(self, llm:callable, tools:List[Tool], prompt_template:str, task:str):
             """ Intialize an agent.
@@ -27,6 +31,10 @@ class Agent:
             tools List[Tool]: a list of Tool
             prompt_template str: a template for prompt, it should contain the following 3 keywords: {tool_names_and_descriptions}, {tool_names}, {agent_playground}, {task}
             """
+            
+            # TODO: this agent is currently a tool based agent, we need to adapt it to the form like 'agent_format.json'. 
+            # TODO: Note that we hope that it can maintain the tool using ability...
+
             self.llm = llm # caller for large language model
             self.tools = tools # a List of Tool
             self.iterations = 0 # number of iterations to now
@@ -42,11 +50,18 @@ class Agent:
 
             self.tool_names_and_descriptions = "\n".join([tool.tool_name+" - "+tool.tool_description for tool in self.tools]) # tool names and desctiptions
             
-            print('='*20)
-            print(self.tool_names_and_descriptions)
-            print('='*20)
+            # TODO: Design details about hierachical task queue
+            self.tasks = []
 
+            # TODO: Design details about short term memory management
+            self.short_term_memory = []
+
+            # TODO: Design details about long term memory in a form of Embedding Vector : Memory Content
+            self.long_term_memory = {} 
+
+            # TODO: Legacy, replace history by short_term_memory
             self.history = [] # a list of history thoughts, actions, action_inputs, obeservations,...
+
             self.exception_count = 0 # count the number of exceptions
             return
   
@@ -65,7 +80,7 @@ class Agent:
         )
         
         num_tokens_system = len(tokenizer.encode(formatted_prompt))
-        available_tokens_for_agent_playground = MAX_INPUT_TOKEN - num_tokens_system
+        available_tokens_for_agent_playground = MAX_SHORT_TERM_MEMORY - num_tokens_system
 
         # reverse self.history
         history_copy = copy.deepcopy(self.history)
@@ -91,10 +106,14 @@ class Agent:
             task=self.task, 
             agent_playground="".join(agent_playground)
         )
+
+        #TODO: Use all the short term context to compute semnatic embedding -> use cosine similarity to compute the most relevant items and append them to the context
+
+        # MAX_LONG_TERM_MEMORY
         
         return formatted_prompt
 
-    def step(self):
+    def action(self):
         """ Single action step"""
 
         self.iterations += 1
@@ -191,11 +210,42 @@ class Agent:
 
         return
     
-    def run(self, max_step:int=10):
+    def multiple_actions(self, max_step:int=10):
         """ run multiple steps until catch finish signal
         """
         # mainloop of run()
         while (not self.finish) and (self.iterations < max_step):
-            self.step()
+            self.action()
         return
 
+    
+
+# TODO: we need to add some tools for this agent
+
+@as_tool("Plan")
+def plan(*args, **kwargs):
+    """ Determine the next task
+    """
+    # TODO: 
+    return
+
+@as_tool("Reprioritize")
+def reprioritize(*args, **kwargs):
+    """ Reprioritize task queue
+    """
+    # TODO:
+    return
+
+@as_tool("Reflection")
+def reflection(*args, **kwargs):
+    """ Make reflection on short term memory, and get a reflection text, insert into long term memory
+    """
+    # TODO: 
+    return
+
+@as_tool("Interaction")
+def interaction(*args, **kwargs):
+    """ Interact with other agents
+    """
+    # TODO:
+    return
