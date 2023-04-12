@@ -22,6 +22,42 @@ MAX_SHORT_TERM_MEMORY = 1500
 MAX_LONG_TERM_MEMORY = 1500
 
 
+# TODO: we need to add some tools for this agent
+
+@as_tool("Plan")
+def plan(*args, **kwargs):
+    """ Determine the next task
+    """
+    # TODO: 
+    return
+
+@as_tool("Reprioritize")
+def reprioritize(*args, **kwargs):
+    """ Reprioritize task queue
+    """
+    # TODO:
+    return
+
+@as_tool("Reflection")
+def reflection(*args, **kwargs):
+    """ Make reflection on short term memory, and get a reflection text, insert into long term memory
+    """
+    # TODO: 
+    return
+
+@as_tool("Interaction")
+def interaction(*args, **kwargs):
+    """ Interact with other agents
+    """
+    # TODO:
+    return
+
+
+#TODO: need to implement an action parser
+def action_parser(*args):
+    return
+
+
 class Agent:
     """ Simple Implementation of Chain of Thought & Task Based Agent
     """
@@ -218,34 +254,4 @@ class Agent:
             self.action()
         return
 
-    
 
-# TODO: we need to add some tools for this agent
-
-@as_tool("Plan")
-def plan(*args, **kwargs):
-    """ Determine the next task
-    """
-    # TODO: 
-    return
-
-@as_tool("Reprioritize")
-def reprioritize(*args, **kwargs):
-    """ Reprioritize task queue
-    """
-    # TODO:
-    return
-
-@as_tool("Reflection")
-def reflection(*args, **kwargs):
-    """ Make reflection on short term memory, and get a reflection text, insert into long term memory
-    """
-    # TODO: 
-    return
-
-@as_tool("Interaction")
-def interaction(*args, **kwargs):
-    """ Interact with other agents
-    """
-    # TODO:
-    return
