@@ -1,0 +1,50 @@
+{
+    "IdentityPrompt": "I am a xxx",
+    "Location": "EID:location",
+    "VelocityUpperBound": "1/s",
+    "Moving": "false",
+    "CurrentTask": "What I am doing",
+    "Schedule": {
+        "timepoint1": "what you are usually do?"
+    },
+    "TaskQueue": [
+        {
+            "title": "Research about large language models",
+            "subtasks": [
+                "read some in-context learning paper",
+                "meet with professor to discuss the future plan"
+            ]
+        },
+        {
+            "title": "Care for my family",
+            "subtasks": [
+                "have a telephone call with my mother",
+                "covid-19 pandemic"
+            ]
+        },
+        {
+            "title": "free",
+            "subtasks": [
+                "have a rest",
+                "watch some cat videos on tiktok"
+            ]
+        }
+    ],
+    "ShortTermMemory": [
+        {
+            "time": "2023-04-13 00:25",
+            "event": "My friend Yifan call me to have some snacks"
+        },
+        {
+            "time": "2023-04-12 23:01",
+            "event": "I buy some coffee"
+        }
+    ],
+    "LongTermMemory": [
+        {
+            "time": "2022-04-13 00:25",
+            "event": "I feel frustrated about the lockdown policy and daily PCR test at Shenzhen",
+            "embedding": [0.111222, 0.2222211, 0.1112222, 0.000001, -0.9331225]
+        }
+    ]
+}

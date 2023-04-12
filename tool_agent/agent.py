@@ -15,11 +15,11 @@ BOLD = "\033[1m"         # Bold text
 BLUE = "\033[34m"        # Blue text
 
 
-MAX_INPUT_TOKEN = 3500
+MAX_SHORT_TERM_MEMORY = 3500
 
 
-class Agent:
-    """ Simple Implementation of Chain of Thought Agent
+class ToolAgent:
+    """ Simple Implementation of Tool-using Agent with Chain of Thought 
     """
     def __init__(self, llm:callable, tools:List[Tool], prompt_template:str, task:str):
             """ Intialize an agent.
@@ -36,12 +36,13 @@ class Agent:
             self.final_answer = "" # final answer (if applicable)
             self.tool_map = {} # a mapping from action name to action Tool object
             self.tool_names = [] # a list of tool names
+
             for tool in self.tools:
                 self.tool_names.append(tool.tool_name)
                 self.tool_map[tool.tool_name] = tool
 
             self.tool_names_and_descriptions = "\n".join([tool.tool_name+" - "+tool.tool_description for tool in self.tools]) # tool names and desctiptions
-            
+
             print('='*20)
             print(self.tool_names_and_descriptions)
             print('='*20)
@@ -65,7 +66,7 @@ class Agent:
         )
         
         num_tokens_system = len(tokenizer.encode(formatted_prompt))
-        available_tokens_for_agent_playground = MAX_INPUT_TOKEN - num_tokens_system
+        available_tokens_for_agent_playground = MAX_SHORT_TERM_MEMORY - num_tokens_system
 
         # reverse self.history
         history_copy = copy.deepcopy(self.history)
@@ -94,7 +95,7 @@ class Agent:
         
         return formatted_prompt
 
-    def step(self):
+    def action(self):
         """ Single action step"""
 
         self.iterations += 1
@@ -191,11 +192,11 @@ class Agent:
 
         return
     
-    def run(self, max_step:int=10):
+    def multiple_actions(self, max_step:int=10):
         """ run multiple steps until catch finish signal
         """
         # mainloop of run()
         while (not self.finish) and (self.iterations < max_step):
-            self.step()
+            self.action()
         return
 
