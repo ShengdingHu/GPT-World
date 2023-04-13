@@ -25,7 +25,6 @@ class AgentThread(threading.Thread, Agent):
         Agent.__init__(self, **agent_state_dict)
 
         return
-        
 
     def run(self):
         """ The life cycle function
@@ -106,7 +105,7 @@ class Environment:
         """
         # TODO: load agent from a dump file, the format will approximately be a JSON formatted file? then add to self.agents
         agent_state_dict = {}
-        with open("./general_agent/general_agent_format.json", "r") as f:
+        with open("./agent_format.json", "r") as f:
             agent_state_dict = json.load(f)
         
         agent = AgentThread(agent_state_dict=agent_state_dict, mode="auto")
