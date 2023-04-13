@@ -1,7 +1,7 @@
 import threading
 import time
 import json
-from agent.agent import Agent
+# from agent.agent import Agent
 from typing import Dict, List, Tuple
 from gptworld.core.time_system import THINKING_TICK, MOVEMENT_TICK
 from gptworld.core.environment import Environment

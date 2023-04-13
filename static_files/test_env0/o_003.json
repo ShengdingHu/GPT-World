@@ -1,0 +1,11 @@
+{
+    "IdentityPrompt": "I am a bed. I cannot give active feedback",
+    "name": "bed",
+    "Location": "e_001:[(1,3)]",
+    "VelocityUpperBound": "0/s",
+    "Moving": "false",
+    "Schedule": {
+        "timepoint1": "Growing"
+    },
+    "Status": ["Flowering"]
+}

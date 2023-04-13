@@ -1,10 +1,14 @@
 import threading
 import time
 import json
-from agent.agent import Agent
+# from agent.agent import Agent
 from typing import Dict, List, Tuple
-from gptworld.core.time_system import THINKING_TICK, MOVEMENT_TICK
+# from gptworld.core.time_system impor, MOVEMENT_TICK
 
+
+class Agent:
+    def __init__(self, *args, **kwargs):
+        pass
 
 
 
@@ -15,22 +19,21 @@ class Environment:
     def __init__(self):
         # TODO: maintain proper variables
 
-        # TODO: agents mapping from agent id to AgentThread object
-        self.agents: Dict[str, AgentThread] = {} 
+        # # TODO: agents mapping from agent id to AgentThread object
+        # self.agents: Dict[str, AgentThread] = {} 
 
-        # TODO: grid mapping from position tuple to agent id
-        self.grid: Dict[Tuple[int, int], str] = {}
+        # # TODO: grid mapping from position tuple to agent id
+        # self.grid: Dict[Tuple[int, int], str] = {}
 
-        # TODO: movement manager thread object
-        self.movement_manager = MovementManagementThread(self.grid, self.agents)
+        # # TODO: movement manager thread object
+        # self.movement_manager = MovementManagementThread(self.grid, self.agents)
 
-        # TODO: control mode mapping from agent id to mode (either 'auto' or 'human')
-        self.control_mode: Dict[str, str] = {}
+        # # TODO: control mode mapping from agent id to mode (either 'auto' or 'human')
+        # self.control_mode: Dict[str, str] = {}
 
-        # control if operational
-        self.operational = True
-
-        return
+        # # control if operational
+        # self.operational = True
+        pass
     
 
     def get_neighbor_environment(self, location: Tuple[int]):
@@ -61,21 +64,24 @@ class Environment:
             message (:obj: List[Dict]) a message like [{'role': 'user', 'content': 'hello'},]
         
         '''
-        environment = {
-            "name": "Happy Farm",
-            "id": "e_123456789",
-            "content": [
-                {"pos":"[(0,0)]", "name":"door", "id": "o_1234567900"},
-                {"pos":"[(0,2)]", "name":"tree", "id": "o_12345679q2"},
-                {"pos": "[(1,3)-(3,6)]", "name":"house", "id": "e_1234567900"},
-            ],
-            "host_agent": [
-                {"id": "a_1342342", "name": "Alice"},
-                {"id": "a_12315235", "name": "Bob"}
-            ]
-        }
+        environment = None
 
         return environment
+
+    def load_from_file(self, rootfile):
+        with open(f"{rootfile}", 'r') as fenv:
+            self.environent = json.load(fenv)
+        from IPython import embed; embed()
+
+        # create_agent
+        for obj in self.environent['object']:
+            if obj['id'].startswith('a'):
+                agent = Agent(obj['id'])
+        
+        pass
+
+
+    
     
     def save(self, ):
         '''Save the environment to a database.
@@ -162,4 +168,6 @@ class Environment:
 if __name__ == "__main__":
     # TODO: add some arguments
     env = Environment()
+    dirname = 'test_env0'
+    env.load_from_file(f"static_files/{dirname}/environment.json")
     env.run()

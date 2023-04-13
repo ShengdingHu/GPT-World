@@ -1,0 +1,11 @@
+{
+    "IdentityPrompt": "I am a tree",
+    "name": "tree",
+    "Location": "e_001:[(1,1)]",
+    "VelocityUpperBound": "0/s",
+    "Moving": "false",
+    "Schedule": {
+        "timepoint1": "Growing"
+    },
+    "Status": ["Flowering"]
+}
