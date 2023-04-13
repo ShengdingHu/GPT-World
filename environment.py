@@ -25,7 +25,6 @@ class AgentThread(threading.Thread, Agent):
         Agent.__init__(self, **agent_state_dict)
 
         return
-        
 
     def run(self):
         """ The life cycle function
