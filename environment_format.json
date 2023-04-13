@@ -1,0 +1,12 @@
+{
+    "id": "xxxxx",
+    "owner": "yyyy",
+    "agents": {
+        "agent1": {
+            
+        },
+        "agent2": {
+
+        }
+    }
+}

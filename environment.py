@@ -14,12 +14,13 @@ class AgentThread(threading.Thread, Agent):
     A thread has a sleep interval (sleep 1 minute after 1 action)
     If other agent thread sends an action, the thread will come back to live immediately.
     """
-    def __init__(self, agent_state_dict: Dict, mode: str):
+    def __init__(self, agent_state_dict: Dict, environment: Environment, mode: str):
         """ agent_state_dict: Dict, all information about the agent
         mode: either 'auto' or 'human'
         """ 
 
         self.mode = mode
+        self.envirnment = environment
         threading.Thread.__init__(self)
         Agent.__init__(self, **agent_state_dict)
 
@@ -29,7 +30,7 @@ class AgentThread(threading.Thread, Agent):
     def run(self):
         """ The life cycle function
         """
-        while True:
+        while self.envirnment.operational:
             if self.mode == "human":
                 # in this case, human request will work through Environment.request_handler, no need to do anything here
                 pass
@@ -46,7 +47,7 @@ class AgentThread(threading.Thread, Agent):
         return
 
 
-class MovementManagement(threading.Thread):
+class MovementManagementThread(threading.Thread):
     """ Manage Movements of All Agents
     """
     def __init__(self, grid: Dict[Tuple[int, int], str], agents: Dict[str, AgentThread]):
@@ -90,10 +91,13 @@ class Environment:
         self.grid: Dict[Tuple[int, int], str] = {}
 
         # TODO: movement manager thread object
-        self.movement_manager = MovementManagement(self.grid, self.agents)
+        self.movement_manager = MovementManagementThread(self.grid, self.agents)
 
         # TODO: control mode mapping from agent id to mode (either 'auto' or 'human')
         self.control_mode: Dict[str, str] = {}
+
+        # control if operational
+        self.operational = True
 
         return
     
@@ -106,11 +110,11 @@ class Environment:
             agent_state_dict = json.load(f)
         
         agent = AgentThread(agent_state_dict=agent_state_dict, mode="auto")
-        self.agents["xxxxxx"] = agent
+        self.agents["agent.name"] = agent
 
         return
     
-    def message_passing(self, receiver: str):
+    def message_passing(self, message: Dict, receiver: str):
         """ For an agent thread to invoke, in order to call another agent thread
         """
         # TODO: implement the message passing
@@ -123,15 +127,17 @@ class Environment:
         """
         # TODO: handle human request (if the agent is controlled by human)
         
-        return
+        response = "ok"
+        return response
 
     def change_agent_control_mode(self, request):
         """ Change the control mode of one agent
         Not necessary to implement in our first stage
         """
         # TODO: users can change the control mode of one agent
-
-        return
+        
+        response = "ok"
+        return response
 
     def run(self, **kwargs):
         """ Run all agents as threads
@@ -142,6 +148,16 @@ class Environment:
         
         # TODO: start movement manager
         self.movement_manager.start()
+
+        # TODO: prompt user to input control signal (in case they want to suspand the server)
+        while True:
+            command = input("Stop? [y]=stop and save all states")
+            if command == "y":
+                self.operational = False
+        
+        # TODO: save the state of all agents to dump files
+
+        # TODO: if necessary, send the agents dump files to user..
 
         # TODO: join all threads
         self.movement_manager.join()

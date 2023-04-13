@@ -35,7 +35,7 @@ class CacheContent:
     )
 
 
-class LocalCache():
+class LongTermMemory():
 
     # on load, load our database
     def __init__(self, cfg) -> None:
