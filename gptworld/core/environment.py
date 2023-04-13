@@ -3,77 +3,9 @@ import time
 import json
 from agent.agent import Agent
 from typing import Dict, List, Tuple
+from gptworld.core.time_system import THINKING_TICK, MOVEMENT_TICK
 
 
-THINKING_TICK = 60 # for each agent thread, normally, sleep 60 seconds after 1 thinking operation
-MOVEMENT_TICK = 10 # for movement management thread, which in charge of managing grid update, sleep 10 seconds after 1 grid update
-
-
-class AgentThread(threading.Thread, Agent):
-    """ In our world envirnment, each agent will reside in a thread. 
-    A thread has a sleep interval (sleep 1 minute after 1 action)
-    If other agent thread sends an action, the thread will come back to live immediately.
-    """
-    def __init__(self, agent_state_dict: Dict, mode: str):
-        """ agent_state_dict: Dict, all information about the agent
-        mode: either 'auto' or 'human'
-        """ 
-
-        self.mode = mode
-        threading.Thread.__init__(self)
-        Agent.__init__(self, **agent_state_dict)
-
-        return
-        
-
-    def run(self):
-        """ The life cycle function
-        """
-        while True:
-            if self.mode == "human":
-                # in this case, human request will work through Environment.request_handler, no need to do anything here
-                pass
-            else:
-                # ...
-                self.action()
-                # ...
-
-            # TODO: come back to life if receive a signal from other agents
-
-            # finally sleep for THINKING_TICK
-            time.sleep(THINKING_TICK)
-        
-        return
-
-
-class MovementManagement(threading.Thread):
-    """ Manage Movements of All Agents
-    """
-    def __init__(self, grid: Dict[Tuple[int, int], str], agents: Dict[str, AgentThread]):
-        self.agents = agents
-        self.grid = grid
-
-        # TODO: read VelocityUpperBound for each agent
-        
-        # TODO: add more ...
-
-        return
-    
-    def run(self):
-        """ The life cycle function
-        """
-        while True:
-            # TODO: for each agent, update its position using its movement status like VelocityUpperBound and MovementTargetLocation, choose the maximum velocity and the best direction, update its location
-            for agent in self.agents:
-                if not agent.is_moving:
-                    continue
-                velocity_upper_bound = agent.velocity_upper_bound
-                movement_target_location = agent.movement_target_location
-                # TODO: calculate the best direction & update the position
-
-            time.sleep(MOVEMENT_TICK)
-
-        return
 
 
 class Environment:
@@ -97,7 +29,66 @@ class Environment:
 
         return
     
-    def load_agent(self, **kwargs):
+
+    def get_neighbor_environment(self, location: Tuple[int]):
+        '''Provide the local environment of the location.
+
+        Args:
+            location (:obj:`Tuple[int]`): The center of the view point.
+        
+        Returns:
+            :obj: Observation : The observation in the form of a json.
+        '''
+        observation = {
+            "(1, 1)": "Tree",
+            "(-1, 2)": "Tree",
+            "(-1, 3)": "Water",
+        }
+        return observation
+
+    def show(self):
+        '''Show the current status of this environment in a table
+        '''
+        return
+    
+    def create_by_prompt(self, message):
+        '''Create the environment through user provided message.
+
+        Args: 
+            message (:obj: List[Dict]) a message like [{'role': 'user', 'content': 'hello'},]
+        
+        '''
+        environment = {
+            "name": "Happy Farm",
+            "id": "e_123456789",
+            "content": [
+                {"pos":"[(0,0)]", "name":"door", "id": "o_1234567900"},
+                {"pos":"[(0,2)]", "name":"tree", "id": "o_12345679q2"},
+                {"pos": "[(1,3)-(3,6)]", "name":"house", "id": "e_1234567900"},
+            ],
+            "host_agent": [
+                {"id": "a_1342342", "name": "Alice"},
+                {"id": "a_12315235", "name": "Bob"}
+            ]
+        }
+
+        return environment
+    
+    def save(self, ):
+        '''Save the environment to a database.
+        '''
+        return
+
+    def run_interact(self, agent, message):
+        '''Parser parses natural language to identify the broadcasting target(s).
+        Broadcast the message to the observation of the relevant agent(s).
+        
+        run each agent's react function
+        '''
+        
+        pass
+
+    def load_agent(self, agent_id, **kwargs):
         """ Load an agent from a dump file
         """
         # TODO: load agent from a dump file, the format will approximately be a JSON formatted file? then add to self.agents
@@ -110,6 +101,7 @@ class Environment:
 
         return
     
+
     def message_passing(self, receiver: str):
         """ For an agent thread to invoke, in order to call another agent thread
         """
@@ -149,6 +141,8 @@ class Environment:
             agent.join()
         
         return
+    
+
     
 
 if __name__ == "__main__":
