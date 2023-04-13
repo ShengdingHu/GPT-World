@@ -1,11 +1,12 @@
 from typing import List
-from .agent_tool import Tool, as_tool
 import re
 import json
 import copy
 import tiktoken
 
-from environment import Environment
+from .agent_tool import Tool, as_tool
+from .environment import Environment
+
 
 # TODO: the agent dump file is like 'agent_format.json', we may need to polish it.
 
@@ -237,14 +238,6 @@ class Agent:
                 print(f"{RED}{BOLD}Too many exceptions, terminated.{RESET}")
                 return
 
-        return
-    
-    def multiple_actions(self, max_step:int=10):
-        """ run multiple steps until catch finish signal
-        """
-        # mainloop of run()
-        while (not self.finish) and (self.iterations < max_step):
-            self.action()
         return
 
 

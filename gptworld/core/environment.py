@@ -22,10 +22,13 @@ class Environment:
         self.grid: Dict[Tuple[int, int], str] = {}
 
         # TODO: movement manager thread object
-        self.movement_manager = MovementManagement(self.grid, self.agents)
+        self.movement_manager = MovementManagementThread(self.grid, self.agents)
 
         # TODO: control mode mapping from agent id to mode (either 'auto' or 'human')
         self.control_mode: Dict[str, str] = {}
+
+        # control if operational
+        self.operational = True
 
         return
     
@@ -93,16 +96,15 @@ class Environment:
         """
         # TODO: load agent from a dump file, the format will approximately be a JSON formatted file? then add to self.agents
         agent_state_dict = {}
-        with open("./general_agent/general_agent_format.json", "r") as f:
+        with open("./agent_format.json", "r") as f:
             agent_state_dict = json.load(f)
         
         agent = AgentThread(agent_state_dict=agent_state_dict, mode="auto")
-        self.agents["xxxxxx"] = agent
+        self.agents["agent.name"] = agent
 
         return
     
-
-    def message_passing(self, receiver: str):
+    def message_passing(self, message: Dict, receiver: str):
         """ For an agent thread to invoke, in order to call another agent thread
         """
         # TODO: implement the message passing
@@ -115,15 +117,17 @@ class Environment:
         """
         # TODO: handle human request (if the agent is controlled by human)
         
-        return
+        response = "ok"
+        return response
 
     def change_agent_control_mode(self, request):
         """ Change the control mode of one agent
         Not necessary to implement in our first stage
         """
         # TODO: users can change the control mode of one agent
-
-        return
+        
+        response = "ok"
+        return response
 
     def run(self, **kwargs):
         """ Run all agents as threads
@@ -134,6 +138,16 @@ class Environment:
         
         # TODO: start movement manager
         self.movement_manager.start()
+
+        # TODO: prompt user to input control signal (in case they want to suspand the server)
+        while True:
+            command = input("Stop? [y]=stop and save all states")
+            if command == "y":
+                self.operational = False
+        
+        # TODO: save the state of all agents to dump files
+
+        # TODO: if necessary, send the agents dump files to user..
 
         # TODO: join all threads
         self.movement_manager.join()
