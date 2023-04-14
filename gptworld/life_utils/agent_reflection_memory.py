@@ -153,6 +153,7 @@ class ReflectionMemory():
         )
         self.data.createTime.append(time)
         self.data.accessTime.append(time)
+        self.data.tags.append(tag)
 
 
         with open(self.filename, 'wb') as f:
