@@ -25,6 +25,8 @@ class MovementManagement(threading.Thread):
         while True:
             # TODO: for each agent, update its position using its movement status like VelocityUpperBound and MovementTargetLocation, choose the maximum velocity and the best direction, update its location
             for agent in self.agents:
+                # TODO: child agent will move with the same pace as the parent agent! -> implement by 博凯
+
                 if not agent.is_moving:
                     continue
                 velocity_upper_bound = agent.velocity_upper_bound
