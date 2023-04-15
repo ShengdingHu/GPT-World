@@ -48,23 +48,23 @@ class Agent:
             # The thinking kernel
             self.llm = llm
 
-            #  a List of Tool
-            self.tools = tools 
-
-            self.iterations = 0 # number of iterations to now
-
+            # The chain of thought prompt
             self.prompt_template = prompt_template # template of promot, defined by user 
 
-            self.tool_map = {} # a mapping from action name to action Tool object
-            self.tool_names = [] # a list of tool names
+            # A List of Tool
+            self.tools = tools 
+
+            # Mapping from action name to action Tool object
+            self.tool_map = {} 
+            self.tool_names = []
             for tool in self.tools:
                 self.tool_names.append(tool.tool_name)
                 self.tool_map[tool.tool_name] = tool
 
             self.tool_names_and_descriptions = "\n".join([tool.tool_name+" - "+tool.tool_description for tool in self.tools]) # tool names and desctiptions
             
-            # TODO: Design details about hierachical task queue
-            self.tasks = state_dict.get("tasks", {})
+            # TODO: Design details about hierachical task list
+            self.tasks = state_dict.get("tasks", [])
 
             # TODO: Design details about short term memory management, a list of history thoughts, actions, action_inputs, obeservations,...
             self.short_term_memory = state_dict.get("short_term_memory", [])
@@ -72,35 +72,59 @@ class Agent:
             # TODO: Design details about long term memory in a form of Embedding Vector : Memory Content
             self.long_term_memory = state_dict.get("long_term_memory", {})
 
-            # TODO: Location
+            # Location
             self.location = state_dict.get("location", None)
 
-            # TODO: interaction queue
-            self.interaction_queue = []
+            # Interaction queue will maintain a queue of interactions
+            self.interaction_queue = state_dict.get("interaction_queue", [])
+
+            # The observation result will be stored in this variable
+            self.obervation = state_dict.get("obervation", [])
+
+            # TODO: Whether the agent is moving ("moving" or "static")
+            self.movement = state_dict.get("movement", "static")
+
+            # TODO: Maximum velocity
+            self.max_velocity = state_dict.get("movement", 1)
+
+            # The actual velocity
+            self.velocity = 0
+
+            # Child agent (something append to self)
+            self.child = state_dict.get("child_agent", [])
+
+            # Money
+            self.money = state_dict.get("money", 100)
+
+            # Mental state score, from 0 to 100
+            self.mental_score = 50
+
+            # Energetic score, from 0 to 100
+            self.energetic_score = 100
 
             return
     
     def observe(self):
-        """ update observation of around environment
+        """ Update observation of around environment
         """
         # TODO: maybe need to polish a little bit: 博凯
         self.observation = self.environment.get_neighbor_environment(self.location)
         return
 
     def reflect(self):
-        """ 每过一段时间反思当前短期记忆与Observation, 存入长期记忆
+        """ Reflect the short term memory and store it into long term memory
         """
         # TODO: implement reflect: 凡哥、京伟
         return
     
     def plan(self):
-        """ 计划接下来的任务
+        """ Plan the following tasks (hierachical task list)
         """
         # TODO: implement plan : 凡哥、京伟
         return
     
     def reprioritize(agent: Agent, **kwargs):
-        """ Reprioritize task queue
+        """ Reprioritize task list
         """
         # TODO: implement reprioritize : 凡哥、京伟
         return
@@ -240,8 +264,3 @@ class Agent:
 
         return
 
-
-if __name__ == "__main__":
-    agent = Agent(llm=None, tools=[reprioritize, plan, interact, reflect], prompt_template=None, environment=None)
-    agent.action()
-    
