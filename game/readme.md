@@ -7,7 +7,7 @@ essentially, in your command line
 ```
 cd game-vite/game-try-vite
 npm install
-npm install phaswer
+npm install phaser
 npm run dev
 ```
 
