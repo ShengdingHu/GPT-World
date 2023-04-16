@@ -5,7 +5,10 @@ import copy
 from typing import Dict
 from gptworld.core.environment import Environment
 import tiktoken
+import logging
+import datetime
 
+from gptworld.utils import request_GPT
 
 """
 Agent class implements the static, mind, inner, and cognitive process
@@ -116,12 +119,187 @@ class Agent:
         """
         # TODO: implement reflect: 凡哥、京伟
         return
-    
-    def plan(self):
-        """ Plan the following tasks (hierachical task list)
+
+    def generate_summary(agent):
         """
-        # TODO: implement plan : 凡哥、京伟
-        return
+
+        :param agent:
+        :return: summary string
+        """
+
+        retrieved_record = """
+        Chris is a undergraduate student in Tsinghua University, Love to play tennis and expand knowledge on 
+        many different regions. Major in Electrical Engineering, but join in the Natural Language Processing Research Team
+        , very busy at his schoolwork.
+        """
+
+        query1 = f"""
+        How would one describe {agent.Name}'s core characteristics given the following statements?
+        {retrieved_record}
+        """
+        result1 = request_GPT.request(query1)
+
+        query2 = f"""
+        What is {agent.Name}'s current occupation given the following statements?
+        {retrieved_record}
+        """
+
+        result2 = request_GPT.request(query2)
+
+        query3 = f"""
+        What might be {agent.Name}'s feeling about his recent progress in life given the following statements?
+        {retrieved_record}
+        """
+
+        result3 = request_GPT.request(query3)
+
+        return result1 + result2 + result3
+
+    def plan_in_broad_strokes(agent, date: datetime.date) -> list[dict]:
+        """
+        broad strokes planning of an agent
+        :param agent: agent object
+        :param date: str representing the current day
+        :return: plans, each element is a plan
+                 "task", "start time": datetime.datetime, "end time":datetime.datetime
+        """
+
+        text_base = f"""
+        Name:{agent.Name} (age: {agent.Age})
+        Innate traits: {agent.Personality}
+        {agent.Summarize}
+        {agent.Memory}
+        Today is {date}. Here is {agent.Name}’s plan date in broad strokes:
+        [Example format: 
+         1) wake up and complete the morning routine at 8:00am,
+         2) go to Oak Hill College to take classes from 10:00am to 12:00pm]
+
+        """
+
+        request_result = request_GPT.request(text_base)
+
+        # a typical example to test the regex expressions without access to the GPT
+        # request_result = """
+        # 1) Wake up at 8:00am and have breakfast,
+        # 2) Go to the library to do some research from 10:00am to 12:00pm,
+        # 3) Have lunch at 12:30pm,
+        # 4) Play tennis from 2:00pm to 4:00pm,
+        # 5) Go back to the library to do research from 4:30pm to 6:30pm,
+        # 6) Have dinner at 7:00pm,
+        # 7) Relax and watch a movie from 8:00pm to 10:00pm.
+        # """
+
+        logging.info(f"Request GPT result(Broad strokes):\n{request_result}")
+
+        pattern = r"(?:\d+\))((.+) (from|at) ((?:\d+:\d+)\s*(?:am|pm))(?: to ((?:\d+:\d+)\s*(?:am|pm)))?)"
+        matches = re.findall(pattern, request_result)
+
+        if matches:
+            plans = []
+            for match in matches:
+                try:
+                    # task = match[1]  # this neglected the time information, disposed
+                    task = match[0]  # get the whole string, including the time info as the tast str
+                    if match[2] == "from":
+                        # from ... to ... structure
+                        start_time = datetime.datetime.combine(date
+                                                               , datetime.datetime.strptime(match[3].replace(" ", ""),
+                                                                                            "%I:%M%p").time())
+                        end_time = datetime.datetime.combine(date
+                                                             , datetime.datetime.strptime(match[4].replace(" ", ""),
+                                                                                          "%I:%M%p").time())
+                    elif match[2] == 'at':
+                        # at ... structure
+                        start_time = end_time = datetime.datetime.combine(date
+                                                                          , datetime.datetime.strptime(
+                                match[3].replace(" ", ""), "%I:%M%p").time())
+                    else:
+                        raise Exception()
+                    plans.append({
+                        "task": task,
+                        "start time": start_time,
+                        "end time": end_time,
+                    })
+                except:
+                    # logging.error("Bad Structure of GPT's response: Neither 'from...to...' or 'at...' structure")
+                    logging.error(f"Response: {request_result}")
+                    logging.error(e.__traceback__)
+                    logging.error(e.__context__)
+
+            logging.info(plans)
+            return plans
+        else:
+            raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
+
+    def plan_in_detail(agent, plan: dict, time_granularity: datetime.timedelta, date) -> list[dict]:
+        """
+        generate more detailed plan on the basis of a broad stroke plan(or just a relatively not detailed plan)
+        :param agent:
+        :param plan: a dict with keys of those mentioned in plan_in_broad_strokes
+        :param time_granularity: the time granularity that the generated plan should be (e.g. 15 minutes) in NL
+        :return: a more detailed list of plan
+
+        """
+
+        text_base = f"""
+        Name:{agent.Name} (age: {agent.Age})
+        Innate traits: {agent.Personality}
+        {agent.Summarize}
+        {agent.Name} plans to {plan['task']} date. {agent.Name} will do the following things in this time period
+        [Example format: 
+         4:00 pm: grab a light snack, such as a piece of fruit, a granola bar, or some nuts.
+         4:05 pm: take a short walk around his workspace.]
+         (Precise to {time_granularity.total_seconds() / 60} minutes):
+
+        """
+
+        request_result = request_GPT.request(text_base)
+
+        # a sample
+        # request_result = """
+        # 9:00 am: Wake up, take a shower and get ready for the day.
+        #  9:15 am: Eat a healthy breakfast such as oatmeal, eggs, or yogurt.
+        #  9:30 am: Take a short walk to the university campus.
+        #  9:45 am: Arrive at the university and prepare for classes.
+        #  10:00 am: Attend classes and take notes.
+        #  10:45 am: Take a break and review the notes taken in class.
+        #  11:00 am: Get ready for the next class.
+        # """
+
+        pattern = r"((?:\d+:\d+)\s*(?:am|pm)).*:\s*(.+)"
+        matches = re.findall(pattern, request_result)
+        if matches:
+            plans = []
+            for i in range(len(matches)):
+                match = matches[i]
+                try:
+                    # task = match[1]  # this neglected the time information, disposed
+                    task = match[1]  # get the whole string, including the time info as the tast str
+                    start_time = datetime.datetime.combine(date
+                                                           , datetime.datetime.strptime(match[0].replace(" ", ""),
+                                                                                        "%I:%M%p").time())
+                    if i < len(matches) - 1:
+                        end_time = datetime.datetime.combine(date
+                                                             , datetime.datetime.strptime(
+                                matches[i + 1][0].replace(" ", "")
+                                , "%I:%M%p").time())
+                    else:
+                        end_time = plan['end time']
+                    plans.append({
+                        'task': task,
+                        'start time': start_time,
+                        'end time': end_time,
+                    })
+                except Exception as e:
+                    logging.error(f"Response: {request_result}")
+                    logging.error(e.__traceback__)
+                    logging.error(e.__context__)
+                    # raise Exception("Bad Structure of GPT's response(detailed): Neither 'from...to...' or 'at...' structure")
+
+            logging.info(plans)
+            return plans
+        else:
+            raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
     
     def reprioritize(agent: Agent, **kwargs):
         """ Reprioritize task list
