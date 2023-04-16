@@ -19,6 +19,16 @@ acceptance), rate the likely poignancy of the
 following piece of memory.
 Memory: {}
 Rating: <fill in>'''
+QUESTION_PROMPT='''
+Given only the information above, what are 3 most salient
+high-level questions we can answer about the subjects in the state-
+ments?
+'''
+INSIGHT_PROMPT='''
+What 5 high-level insights can you infer from
+the above statements? (example format: insight
+(because of 1, 5, 3))
+'''
 
 openai.api_key = "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"
 
@@ -40,6 +50,35 @@ def get_importance(text):
     score=int(re.findall('\s*(\d+)\s*',result)[0])
     return score
 
+def get_questions(texts):
+    prompt='\n'.join(texts)+'\n'+QUESTION_PROMPT
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    result=completion.choices[0].message['content']
+    questions=result.split('\n')[:3]
+    return questions
+
+def get_insights(statements):
+    prompt=''
+    for i,st in enumerate(statements):
+        prompt+=(str(i+1)+'. '+st+'\n')
+    prompt+=INSIGHT_PROMPT
+    completion = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    result = completion.choices[0].message['content']
+    insights= result.split('\n')[:5]
+    insights=['.'.join(i.split('.')[1:]) for i in insights]
+    # remove insight pointers for now
+    insights=[i.split('(')[0] for i in insights]
+    return insights
 
 EMBED_DIM = 1536
 SAVE_OPTIONS = orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_SERIALIZE_DATACLASS
@@ -114,6 +153,7 @@ class ReflectionMemory():
         )
         self.data.createTime.append(time)
         self.data.accessTime.append(time)
+        self.data.tags.append(tag)
 
 
         with open(self.filename, 'wb') as f:
@@ -172,9 +212,15 @@ class ReflectionMemory():
 
         return [self.data.texts[i] for i in top_k_indices]
 
-    def reflection(self,):
+    def reflection(self,time:datetime.datetime):
         # initiate a reflection that inserts high level knowledge to memory
-        pass
+        mem_of_interest=self.data.texts[-100:]
+        questions=get_questions(mem_of_interest)
+        statements=sum([self.query(q,5,time) for q in questions],[])
+        insights=get_insights(statements)
+        for insight in insights:
+            self.add(insight, time)
+
 
 # test: 给定一堆记忆，进行一次query，两次reflection
 
@@ -207,5 +253,5 @@ if __name__=='__main__':
                     dt=datetime.datetime.strptime(' '.join(segs[1:3]),'%Y-%m-%d %H:%M:%S:')
                     r.add(' '.join(segs[3:]),dt)
     texts=r.query(test_query,k=3,curtime=datetime.datetime.strptime(test_query_time,'%Y-%m-%d %H:%M:%S:'))
-    r.reflection()
-    r.reflection()
+    r.reflection(datetime.datetime.strptime(test_query_time,'%Y-%m-%d %H:%M:%S:'))
+    r.reflection(datetime.datetime.strptime(test_query_time,'%Y-%m-%d %H:%M:%S:'))
