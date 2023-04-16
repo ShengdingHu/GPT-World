@@ -77,6 +77,9 @@ class Environment:
         for obj in self.environent['object']:
             if obj['id'].startswith('a'):
                 agent = Agent(obj['id'])
+            elif obj['id'].startswith('o'):
+                object_agent = Agent(obj['id'])
+                        
         
         pass
 
