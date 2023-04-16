@@ -7,6 +7,7 @@ from gptworld.core.environment import Environment
 import tiktoken
 import logging
 import datetime
+from ..life_utils.agent_reflection_memory import ReflectionMemory
 
 from gptworld.utils import request_GPT
 
@@ -74,6 +75,8 @@ class Agent:
 
             # TODO: Design details about long term memory in a form of Embedding Vector : Memory Content
             self.long_term_memory = state_dict.get("long_term_memory", {})
+
+            self.reflection_memory=state_dict.get("reflection_memory",ReflectionMemory(object()))
 
             # Location
             self.location = state_dict.get("location", None)
