@@ -1,15 +1,47 @@
 import threading
 import time
 import json
-# from agent.agent import Agent
+from agent.agent import Agent
 from typing import Dict, List, Tuple
 # from gptworld.core.time_system impor, MOVEMENT_TICK
 
 
-class Agent:
-    def __init__(self, *args, **kwargs):
-        pass
+def action_parser():
+    """ Parser parses natural language to identify the broadcasting target(s).
+        Broadcast the message to the observation of the relevant agent(s).
+    """
 
+    prompt = """
+    Example 1
+    Thought:
+    I need to send a text message to my parents and tell them that I am fine
+    Knowledge:
+    Relationship=["Father": "Lao Wang", "Mother": "Lao Li"]
+    API Call:
+    "Lao Wang", "messaging", "I'm fine"
+    "Lao Li", "messaging", "I'm fine"
+
+    Example 2:
+    Thought:
+    I want to inform my friends that I want to have a party on Sunday
+    Knowledge:
+    Friend: ["Little A", "Little B", "Little C"]
+    API Call:
+    "Little A", "messaging", "I want to have a party on Sunday"
+    "Little B", "messaging", "I want to have a party on Sunday"
+    "Little C", "Text message", "I want to have a party on Sunday"
+
+    Have you discovered the pattern? The first is the only existing named entity (not a reference), the second is the action, and the third is the specific content. If the action is given, it is best to choose from it, if you have other unprovided actions, you could use "misc". The content may not be provided.
+
+    Here is a new scenario:
+    Thought:
+    I want to start the car
+    Knowledge:
+    ParentElement: ["Das Auto A100": "start engine", "get off", "open windows", "misc"]
+    API Call:
+    """
+    
+    return
 
 
 class Environment:
@@ -17,22 +49,20 @@ class Environment:
     Maintain a pool of all AgentThread
     """
     def __init__(self):
-        # TODO: maintain proper variables
+        # TODO: agents mapping from agent id to AgentThread object
+        self.agents: Dict[str, AgentThread] = {} 
 
-        # # TODO: agents mapping from agent id to AgentThread object
-        # self.agents: Dict[str, AgentThread] = {} 
+        # TODO: grid mapping from position tuple to agent id
+        self.grid: Dict[Tuple[int, int], str] = {}
 
-        # # TODO: grid mapping from position tuple to agent id
-        # self.grid: Dict[Tuple[int, int], str] = {}
+        # TODO: movement manager thread object
+        self.movement_manager = MovementManagementThread(self.grid, self.agents)
 
-        # # TODO: movement manager thread object
-        # self.movement_manager = MovementManagementThread(self.grid, self.agents)
+        # TODO: control mode mapping from agent id to mode (either 'auto' or 'human')
+        self.control_mode: Dict[str, str] = {}
 
-        # # TODO: control mode mapping from agent id to mode (either 'auto' or 'human')
-        # self.control_mode: Dict[str, str] = {}
-
-        # # control if operational
-        # self.operational = True
+        # control if operational
+        self.operational = True
         pass
     
 
@@ -79,26 +109,13 @@ class Environment:
                 agent = Agent(obj['id'])
             elif obj['id'].startswith('o'):
                 object_agent = Agent(obj['id'])
-                        
         
         pass
 
-
-    
-    
     def save(self, ):
         '''Save the environment to a database.
         '''
         return
-
-    def run_interact(self, agent, message):
-        '''Parser parses natural language to identify the broadcasting target(s).
-        Broadcast the message to the observation of the relevant agent(s).
-        
-        run each agent's react function
-        '''
-        
-        pass
 
     def load_agent(self, agent_id, **kwargs):
         """ Load an agent from a dump file
@@ -108,48 +125,37 @@ class Environment:
         with open("./agent_format.json", "r") as f:
             agent_state_dict = json.load(f)
         
-        agent = AgentThread(agent_state_dict=agent_state_dict, mode="auto")
+        agent = Agent(state_dict=agent_state_dict, mode="auto")
         self.agents["agent.name"] = agent
 
         return
     
-    def message_passing(self, message: Dict, receiver: str):
+    def action_handler(self, sender: Agent, receiver: str, content: str):
         """ For an agent thread to invoke, in order to call another agent thread
         """
         # TODO: implement the message passing
-        # maybe we need to use thread communication
+        receiver_agent = self.agents.get(receiver, None)
+        if receiver_agent is None:
+            # fuzzy match
+            pass
+        else:
+            receiver_agent.incoming_interactions.append({"sender": sender, "content": content})
         return
 
-    def request_handler(self, request):
-        """ handle human request (if the agent is controlled by human)
-        Not necessary to implement in our first stage
+    def step(self, **kwargs):
+        """ For each time frame, call step method for agents
         """
-        # TODO: handle human request (if the agent is controlled by human)
-        
-        response = "ok"
-        return response
 
-    def change_agent_control_mode(self, request):
-        """ Change the control mode of one agent
-        Not necessary to implement in our first stage
-        """
-        # TODO: users can change the control mode of one agent
-        
-        response = "ok"
-        return response
-
-    def run(self, **kwargs):
-        """ Run all agents as threads
-        """
-        # TODO: add details
-        for agent in self.agents:
-            agent.start()
-        
-        # TODO: start movement manager
         self.movement_manager.start()
 
-        # TODO: prompt user to input control signal (in case they want to suspand the server)
-        while True:
+        while self.operational:
+            time.sleep(1)
+            for agent in self.agents:
+                # run agent as thread
+                thread = threading.Thread(target=agent.step)
+                thread.start() 
+            
+            # prompt user to input control signal (in case they want to suspand the server)
             command = input("Stop? [y]=stop and save all states")
             if command == "y":
                 self.operational = False
@@ -158,14 +164,9 @@ class Environment:
 
         # TODO: if necessary, send the agents dump files to user..
 
-        # TODO: join all threads
         self.movement_manager.join()
-        for agent in self.agents:
-            agent.join()
-        
-        return
-    
 
+        return
     
 
 if __name__ == "__main__":
