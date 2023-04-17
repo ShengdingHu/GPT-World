@@ -1,13 +1,13 @@
-from typing import List
 import re
 import json
 import copy
-from typing import Dict
-from gptworld.core.environment import Environment
+from typing import Dict, List
 import tiktoken
 import logging
 import datetime
-
+from gptworld.core.environment import Environment
+from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
+from gptworld.life_utils.agent_tool import as_tool
 from gptworld.utils import request_GPT
 
 """
@@ -32,85 +32,98 @@ class Agent:
     """ Simple Implementation of Chain of Thought & Task Based Agent
     """
     def __init__(self, state_dict: Dict, llm: callable, tools: List[Tool], prompt_template: str):
-            """ Intialize an agent.
-            state_dict: Dict -> a state dict which contains all the information about the agent
-            llm: callable -> a function which could call llm and return response
-            tools: List[Tool] -> a list of Tool
-            prompt_template: str -> a template for prompt
-            """
-            
-            # TODO: Note that we hope that it can maintain the tool using ability...
+        """ Intialize an agent.
+        state_dict: Dict -> a state dict which contains all the information about the agent
+        llm: callable -> a function which could call llm and return response
+        tools: List[Tool] -> a list of Tool
+        prompt_template: str -> a template for prompt
+        """
+        
+        # TODO: Note that we hope that it can maintain the tool using ability...
+        self.name = state_dict.get("name", None)
 
-            # Type of the agent, either 'objective' or 'subjective'
-            self.type = state_dict.get("type", None)
+        # Type of the agent, either 'objective' or 'subjective'
+        self.type = state_dict.get("type", None)
 
-            # Initialized at mount time
-            self.environment = None
-            self.environment_id = None
+        # Initialized at mount time
+        self.environment = None
+        self.environment_id = None
 
-            # The thinking kernel
-            self.llm = llm
+        # The thinking kernel
+        self.llm = llm
 
-            # The chain of thought prompt
-            self.prompt_template = prompt_template # template of promot, defined by user 
+        # The chain of thought prompt
+        self.prompt_template = prompt_template # template of promot, defined by user 
 
-            # A List of Tool
-            self.tools = tools 
+        # A List of Tool
+        self.tools = tools 
 
-            # Mapping from action name to action Tool object
-            self.tool_map = {} 
-            self.tool_names = []
-            for tool in self.tools:
-                self.tool_names.append(tool.tool_name)
-                self.tool_map[tool.tool_name] = tool
+        # Mapping from action name to action Tool object
+        self.tool_map = {} 
+        self.tool_names = []
+        for tool in self.tools:
+            self.tool_names.append(tool.tool_name)
+            self.tool_map[tool.tool_name] = tool
 
-            self.tool_names_and_descriptions = "\n".join([tool.tool_name+" - "+tool.tool_description for tool in self.tools]) # tool names and desctiptions
-            
-            # TODO: Design details about hierachical task list
-            self.tasks = state_dict.get("tasks", [])
+        self.tool_names_and_descriptions = "\n".join([tool.tool_name+" - "+tool.tool_description for tool in self.tools]) # tool names and desctiptions
+        
+        # TODO: Design details about hierachical task list
+        self.tasks = state_dict.get("tasks", [])
 
-            # TODO: Design details about short term memory management, a list of history thoughts, actions, action_inputs, obeservations,...
-            self.short_term_memory = state_dict.get("short_term_memory", [])
+        # TODO: Design details about short term memory management, a list of history thoughts, actions, action_inputs, obeservations,...
+        self.short_term_memory = state_dict.get("short_term_memory", [])
 
-            # TODO: Design details about long term memory in a form of Embedding Vector : Memory Content
-            self.long_term_memory = state_dict.get("long_term_memory", {})
+        # TODO: Design details about long term memory in a form of Embedding Vector : Memory Content
+        self.long_term_memory = state_dict.get("long_term_memory", {})
 
-            # Location
-            self.location = state_dict.get("location", None)
+        self.reflection_memory=state_dict.get("reflection_memory",ReflectionMemory(object()))
 
-            # Interaction queue will maintain a queue of interactions
-            self.interaction_queue = state_dict.get("interaction_queue", [])
+        # Location
+        self.location = state_dict.get("location", None)
 
-            # The observation result will be stored in this variable
-            self.obervation = state_dict.get("obervation", [])
+        # incoming interactions
+        self.incoming_interactions = state_dict.get("incoming_interactions", [])
 
-            # TODO: Whether the agent is moving ("moving" or "static")
-            self.movement = state_dict.get("movement", "static")
+        # outgoing interactions
+        self.outgoing_interactions = state_dict.get("outgoing_interactions", [])
 
-            # TODO: Maximum velocity
-            self.max_velocity = state_dict.get("movement", 1)
+        # The observation result will be stored in this variable
+        self.obervation = state_dict.get("obervation", [])
 
-            # The actual velocity
-            self.velocity = 0
+        # TODO: Whether the agent is moving ("moving" or "static")
+        self.movement = state_dict.get("movement", "static")
 
-            # Child agent (something append to self)
-            self.child = state_dict.get("child_agent", [])
+        # TODO: Maximum velocity
+        self.max_velocity = state_dict.get("movement", 1)
 
-            # Money
-            self.money = state_dict.get("money", 100)
+        # The actual velocity
+        self.velocity = 0
 
-            # Mental state score, from 0 to 100
-            self.mental_score = 50
+        # Child agent (something append to self)
+        self.child = state_dict.get("child_agent", [])
 
-            # Energetic score, from 0 to 100
-            self.energetic_score = 100
+        # Money
+        self.money = state_dict.get("money", 100)
 
-            return
+        # Mental state score, from 0 to 100
+        self.mental_score = 50
+
+        # Energetic score, from 0 to 100
+        self.energetic_score = 100
+
+        # the agent is calling language model
+        self.blocking = False
+
+        return
+    
+    def available_actions(self):
+        """ return available actions I can handle
+        """
+        return self.tool_names
     
     def observe(self):
         """ Update observation of around environment
         """
-        # TODO: maybe need to polish a little bit: 博凯
         self.observation = self.environment.get_neighbor_environment(self.location)
         return
 
@@ -301,14 +314,88 @@ class Agent:
         else:
             raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
     
-    def reprioritize(agent: Agent, **kwargs):
+    def reprioritize(self, **kwargs):
         """ Reprioritize task list
         """
         # TODO: implement reprioritize : 凡哥、京伟
         return
+    
+    def action(self, receiver: str, action_type: str, content: str):
+        """ Create an action targeted on other agents
+        :param receiver: the name of receiver like "Alex", "Tree", "Starship"
+        :param action_type: if you want to use a function of that agent, use the name of the function, otherwise use "misc"
+        :param content: the content of the action like "Hi, how is it going?" (should be complete and in natural language.)
+        """
+        self.outgoing_interactions.append({"sender": self.name, "action_type": action_type, "receiver": receiver, "content": content})
+        return
+    
+    def mount_to_environment(self, environment: Environment, environment_id: str = None, location: List[int, int] = None):
+        """ Mount the agent to the environment
+        :param environment: the environment to which the agent will be mounted
+        :param environment_id: the unique id of this environment
+        :param location: the initial location of this agent in the environment
+        """
+
+        self.environment = environment
+        self.environment_id = environment_id
+
+        # If location is not specified, allocate an available seat to this agent
+        if location is None:
+            location = self.environment.pop_available_seats()
+        self.location = location
+
+        # Call environment method to sync the change to environment
+        self.environment.mount_agent(self, self.location)
+        
+        return
+
+    def post_in_interaction(self, action_type: str, content: str, sender: str):
+        """ Handle the action from other agents and store in queue
+        :param action_type: the type of the action, either tool names or "misc"
+        :param content: the content of action
+        :param sender: the sender of action
+        """
+        self.incoming_interactions.append({"sender": sender, "content": content})
+        return
+
+    def get_out_interaction(self) -> List:
+        """ Get my outgoing interactions queue
+        """
+        return self.outgoing_interactions
+
+    def step(self):
+        """ Call this method at each time frame
+        """
+        # TODO: if the agent is thinking : 博凯
+        if self.blocking:
+            pass
+            
+        # TODO: if agent is 'objective' : 博凯
+        if self.type == 'objective':
+            pass
+        
+        # if no interaction in interaction_queue : 博凯
+        if self.observation_queue == []:
+            pass
+        
+        # Acquire the lock
+        self.blocking = True
+
+        try:
+            self.action()
+        except:
+            # TODO: handle exception
+            pass
+        
+        # Release the lock
+        self.blocking = False
+
+        return
+
   
-    def compose(self):
+    def compose_dev(self):
         """ Compose the context feed to large language model in this step (with trucation to avoid overflow of total tokens)
+        When finished, this will become depreciated.
         """
         # first truncation
         tokenizer = tiktoken.get_encoding("cl100k_base")
@@ -355,20 +442,17 @@ class Agent:
         
         return formatted_prompt
 
-    def action(self):
+    def step_dev(self):
         """ Single action step"""
 
         # First update the observation
         self.observe()
 
-        # compose the context with truncation
-        formatted_prompt = self.compose()
+        # Fetch incoming interactions
+        self.incoming_interactions
 
         # if exception occurs, retry 3 times at most
-        num_trial = 0
-        no_exception = False
 
-        # mainloop of step()
         while (not no_exception) and (num_trial < 3):
             num_trial += 1
 

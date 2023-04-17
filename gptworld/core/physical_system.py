@@ -5,6 +5,7 @@ from agent.agent import Agent
 from typing import Dict, List, Tuple
 from gptworld.core.time_system import THINKING_TICK, MOVEMENT_TICK
 
+
 class MovementManagement(threading.Thread):
     """ Manage Movements of All Agents
     """
@@ -18,14 +19,13 @@ class MovementManagement(threading.Thread):
 
         return
     
-    
     def run(self):
         """ The life cycle function
         """
         while True:
             # TODO: for each agent, update its position using its movement status like VelocityUpperBound and MovementTargetLocation, choose the maximum velocity and the best direction, update its location
             for agent in self.agents:
-                # TODO: child agent will move with the same pace as the parent agent! -> implement by 博凯
+                # TODO: child agent will move with the same pace as the parent agent -> implement by 博凯
 
                 if not agent.is_moving:
                     continue
