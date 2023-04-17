@@ -19,3 +19,5 @@ If you have any question, refer to [this blog](https://saricden.com/how-to-setup
 
 Refer to [this doc](https://photonstorm.github.io/phaser3-docs/)
 
+
+- [Add obstacles](https://developer.amazon.com/blogs/post/Tx3AT4I2ENBOI6R/Intro-to-Phaser-Part-3-Obstacles-Collision-Score-Sound-and-Publishing)

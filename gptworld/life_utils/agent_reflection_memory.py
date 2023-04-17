@@ -88,7 +88,7 @@ def create_default_embeddings():
     return np.zeros((0, EMBED_DIM)).astype(np.float32)
 
 def create_default_importance():
-    return np.zeros((0)).astype(np.int)
+    return np.zeros((0)).astype(np.int64)
 @dataclasses.dataclass
 class CacheContent:
     texts: List[str] = dataclasses.field(default_factory=list)
@@ -111,7 +111,7 @@ class ReflectionMemory():
                 # change datetime string to datetime again
                 self.data.accessTime=[datetime.datetime.strptime(a,'%Y-%m-%dT%H:%M:%S') for a in self.data.accessTime]
                 self.data.createTime=[datetime.datetime.strptime(a,'%Y-%m-%dT%H:%M:%S') for a in self.data.createTime]
-                self.data.importance=np.array(self.data.importance).astype(np.int)
+                self.data.importance=np.array(self.data.importance).astype(np.int64)
                 self.data.embeddings=np.array(self.data.embeddings).astype(np.float32)
         else:
             self.data = CacheContent()
