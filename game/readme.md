@@ -5,7 +5,7 @@
 essentially, in your command line
 
 ```
-cd game-vite/game-try-vite
+cd text_grid
 npm install
 npm install phaser
 npm run dev

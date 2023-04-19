@@ -1,9 +1,20 @@
 import threading
 import time
 import json
-from agent.agent import Agent
+from gptworld.core.agent import GPTAgent
 from typing import Dict, List, Tuple
 # from gptworld.core.time_system impor, MOVEMENT_TICK
+import subprocess
+from gptworld.utils.logging import get_logger
+
+logger = get_logger(__file__)
+logger.debug = print
+logger.info =  print
+
+
+def run_dev():
+    subprocess.run(['npm', 'run', 'dev'], cwd='/Users/hsd/codes/MultiAgent/GPT-World/game/text_grid/frontend', capture_output=True)
+    subprocess.run(['python app.py'], cwd='/Users/hsd/codes/MultiAgent/GPT-World/game/text_grid', capture_output=True)
 
 
 def action_parser():
@@ -44,27 +55,73 @@ def action_parser():
     return
 
 
-class Environment:
+class GPTWorldEnv:
     """ The envirnment simulator
     Maintain a pool of all AgentThread
     """
-    def __init__(self):
+    def __init__(self, 
+        name,
+        id,
+        size,
+        areas,
+        objects = None,
+        agents = None,
+        ):
         # TODO: agents mapping from agent id to AgentThread object
-        self.agents: Dict[str, AgentThread] = {} 
+
+
+        self.name = name
+        self.id = id
+        self.size = size
+        self.areas = areas
+        self.objects = objects
+        self.agents = agents
+        logger.debug("Initialize Complete!")
+
+        
 
         # TODO: grid mapping from position tuple to agent id
-        self.grid: Dict[Tuple[int, int], str] = {}
+        # self.grid: Dict[Tuple[int, int], str] = {}
 
         # TODO: movement manager thread object
-        self.movement_manager = MovementManagementThread(self.grid, self.agents)
+        # self.movement_manager = MovementManagementThread(self.grid, self.agents)
 
         # TODO: control mode mapping from agent id to mode (either 'auto' or 'human')
-        self.control_mode: Dict[str, str] = {}
+        # self.control_mode: Dict[str, str] = {}
 
         # control if operational
-        self.operational = True
+        # self.operational = True
         pass
-    
+
+
+    @classmethod
+    def from_file(cls, filename):
+        logger.debug(filename)
+        with open(filename, 'r') as f:
+            data = json.load(f)
+        return cls(**data)
+        
+      
+    def initialize(self, ):
+        import multiprocessing
+
+        
+        process = multiprocessing.Process(target=run_dev)
+        process.start()
+
+        logger.info("View the demo at locathost:5173")
+
+
+        # process = subprocess.run(['npm', 'run', 'dev'], 
+        # cwd='/Users/hsd/codes/MultiAgent/GPT-World/game/game-vite/game-try-vite/',
+        # )
+
+
+
+        
+
+
+
 
     def get_neighbor_environment(self, location: Tuple[int]):
         '''Provide the local environment of the location.
@@ -130,7 +187,7 @@ class Environment:
 
         return
     
-    def action_handler(self, sender: Agent, receiver: str, content: str):
+    def action_handler(self, sender: GPTAgent, receiver: str, content: str):
         """ For an agent thread to invoke, in order to call another agent thread
         """
         # TODO: implement the message passing

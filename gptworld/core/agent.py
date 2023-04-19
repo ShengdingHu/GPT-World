@@ -5,9 +5,9 @@ from typing import Dict, List
 import tiktoken
 import logging
 import datetime
-from gptworld.core.environment import Environment
+# from gptworld.core.environment import GPTWorldEnv
 from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
-from gptworld.life_utils.agent_tool import as_tool
+from gptworld.life_utils.agent_tool import as_tool, Tool
 from gptworld.utils import request_GPT
 
 """
@@ -28,7 +28,7 @@ MAX_SHORT_TERM_MEMORY = 1500
 MAX_LONG_TERM_MEMORY = 1500
 
 
-class Agent:
+class GPTAgent:
     """ Simple Implementation of Chain of Thought & Task Based Agent
     """
     def __init__(self, state_dict: Dict, llm: callable, tools: List[Tool], prompt_template: str):
@@ -329,7 +329,7 @@ class Agent:
         self.outgoing_interactions.append({"sender": self.name, "action_type": action_type, "receiver": receiver, "content": content})
         return
     
-    def mount_to_environment(self, environment: Environment, environment_id: str = None, location: List[int, int] = None):
+    def mount_to_environment(self, environment, environment_id: str = None, location: List[List[int]] = None):
         """ Mount the agent to the environment
         :param environment: the environment to which the agent will be mounted
         :param environment_id: the unique id of this environment

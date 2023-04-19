@@ -29,8 +29,8 @@ class ToolAgent:
             """
             self.llm = llm # caller for large language model
             self.tools = tools # a List of Tool
-            self.iterations = 0 # number of iterations to now
-            self.prompt_template = prompt_template # template of promot, defined by user 
+            self.iterations = 0 # number of iterations to now # TODO: relation with frame?
+            self.prompt_template = prompt_template # template of promot, defined by user  # TODO: load from where?
             self.task = task # final task
             self.finish = False # if finish the task / answer the question
             self.final_answer = "" # final answer (if applicable)
