@@ -33,6 +33,13 @@ class GameScene extends Scene {
   preload() {
     
   }
+
+  getRandomColor(): number {
+    // Generate a random 24-bit number
+    const color = Math.floor(Math.random() * 0xffffff);
+  
+    return color;
+  }
     
   async create_scene(){
     await this.load_file();
@@ -55,9 +62,13 @@ class GameScene extends Scene {
     );
 
 
-    for (let i=0; i < this.mydata.areas.length; i++){
-      let area = this.mydata.areas[i];
-      this.gridGraphics.fillStyle(2, 0xaaaaaa, 1)
+    let areas_key = Object.keys(this.mydata.areas)
+    for (let i=0; i < areas_key.length; i++){
+      let area_key = areas_key[i]
+      let area = this.mydata.areas[area_key];
+      let randomcolor = this.getRandomColor()
+      console.log(randomcolor)
+      this.gridGraphics.fillStyle(2, randomcolor, 1)
       this.gridGraphics.fillRect(
         100 - this.squareSize /2 + this.squareSize * (area.pos[0][0] -1),
         100 - this.squareSize / 2+ this.squareSize * (area.pos[0][1] -1),
@@ -81,8 +92,12 @@ class GameScene extends Scene {
   async place_objects(){
     await this.load_file();
     // Loop through each object in mydata.objects
-    for (let i=0; i < this.mydata.objects.length; i++){
-      let obj = this.mydata.objects[i];
+
+    let objects_key = Object.keys(this.mydata.objects)
+    for (let i=0; i < objects_key.length; i++){
+      let object_key = objects_key[i]
+      let obj = this.mydata.objects[object_key];
+
       console.log("obj", obj)
       // Check if the object already exists in the scene
       let existingObj = this.children.getByName(obj.id);
@@ -103,7 +118,7 @@ class GameScene extends Scene {
           'square'
         );
         newObj.setScale(this.squareSize / 10);
-        newObj.setName(obj.id);
+        newObj.setName(object_key);
         // Change the color of the sprite to white
         newObj.setTint(0xffffff);
         // Add text to the sprite with the value of obj.name
@@ -118,7 +133,7 @@ class GameScene extends Scene {
             padding: 5
           }
         );
-        obj_title.setName(obj.id+"_title");
+        obj_title.setName(object_key+"_title");
 
 
       }

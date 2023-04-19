@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple
 # from gptworld.core.time_system impor, MOVEMENT_TICK
 import subprocess
 from gptworld.utils.logging import get_logger
+import os
 
 logger = get_logger(__file__)
 logger.debug = print
@@ -60,22 +61,24 @@ class GPTWorldEnv:
     Maintain a pool of all AgentThread
     """
     def __init__(self, 
-        name,
-        id,
-        size,
-        areas,
-        objects = None,
-        agents = None,
+        env_json,
+        file_dir,
+        # name,
+        # id,
+        # size,
+        # areas,
+        # objects = None,
+        # agents = None,
         ):
         # TODO: agents mapping from agent id to AgentThread object
 
+        self.env_json = env_json
+        self.file_dir = file_dir
 
-        self.name = name
-        self.id = id
-        self.size = size
-        self.areas = areas
-        self.objects = objects
-        self.agents = agents
+        self.agents, self.objects = {}, {}
+
+        self.load_objects_and_agents()
+        
         logger.debug("Initialize Complete!")
 
         
@@ -95,11 +98,11 @@ class GPTWorldEnv:
 
 
     @classmethod
-    def from_file(cls, filename):
-        logger.debug(filename)
-        with open(filename, 'r') as f:
+    def from_file(cls, file_dir, file_name ="environment.json"):
+        logger.debug(file_dir)
+        with open(os.path.join(file_dir, file_name), 'r') as f:
             data = json.load(f)
-        return cls(**data)
+        return cls(**{"env_json": data, "file_dir": file_dir})
         
       
     def initialize(self, ):
@@ -112,32 +115,57 @@ class GPTWorldEnv:
         logger.info("View the demo at locathost:5173")
 
 
-        # process = subprocess.run(['npm', 'run', 'dev'], 
-        # cwd='/Users/hsd/codes/MultiAgent/GPT-World/game/game-vite/game-try-vite/',
-        # )
-
-
-
-        
-
-
-
-
-    def get_neighbor_environment(self, location: Tuple[int]):
+    def get_neighbor_environment(self, location: Tuple[int] = None, agent_id :str = None, critical_distance = 20):
         '''Provide the local environment of the location.
 
         Args:
             location (:obj:`Tuple[int]`): The center of the view point.
+            agent_id (:obj:`str`): The agent id, to filter the agent itself
+            critical_distance (:obj:`int`): A distance that counts as the neighborhood.
         
         Returns:
-            :obj: Observation : The observation in the form of a json.
+            :text: the observation text. E.g., Now you are at fields. There are tractor, Bob, around you.'
         '''
+
+        if location is None and agent_id is not None:
+            location = self.env_json['objects'][agent_id]['pos'][0]
+
+        at_area = None
+        for areaid, area in self.env_json['areas'].items():
+            pos = area['pos']
+            if pos[0][0] <= location[0] <= pos[1][0] and pos[0][1] <= location[1] <= pos[1][1]:
+                at_area = area['name']
+        
+        # Find objects within the agent's reach in distance
+        objects_within_distance = []
+        for obj_id, obj in self.env_json['objects'].items():
+            if obj_id != agent_id:
+                obj_location = obj['pos']
+                distance = abs(obj_location[0][0] - location[0]) + abs(obj_location[0][1] - location[1])
+                if distance <= critical_distance:
+                    objects_within_distance.append(obj_id)
+        
+
+        # Generate the observation
         observation = {
-            "(1, 1)": "Tree",
-            "(-1, 2)": "Tree",
-            "(-1, 3)": "Water",
+            "agent_location": at_area,
+            "objects_within_distance": objects_within_distance
         }
-        return observation
+        observation_text = self.get_observation_text(observation)
+
+        return observation_text
+    
+    def get_observation_text(self, observation):
+        prompt_template = "Now you are at {}. There are {} around you."
+    
+        object_text = []
+        for obj_id in observation['objects_within_distance']:
+            object_text.append(self.env_json['objects'][obj_id]['name'])
+        object_text = ", ".join(object_text) if len(object_text) > 0 else "nothing"
+
+        prompt = prompt_template.format(observation['agent_location'], object_text)
+        return prompt
+
 
     def show(self):
         '''Show the current status of this environment in a table
@@ -155,19 +183,15 @@ class GPTWorldEnv:
 
         return environment
 
-    def load_from_file(self, rootfile):
-        with open(f"{rootfile}", 'r') as fenv:
-            self.environent = json.load(fenv)
-        from IPython import embed; embed()
+    def load_objects_and_agents(self):
 
         # create_agent
-        for obj in self.environent['object']:
-            if obj['id'].startswith('a'):
-                agent = Agent(obj['id'])
+        for obj_id, obj in self.env_json['objects'].items():
+            if obj_id.startswith('a'):
+                self.agents[obj_id] = GPTAgent.from_file(self.file_dir, '{}.json'.format(obj_id))
             elif obj['id'].startswith('o'):
-                object_agent = Agent(obj['id'])
-        
-        pass
+                self.objects[obj_id] = GPTAgent.from_file(self.file_dir, '{}.json'.format(obj_id))
+
 
     def save(self, ):
         '''Save the environment to a database.
@@ -182,8 +206,7 @@ class GPTWorldEnv:
         with open("./agent_format.json", "r") as f:
             agent_state_dict = json.load(f)
         
-        agent = Agent(state_dict=agent_state_dict, mode="auto")
-        self.agents["agent.name"] = agent
+        agent = GPTAgent(state_dict=agent_state_dict, mode="auto")
 
         return
     
@@ -224,6 +247,13 @@ class GPTWorldEnv:
         self.movement_manager.join()
 
         return
+    
+    def run(self, ):
+        """The main loop 
+        """
+        while True:
+            time.sleep(10)
+            self.step()
     
 
 if __name__ == "__main__":

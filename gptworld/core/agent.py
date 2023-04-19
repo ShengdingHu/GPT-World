@@ -9,6 +9,12 @@ import datetime
 from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
 from gptworld.life_utils.agent_tool import as_tool, Tool
 from gptworld.utils import request_GPT
+from gptworld.utils.logging import get_logger
+import os
+
+logger = get_logger(__file__)
+logger.debug = print
+logger.info =  print
 
 """
 Agent class implements the static, mind, inner, and cognitive process
@@ -31,7 +37,13 @@ MAX_LONG_TERM_MEMORY = 1500
 class GPTAgent:
     """ Simple Implementation of Chain of Thought & Task Based Agent
     """
-    def __init__(self, state_dict: Dict, llm: callable, tools: List[Tool], prompt_template: str):
+    def __init__(self, 
+                state_dict: Dict, 
+                file_dir
+                # llm: callable, 
+                # tools: List[Tool], 
+                # prompt_template: str
+            ):
         """ Intialize an agent.
         state_dict: Dict -> a state dict which contains all the information about the agent
         llm: callable -> a function which could call llm and return response
@@ -39,6 +51,11 @@ class GPTAgent:
         prompt_template: str -> a template for prompt
         """
         
+        self.file_dir = file_dir
+
+        self.static_dict = state_dict
+
+        return 
         # TODO: Note that we hope that it can maintain the tool using ability...
         self.name = state_dict.get("name", None)
 
@@ -115,6 +132,19 @@ class GPTAgent:
         self.blocking = False
 
         return
+    
+    @classmethod
+    def from_file(cls, file_dir, file_name):
+        logger.debug(file_dir)
+        agent_path = os.path.join(file_dir, file_name)
+        if os.path.exists(agent_path):
+            with open(os.path.join(file_dir, file_name), 'r') as f:
+                data = json.load(f)
+            return cls(**{"state_dict": data, "file_dir": file_dir})
+        else:
+            logger.warning(f"No config of {agent_path} found!")
+            return None
+        
     
     def available_actions(self):
         """ return available actions I can handle
