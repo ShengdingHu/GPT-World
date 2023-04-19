@@ -11,6 +11,7 @@ from gptworld.life_utils.agent_tool import as_tool, Tool
 from gptworld.utils import request_GPT
 from gptworld.utils.logging import get_logger
 import os
+import time
 
 logger = get_logger(__file__)
 logger.debug = print
@@ -53,7 +54,34 @@ class GPTAgent:
         
         self.file_dir = file_dir
 
-        self.static_dict = state_dict
+        self.state_dict = state_dict
+
+        self.incoming_interactions = [{"sender": "A", "message": "XXX"}]
+
+        self.incomming_objection = ["XXXX",]
+
+        self.location = [10,10]
+
+        self.summary = "XXXX"
+
+        self.plan = [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
+
+        
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
 
         return 
         # TODO: Note that we hope that it can maintain the tool using ability...
@@ -70,7 +98,7 @@ class GPTAgent:
         self.llm = llm
 
         # The chain of thought prompt
-        self.prompt_template = prompt_template # template of promot, defined by user 
+        # self.prompt_template = prompt_template # template of promot, defined by user 
 
         # A List of Tool
         self.tools = tools 
@@ -393,38 +421,38 @@ class GPTAgent:
         """
         return self.outgoing_interactions
 
-    def step(self):
+    def step(self, current_time):
         """ Call this method at each time frame
         """
-        # TODO: if the agent is thinking : 博凯
-        if self.blocking:
-            pass
-            
-        # TODO: if agent is 'objective' : 博凯
-        if self.type == 'objective':
-            pass
-        
-        # if no interaction in interaction_queue : 博凯
-        if self.observation_queue == []:
-            pass
-        
-        # Acquire the lock
-        self.blocking = True
 
-        try:
-            self.action()
-        except:
-            # TODO: handle exception
-            pass
+        logger.debug("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
         
-        # Release the lock
-        self.blocking = False
+        # # 测试异步
+        # if self.state_dict['name'].startswith("A"):
+        #     time.sleep(20)
+        # logger.debug("Agent {} is done".format(self.state_dict['name']))
+
+
+        # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
+
+        # 1. 如果当前正在向openai请求，调过这一步
+
+        # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
+
+        # 3. 检查当前有没有new_observation (或 incoming的interaction), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
+        #    多个observation一起处理，处理过就扔进短期记忆。
+        #    短期记忆是已经处理过的observation。
+
+        # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) @TODO jingwei
+
+        # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
+
 
         return
 
   
     def compose_dev(self):
-        """ Compose the context feed to large language model in this step (with trucation to avoid overflow of total tokens)
+        """ Truncation:  Compose the context feed to large language model in this step (with trucation to avoid overflow of total tokens)
         When finished, this will become depreciated.
         """
         # first truncation

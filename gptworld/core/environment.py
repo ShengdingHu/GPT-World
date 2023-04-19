@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple
 import subprocess
 from gptworld.utils.logging import get_logger
 import os
+import datetime
 
 logger = get_logger(__file__)
 logger.debug = print
@@ -118,7 +119,7 @@ class GPTWorldEnv:
         process = multiprocessing.Process(target=run_dev)
         process.start()
 
-        logger.info("View the demo at locathost:5173")
+        logger.info("-"*20 + "\nView the demo at localhost:5173\n" + "-"*20)
 
 
     def get_neighbor_environment(self, location: Tuple[int] = None, agent_id :str = None, critical_distance = 20):
@@ -232,34 +233,46 @@ class GPTWorldEnv:
         """ For each time frame, call step method for agents
         """
 
-        self.movement_manager.start()
+        # self.movement_manager.start()
 
-        while self.operational:
-            time.sleep(1)
-            for agent in self.agents:
-                # run agent as thread
-                thread = threading.Thread(target=agent.step)
-                thread.start() 
+   
+
+        thread_pool = []
+
+        for agent_id in self.agents:
+            agent = self.agents[agent_id]
+            # run agent as thread
+            thread = threading.Thread(target=agent.step, args=(self.current_time,))
+            thread_pool.append(thread)
+            thread.start() 
+
+        for thread in thread_pool:
+            thread.join()
+
+        
+        
+            # 同步操作  @TODO bokai
+
             
-            # prompt user to input control signal (in case they want to suspand the server)
-            command = input("Stop? [y]=stop and save all states")
-            if command == "y":
-                self.operational = False
+
         
         # TODO: save the state of all agents to dump files
 
         # TODO: if necessary, send the agents dump files to user..
 
-        self.movement_manager.join()
-
         return
     
-    def run(self, ):
+    def run(self, start_time=[2023, 4, 1, 7, 0, 0]):
         """The main loop 
         """
+        realworld_time_delta = 8
+        env_time_delta = 10
+        
+        self.current_time = datetime.datetime(*start_time)
         while True:
-            time.sleep(10)
+            time.sleep(realworld_time_delta)
             self.step()
+            self.current_time += datetime.timedelta(seconds = env_time_delta)
     
 
 if __name__ == "__main__":
