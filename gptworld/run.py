@@ -8,7 +8,7 @@ if __name__ == "__main__":
 
     # Create an instance of the environment
     env = GPTWorldEnv.from_file("static_files/test_env0/")
-    # env.initialize() # this start a new subprocess to start a webpage.
+    env.initialize() # this start a new subprocess to start a webpage.
 
 
     # Create an instance of the agent
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     environment_text = env.get_neighbor_environment(agent_id='a_001')
 
-    from IPython import embed; embed(header="In environment")
+    print(environment_text)
 
 
 

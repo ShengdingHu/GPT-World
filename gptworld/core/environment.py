@@ -12,10 +12,16 @@ logger = get_logger(__file__)
 logger.debug = print
 logger.info =  print
 
+# Use the os module to get the absolute dir path of the current file
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+
+
 
 def run_dev():
-    subprocess.run(['npm', 'run', 'dev'], cwd='/Users/hsd/codes/MultiAgent/GPT-World/game/text_grid/frontend', capture_output=True)
-    subprocess.run(['python app.py'], cwd='/Users/hsd/codes/MultiAgent/GPT-World/game/text_grid', capture_output=True)
+    subprocess.run(['npm', 'run', 'dev'], cwd=f'{CURRENT_DIR}/../../game/text_grid/frontend', capture_output=True)
+    subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../..//game/text_grid', capture_output=True)
 
 
 def action_parser():
