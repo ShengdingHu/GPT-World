@@ -14,21 +14,19 @@ import os
 
 logger = get_logger(__file__)
 logger.debug = print
-logger.info =  print
+logger.info = print
 
 """
 Agent class implements the static, mind, inner, and cognitive process
 """
 
-
 # The color for intermediate result
-RESET = "\033[0m"        # reset color output
-GREEN = "\033[92m"       # Green text
-MAGENTA = "\033[35m"     # Magenta text
-RED = "\033[31m"         # Red text
-BOLD = "\033[1m"         # Bold text
-BLUE = "\033[34m"        # Blue text
-
+RESET = "\033[0m"  # reset color output
+GREEN = "\033[92m"  # Green text
+MAGENTA = "\033[35m"  # Magenta text
+RED = "\033[31m"  # Red text
+BOLD = "\033[1m"  # Bold text
+BLUE = "\033[34m"  # Blue text
 
 MAX_SHORT_TERM_MEMORY = 1500
 MAX_LONG_TERM_MEMORY = 1500
@@ -37,25 +35,26 @@ MAX_LONG_TERM_MEMORY = 1500
 class GPTAgent:
     """ Simple Implementation of Chain of Thought & Task Based Agent
     """
-    def __init__(self, 
-                state_dict: Dict, 
-                file_dir
-                # llm: callable, 
-                # tools: List[Tool], 
-                # prompt_template: str
-            ):
+
+    def __init__(self,
+                 state_dict: Dict,
+                 file_dir
+                 # llm: callable,
+                 # tools: List[Tool],
+                 # prompt_template: str
+                 ):
         """ Intialize an agent.
         state_dict: Dict -> a state dict which contains all the information about the agent
         llm: callable -> a function which could call llm and return response
         tools: List[Tool] -> a list of Tool
         prompt_template: str -> a template for prompt
         """
-        
+
         self.file_dir = file_dir
 
         self.static_dict = state_dict
 
-        return 
+        return
         # TODO: Note that we hope that it can maintain the tool using ability...
         self.name = state_dict.get("name", None)
 
@@ -70,20 +69,21 @@ class GPTAgent:
         self.llm = llm
 
         # The chain of thought prompt
-        self.prompt_template = prompt_template # template of promot, defined by user 
+        self.prompt_template = prompt_template  # template of promot, defined by user
 
         # A List of Tool
-        self.tools = tools 
+        self.tools = tools
 
         # Mapping from action name to action Tool object
-        self.tool_map = {} 
+        self.tool_map = {}
         self.tool_names = []
         for tool in self.tools:
             self.tool_names.append(tool.tool_name)
             self.tool_map[tool.tool_name] = tool
 
-        self.tool_names_and_descriptions = "\n".join([tool.tool_name+" - "+tool.tool_description for tool in self.tools]) # tool names and desctiptions
-        
+        self.tool_names_and_descriptions = "\n".join(
+            [tool.tool_name + " - " + tool.tool_description for tool in self.tools])  # tool names and desctiptions
+
         # TODO: Design details about hierachical task list
         self.tasks = state_dict.get("tasks", [])
 
@@ -93,7 +93,7 @@ class GPTAgent:
         # TODO: Design details about long term memory in a form of Embedding Vector : Memory Content
         self.long_term_memory = state_dict.get("long_term_memory", {})
 
-        self.reflection_memory=state_dict.get("reflection_memory",ReflectionMemory(object()))
+        self.reflection_memory = state_dict.get("reflection_memory", ReflectionMemory(object()))
 
         # Location
         self.location = state_dict.get("location", None)
@@ -132,7 +132,7 @@ class GPTAgent:
         self.blocking = False
 
         return
-    
+
     @classmethod
     def from_file(cls, file_dir, file_name):
         logger.debug(file_dir)
@@ -144,13 +144,12 @@ class GPTAgent:
         else:
             logger.warning(f"No config of {agent_path} found!")
             return None
-        
-    
+
     def available_actions(self):
         """ return available actions I can handle
         """
         return self.tool_names
-    
+
     def observe(self):
         """ Update observation of around environment
         """
@@ -198,7 +197,7 @@ class GPTAgent:
 
         return result1 + result2 + result3
 
-    def plan_in_broad_strokes(agent, date: datetime.date) -> list[dict]:
+    def plan_in_broad_strokes(agent, date: datetime.date) -> List[dict]:
         """
         broad strokes planning of an agent
         :param agent: agent object
@@ -274,7 +273,7 @@ class GPTAgent:
         else:
             raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
 
-    def plan_in_detail(agent, plan: dict, time_granularity: datetime.timedelta, date) -> list[dict]:
+    def plan_in_detail(agent, plan: dict, time_granularity: datetime.timedelta, date) -> List[dict]:
         """
         generate more detailed plan on the basis of a broad stroke plan(or just a relatively not detailed plan)
         :param agent:
@@ -343,22 +342,23 @@ class GPTAgent:
             return plans
         else:
             raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
-    
+
     def reprioritize(self, **kwargs):
         """ Reprioritize task list
         """
         # TODO: implement reprioritize : 凡哥、京伟
         return
-    
+
     def action(self, receiver: str, action_type: str, content: str):
         """ Create an action targeted on other agents
         :param receiver: the name of receiver like "Alex", "Tree", "Starship"
         :param action_type: if you want to use a function of that agent, use the name of the function, otherwise use "misc"
         :param content: the content of the action like "Hi, how is it going?" (should be complete and in natural language.)
         """
-        self.outgoing_interactions.append({"sender": self.name, "action_type": action_type, "receiver": receiver, "content": content})
+        self.outgoing_interactions.append(
+            {"sender": self.name, "action_type": action_type, "receiver": receiver, "content": content})
         return
-    
+
     def mount_to_environment(self, environment, environment_id: str = None, location: List[List[int]] = None):
         """ Mount the agent to the environment
         :param environment: the environment to which the agent will be mounted
@@ -376,7 +376,7 @@ class GPTAgent:
 
         # Call environment method to sync the change to environment
         self.environment.mount_agent(self, self.location)
-        
+
         return
 
     def post_in_interaction(self, action_type: str, content: str, sender: str):
@@ -399,15 +399,15 @@ class GPTAgent:
         # TODO: if the agent is thinking : 博凯
         if self.blocking:
             pass
-            
+
         # TODO: if agent is 'objective' : 博凯
         if self.type == 'objective':
             pass
-        
+
         # if no interaction in interaction_queue : 博凯
         if self.observation_queue == []:
             pass
-        
+
         # Acquire the lock
         self.blocking = True
 
@@ -416,13 +416,12 @@ class GPTAgent:
         except:
             # TODO: handle exception
             pass
-        
+
         # Release the lock
         self.blocking = False
 
         return
 
-  
     def compose_dev(self):
         """ Compose the context feed to large language model in this step (with trucation to avoid overflow of total tokens)
         When finished, this will become depreciated.
@@ -432,12 +431,12 @@ class GPTAgent:
 
         # count system prompt length
         formatted_prompt = self.prompt_template.format(
-            tool_names_and_descriptions=self.tool_names_and_descriptions, 
-            tool_names=f"[{', '.join(self.tool_names)}]", 
-            task=self.task, 
+            tool_names_and_descriptions=self.tool_names_and_descriptions,
+            tool_names=f"[{', '.join(self.tool_names)}]",
+            task=self.task,
             agent_playground=""
         )
-        
+
         num_tokens_system = len(tokenizer.encode(formatted_prompt))
         available_tokens_for_agent_playground = MAX_SHORT_TERM_MEMORY - num_tokens_system
 
@@ -456,20 +455,20 @@ class GPTAgent:
                 agent_playground.append(message)
 
         # reverse back
-        agent_playground.reverse() # recover the original agent_playground
+        agent_playground.reverse()  # recover the original agent_playground
 
         # finally ground the prompt template
         formatted_prompt = self.prompt_template.format(
-            tool_names_and_descriptions=self.tool_names_and_descriptions, 
-            tool_names=f"[{', '.join(self.tool_names)}]", 
-            task=self.task, 
+            tool_names_and_descriptions=self.tool_names_and_descriptions,
+            tool_names=f"[{', '.join(self.tool_names)}]",
+            task=self.task,
             agent_playground="".join(agent_playground)
         )
 
-        #TODO: Use all the short term context to compute semnatic embedding -> use cosine similarity to compute the most relevant items and append them to the context
+        # TODO: Use all the short term context to compute semnatic embedding -> use cosine similarity to compute the most relevant items and append them to the context
 
         # MAX_LONG_TERM_MEMORY
-        
+
         return formatted_prompt
 
     def step_dev(self):
@@ -513,14 +512,14 @@ class GPTAgent:
             else:
                 print(f"{RED}{BOLD}Error: cannot find Action Input{RESET}")
                 continue
-            
+
             # find the tool of action
             action_tool = self.tool_map[action_content]
 
             # TODO: this is a legacy, need to be adapted 
             # pass the Action Input (in JSON format) to the action_tool function, get observation
             try:
-                action_input_content = json.loads(action_input_content) # parse str to json
+                action_input_content = json.loads(action_input_content)  # parse str to json
 
                 # TODO: use tools, need to be adapted
                 action_input_content["environment"] = self.environment
@@ -529,7 +528,7 @@ class GPTAgent:
                 observation = action_tool(**action_input_content)
 
             except Exception as e:
-                
+
                 print(f"{RED}{BOLD}Exception, retrying...{RESET}")
                 self.exception_count += 1
                 observation = e
@@ -542,7 +541,7 @@ class GPTAgent:
             self.history.append(f"Observation: {observation}\n")
             self.history.append(f"Thought: ")
 
-            if action_tool.tool_type == "finish": 
+            if action_tool.tool_type == "finish":
                 print(f"{BLUE}{BOLD}Task finished!{RESET}")
                 self.finish = True
 
@@ -555,4 +554,3 @@ class GPTAgent:
                 return
 
         return
-
