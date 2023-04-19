@@ -21,7 +21,6 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def run_dev():
-    from IPython import embed; embed(header="in run_dev")
     subprocess.run(['npm', 'run', 'dev'], cwd=f'{CURRENT_DIR}/../../game/text_grid/frontend', capture_output=True,shell=True)
     subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../..//game/text_grid', capture_output=True,shell=True)
 
