@@ -5,13 +5,14 @@ from typing import Dict, List
 import tiktoken
 import logging
 import datetime
+from datetime import datetime as dt
 # from gptworld.core.environment import GPTWorldEnv
 from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
 from gptworld.life_utils.agent_tool import as_tool, Tool
 from gptworld.utils import request_GPT
 from gptworld.utils.logging import get_logger
 import os
-import time
+
 
 logger = get_logger(__file__)
 logger.debug = print
@@ -21,16 +22,16 @@ logger.info = print
 Agent class implements the static, mind, inner, and cognitive process
 """
 
-# The color for intermediate result
-RESET = "\033[0m"  # reset color output
-GREEN = "\033[92m"  # Green text
-MAGENTA = "\033[35m"  # Magenta text
-RED = "\033[31m"  # Red text
-BOLD = "\033[1m"  # Bold text
-BLUE = "\033[34m"  # Blue text
-
-MAX_SHORT_TERM_MEMORY = 1500
-MAX_LONG_TERM_MEMORY = 1500
+# # The color for intermediate result
+# RESET = "\033[0m"  # reset color output
+# GREEN = "\033[92m"  # Green text
+# MAGENTA = "\033[35m"  # Magenta text
+# RED = "\033[31m"  # Red text
+# BOLD = "\033[1m"  # Bold text
+# BLUE = "\033[34m"  # Blue text
+#
+# MAX_SHORT_TERM_MEMORY = 1500
+# MAX_LONG_TERM_MEMORY = 1500
 
 
 class GPTAgent:
@@ -49,42 +50,48 @@ class GPTAgent:
         llm: callable -> a function which could call llm and return response
         tools: List[Tool] -> a list of Tool
         prompt_template: str -> a template for prompt
+
         """
 
         self.file_dir = file_dir
 
         self.state_dict = state_dict
 
-        self.incoming_interactions = [{"sender": "A", "message": "XXX"}]
+        # 记录当前对话历史
+        self.incoming_interactions = state_dict.get('IncomingInteractions',[])
 
-        self.incomming_objection = ["XXXX",]
+        # 记录下一轮需要处理的新observation
+        self.incoming_observation = state_dict.get('IncomingObservation',[])
 
-        self.location = [10,10]
+        # Parse initial location from state dict. format: {"eid": "e_004", "pos": [1,1]}
+        self.location = state_dict.get('Location',None)
 
-        self.summary = "XXXX"
+        # self summary of current state.
+        self.summary = state_dict.get( 'Summary', None)
 
-        self.plan = [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
+        # Broad Stroke Plan
+        self.WholeDayPlan = state_dict.get('WholeDayPlan',None)
 
-        
+        # fine-grained plan list for next task searching
+        # format: [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
+        self.plan = state_dict.get('Plan',[])
 
+        # Long term memory is serialized/deserialized by orjson so only file name is provided here.
+        self.LongTermMemory=ReflectionMemory(state_dict,file_dir)
 
-        
+        # Short term memory is a queue of observations recording recent observations.
+        self.ShortTermMemory=state_dict.get('shortTermMemory',[])
 
+        # basic fingerprint
+        self.name = state_dict.get("Name", None)
 
+        self.age=state_dict.get("Age",None)
 
+        self.traits=state_dict.get("Traits",None)
 
+        self.movement = state_dict.get("movement", "static")
 
-
-
-
-
-
-
-
-
-        return
-        # TODO: Note that we hope that it can maintain the tool using ability...
-        self.name = state_dict.get("name", None)
+        self.max_velocity = state_dict.get("VelocityUpperBound", 1)
 
         # Type of the agent, either 'objective' or 'subjective'
         self.type = state_dict.get("type", None)
@@ -94,52 +101,25 @@ class GPTAgent:
         self.environment_id = None
 
         # The thinking kernel
-        self.llm = llm
+        # self.llm = llm
 
         # The chain of thought prompt
         # self.prompt_template = prompt_template # template of promot, defined by user 
 
         # A List of Tool
-        self.tools = tools
+        # self.tools = tools
 
         # Mapping from action name to action Tool object
-        self.tool_map = {}
-        self.tool_names = []
-        for tool in self.tools:
-            self.tool_names.append(tool.tool_name)
-            self.tool_map[tool.tool_name] = tool
+        # self.tool_map = {}
+        # self.tool_names = []
+        # for tool in self.tools:
+        #     self.tool_names.append(tool.tool_name)
+        #     self.tool_map[tool.tool_name] = tool
 
-        self.tool_names_and_descriptions = "\n".join(
-            [tool.tool_name + " - " + tool.tool_description for tool in self.tools])  # tool names and desctiptions
+        # self.tool_names_and_descriptions = "\n".join(
+        #     [tool.tool_name + " - " + tool.tool_description for tool in self.tools])  # tool names and desctiptions
 
-        # TODO: Design details about hierachical task list
-        self.tasks = state_dict.get("tasks", [])
-
-        # TODO: Design details about short term memory management, a list of history thoughts, actions, action_inputs, obeservations,...
-        self.short_term_memory = state_dict.get("short_term_memory", [])
-
-        # TODO: Design details about long term memory in a form of Embedding Vector : Memory Content
-        self.long_term_memory = state_dict.get("long_term_memory", {})
-
-        self.reflection_memory = state_dict.get("reflection_memory", ReflectionMemory(object()))
-
-        # Location
-        self.location = state_dict.get("location", None)
-
-        # incoming interactions
-        self.incoming_interactions = state_dict.get("incoming_interactions", [])
-
-        # outgoing interactions
-        self.outgoing_interactions = state_dict.get("outgoing_interactions", [])
-
-        # The observation result will be stored in this variable
-        self.obervation = state_dict.get("obervation", [])
-
-        # TODO: Whether the agent is moving ("moving" or "static")
-        self.movement = state_dict.get("movement", "static")
-
-        # TODO: Maximum velocity
-        self.max_velocity = state_dict.get("movement", 1)
+        # Whether the agent is moving ("moving" or "static")
 
         # The actual velocity
         self.velocity = 0
@@ -184,46 +164,56 @@ class GPTAgent:
         self.observation = self.environment.get_neighbor_environment(self.location)
         return
 
-    def reflect(self):
-        """ Reflect the short term memory and store it into long term memory
+    def reflect(self,time:datetime):
+        """ While the time is right, do reflection for memory
         """
-        # TODO: implement reflect: 凡哥、京伟
-        return
+        return self.LongTermMemory.maybe_reflect(time)
 
-    def generate_summary(agent):
+    def generate_summary(self,time:dt):
         """
-
+        # Generating summary for myself
         :param agent:
         :return: summary string
         """
 
-        retrieved_record = """
-        Chris is a undergraduate student in Tsinghua University, Love to play tennis and expand knowledge on 
-        many different regions. Major in Electrical Engineering, but join in the Natural Language Processing Research Team
-        , very busy at his schoolwork.
-        """
+        # retrieved_record = """
+        # Chris is a undergraduate student in Tsinghua University, Love to play tennis and expand knowledge on
+        # many different regions. Major in Electrical Engineering, but join in the Natural Language Processing Research Team
+        # , very busy at his schoolwork.
+        # """
+        qResList1 = self.LongTermMemory.query(f"{self.name}'s core characteristics",10,time)
+        qResList2 = self.LongTermMemory.query(f"{self.name}'s current daily plan",10,time)
+        qResList3 = self.LongTermMemory.query(f"{self.name}'s feeling about his recent progress in life",10,time)
+
+        q1,q2,q3=map(lambda k: '\n'.join(k),(qResList1,qResList2,qResList3))
 
         query1 = f"""
-        How would one describe {agent.Name}'s core characteristics given the following statements?
-        {retrieved_record}
+        How would one describe {self.name}'s core characteristics given the following statements?
+        {q1}
         """
         result1 = request_GPT.request(query1)
 
+        # 'daily occupation' is ambiguous and performs bad in searching daily requirements and summarizing schedule.
         query2 = f"""
-        What is {agent.Name}'s current occupation given the following statements?
-        {retrieved_record}
+        What is {self.name}'s current daily plan given the following statements?
+        {q2}
         """
 
         result2 = request_GPT.request(query2)
 
         query3 = f"""
-        What might be {agent.Name}'s feeling about his recent progress in life given the following statements?
-        {retrieved_record}
+        What might be {self.name}'s feeling about his recent progress in life given the following statements?
+        {q3}
         """
 
         result3 = request_GPT.request(query3)
 
-        return result1 + result2 + result3
+        BasicInfo=f"""\
+Name: {self.name} (age: {self.age})
+Innate traits: {self.traits}"""
+
+        # Notice the order of these results in the example of GA paper/
+        return BasicInfo+result1 + result3 + result2
 
     def plan_in_broad_strokes(agent, date: datetime.date) -> List[dict]:
         """

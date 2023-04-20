@@ -122,11 +122,11 @@ class ReflectionMemory():
 
     """
 
-    def __init__(self, cfg) -> None:
+    def __init__(self, state_dict,file_dir='./') -> None:
         # the least importance threshold for reflection. It seems that setting it to 0 does not induce duplicate reflections
-        self.reflection_threshold = getattr(cfg, 'reflection_threshold', 0)
-        self.memory_index = getattr(cfg, 'memory_index', 'default_memory')
-        self.filename = f"{self.memory_index}.json"
+        self.reflection_threshold = state_dict.get( 'reflection_threshold', 0)
+        self.memory_id = state_dict.get( 'Memory', 'default_memory')
+        self.filename = os.path.join(file_dir,f"{self.memory_id}.json")
         if os.path.exists(self.filename):
             with open(self.filename, 'rb') as f:
                 loaded = orjson.loads(f.read())
