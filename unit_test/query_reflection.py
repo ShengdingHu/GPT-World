@@ -34,7 +34,12 @@ if __name__=='__main__':
             if line.startswith('['):
                 segs=line.strip().split(' ')
                 dt=datetime.strptime(' '.join(segs[1:3]),'%Y-%m-%d %H:%M:%S:')
-                r.add(' '.join(segs[3:]),dt,[],False)
+                text=' '.join(segs[3:])
+                if text.find("This is Isabella Rodriguez's plan"):
+                    tag='plan'
+                else:
+                    tag='characteristics'
+                r.add(text,dt,[tag],False)
     with open('IR_observations.txt','r') as f:
         lines=f.readlines()
         for line in tqdm(lines):
@@ -43,5 +48,7 @@ if __name__=='__main__':
                 dt=datetime.strptime(' '.join(segs[1:3]),'%Y-%m-%d %H:%M:%S:')
                 r.add(' '.join(segs[3:]),dt,[],False)
     texts=r.query(test_query,k=3,curtime=datetime.strptime(test_query_time,'%Y-%m-%d %H:%M:%S:'))
-    r.reflection(datetime.strptime(test_query_time,'%Y-%m-%d %H:%M:%S:'))
-    r.reflection(datetime.strptime(test_query_time,'%Y-%m-%d %H:%M:%S:'))
+    print(test_query)
+    print(texts)
+    print(r.maybe_reflect(datetime.strptime(test_query_time,'%Y-%m-%d %H:%M:%S:')))
+    print(r.maybe_reflect(datetime.strptime(test_query_time,'%Y-%m-%d %H:%M:%S:')))

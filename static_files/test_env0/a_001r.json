@@ -1,0 +1,27 @@
+{
+    "IdentityPrompt": "I am a student",
+    "Name": "Alice",
+    "Age": 19,
+    "VisionRadius": 8,
+    "AttentionBandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "Location": "e_001:[(1,1)]",
+    "VelocityUpperBound": "1/s",
+    "Moving": "false",
+    "Status": "sleeping",
+    "StatusDuration" : 0,
+    "StatusStartTime": null,
+    "Plan": [],
+    "WholeDayPlan": "This is Isabella Rodriguez's plan for Monday February 13: wake up and complete the morning routine at 6:00 am, be at the cafe to open at 8:00 am, in the morning, keep working at the cafe until 12:00 pm, when she goes out to lunch with her friends, come back to Hobbs' cafe at 2:00 pm and get ready for the Valentine's Day party, assess how to make the best party6 by gathering any supplies or materials that she needs, go out to purchase any necessary materials to finish decorating the cafe, finish decorating the cafe by 6:00 pm.",
+    "Reflection": [
+        {
+            "time": "2022-04-13 00:25",
+            "event": "I feel frustrated about the lockdown policy and daily PCR test at Shenzhen",
+            "embedding": [0.111222, 0.2222211, 0.1112222, 0.000001, -0.9331225]
+        }
+    ],
+    "description":
+
+    ]
+}
