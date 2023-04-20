@@ -7,7 +7,7 @@ if __name__ == "__main__":
     from gptworld.core.agent import GPTAgent
 
     # Create an instance of the environment
-    env = GPTWorldEnv.from_file("static_files/test_env0/")
+    env = GPTWorldEnv.from_file("static_files/alice_home/")
     env.initialize() # this start a new subprocess to start a webpage.
 
 

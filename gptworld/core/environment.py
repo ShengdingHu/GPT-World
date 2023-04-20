@@ -122,7 +122,7 @@ class GPTWorldEnv:
         logger.info("-"*20 + "\nView the demo at localhost:5173\n" + "-"*20)
 
 
-    def get_neighbor_environment(self, location: Tuple[int] = None, agent_id :str = None, critical_distance = 20):
+    def get_neighbor_environment(self, location: Tuple[int] = None, agent_id :str = None, critical_distance = 50):
         '''Provide the local environment of the location.
 
         Args:
@@ -135,21 +135,22 @@ class GPTWorldEnv:
         '''
 
         if location is None and agent_id is not None:
-            location = self.env_json['objects'][agent_id]['pos'][0]
+            location = self.env_json['objects'][agent_id]['pos']
+            env_id = self.env_json['objects'][agent_id]['eid']
 
         at_area = None
-        for areaid, area in self.env_json['areas'].items():
-            pos = area['pos']
-            if pos[0][0] <= location[0] <= pos[1][0] and pos[0][1] <= location[1] <= pos[1][1]:
-                at_area = area['name']
+        # for areaid, area in self.env_json['areas'].items():
+        #     pos = area['pos']
+        #     if pos[0][0] <= location[0] <= pos[1][0] and pos[0][1] <= location[1] <= pos[1][1] and env_id == :
+        at_area = self.env_json['areas'][env_id]['name']
         
         # Find objects within the agent's reach in distance
         objects_within_distance = []
         for obj_id, obj in self.env_json['objects'].items():
             if obj_id != agent_id:
                 obj_location = obj['pos']
-                distance = abs(obj_location[0][0] - location[0]) + abs(obj_location[0][1] - location[1])
-                if distance <= critical_distance:
+                distance = abs(obj_location[0] - location[0]) + abs(obj_location[1] - location[1])
+                if distance <= critical_distance and env_id == obj['eid']:
                     objects_within_distance.append(obj_id)
         
 
