@@ -10,12 +10,17 @@ from datetime import datetime
 import re
 from sklearn.metrics.pairwise import cosine_similarity
 import logging
+import bisect
+
+EMBED_DIM = 1536
+SAVE_OPTIONS = orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_SERIALIZE_DATACLASS | orjson.OPT_INDENT_2
 
 IMPORTANCE_PROMPT = '''On the scale of 1 to 10, where 1 is purely mundane \
 (e.g., brushing teeth, making bed) and 10 is \
 extremely poignant (e.g., a break up, college \
 acceptance), rate the likely poignancy of the \
 following piece of memory. \
+If you think it's too hard to rate it, you can give an inaccurate assessment. Please strictly only output one number\
 Memory: {} \
 Rating: <fill in>'''
 QUESTION_PROMPT = '''Given only the information above, what are 3 most salient \
@@ -79,12 +84,8 @@ def get_insights(statements):
     insights = result.split('\n')[:5]
     insights = ['.'.join(i.split('.')[1:]) for i in insights]
     # remove insight pointers for now
-    insights = [i.split('(')[0] for i in insights]
+    insights = [i.split('(')[0].strip() for i in insights]
     return insights
-
-
-EMBED_DIM = 1536
-SAVE_OPTIONS = orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_SERIALIZE_DATACLASS
 
 
 def create_default_embeddings():
@@ -97,13 +98,19 @@ def create_default_importance():
 
 @dataclasses.dataclass
 class CacheContent:
+    # Natural language description of memory
     texts: List[str] = dataclasses.field(default_factory=list)
+    # openAI embedding
     embeddings: np.ndarray = dataclasses.field(
         default_factory=create_default_embeddings
     )
+    # create time
     createTime: List[datetime] = dataclasses.field(default_factory=list)
+    # last access time
     accessTime: List[datetime] = dataclasses.field(default_factory=list)
+    # importance rating given by asking LLM
     importance: np.ndarray = dataclasses.field(default_factory=create_default_importance)
+    # Tags, other attributes for memory
     tags: List[List[str]] = dataclasses.field(default_factory=list)
 
 
@@ -116,14 +123,15 @@ class ReflectionMemory():
     """
 
     def __init__(self, cfg) -> None:
-        self.reflection_threshold = getattr(cfg, 'reflection_threshold', 10)
-        self.memory_index=getattr(cfg,'memory_index','default_memory')
+        # the least importance threshold for reflection. It seems that setting it to 0 does not induce duplicate reflections
+        self.reflection_threshold = getattr(cfg, 'reflection_threshold', 0)
+        self.memory_index = getattr(cfg, 'memory_index', 'default_memory')
         self.filename = f"{self.memory_index}.json"
         if os.path.exists(self.filename):
             with open(self.filename, 'rb') as f:
                 loaded = orjson.loads(f.read())
                 self.data = CacheContent(**loaded)
-                # change datetime string to datetime again
+                # conversions induced by orjson
                 self.data.accessTime = [datetime.strptime(a, '%Y-%m-%dT%H:%M:%S') for a in self.data.accessTime]
                 self.data.createTime = [datetime.strptime(a, '%Y-%m-%dT%H:%M:%S') for a in self.data.createTime]
                 self.data.importance = np.array(self.data.importance).astype(np.int32)
@@ -133,12 +141,19 @@ class ReflectionMemory():
 
         # members
         self.accumulated_importance = 0
-
+        if len(self.data.importance) > 0:
+            # self.sort_data_by_createtime()
+            for i, tag in zip(reversed(self.data.importance), reversed(self.data.tags)):
+                if 'reflection' not in tag:
+                    self.accumulated_importance += i
+                else:
+                    break
 
     def add(self, text: str, time: datetime, tag: list = [], repeat_ok: bool = True):
         """
         Add text as entry. Also add creation time information, last access time information, importance
         It's supposed that all memory are added with non-decreasing time. The time relevant operations such as getting recent memories during reflection does not check time order.
+        This kind of retrieval based memory system is vulnerable to duplicate memories, making top-k retrival giving less meaningful results. Be cautious!
 
         tags: (characteristics, reflection_depth, plan, conversation summary, action observation, object status observation, self observation, etc)
         tags目前只作为分析工具，但也可以根据tag做调整。
@@ -150,7 +165,12 @@ class ReflectionMemory():
         if not repeat_ok and self.check_repeat(text, time):
             return
 
-        self.data.texts.append(text)
+        insert_point=len(self.data.texts)
+        if len(self.data.createTime)>0 and time<self.data.createTime[-1]:
+            logging.log(logging.WARNING, 'Wrong memory order :{} {}'.format(time,text))
+            insert_point=bisect.bisect_left(self.data.createTime, time)
+
+        self.data.texts.insert(insert_point,text)
 
         embedding = get_ada_embedding(text)
 
@@ -158,22 +178,24 @@ class ReflectionMemory():
         vector = vector[np.newaxis, :]
         self.data.embeddings = np.concatenate(
             [
+                self.data.embeddings[:insert_point],
                 vector,
-                self.data.embeddings,
+                self.data.embeddings[insert_point:],
             ],
             axis=0,
         )
         importance = np.array(get_importance(text))[np.newaxis]
         self.data.importance = np.concatenate(
             [
+                self.data.importance[:insert_point],
                 importance,
-                self.data.importance,
+                self.data.importance[insert_point:],
             ],
             axis=0,
         )
-        self.data.createTime.append(time)
-        self.data.accessTime.append(time)
-        self.data.tags.append(tag)
+        self.data.createTime.insert(insert_point,time)
+        self.data.accessTime.insert(insert_point,time)
+        self.data.tags.insert(insert_point,tag)
         self.accumulate_importance(importance, tag)
 
         with open(self.filename, 'wb') as f:
@@ -206,7 +228,7 @@ class ReflectionMemory():
         return self.query(text, k, datetime.now(), weights=[0, 1, 0])
 
     def query(self, text: str, k: int, curtime: datetime, weights=[1., 1., 1.]) -> List[Any]:
-        """"
+        """
         get topk entry based on recency, relevance and importance
         weights can be changed.
 
@@ -217,7 +239,6 @@ class ReflectionMemory():
 
         Returns: List[str]
         """
-
         embedding = get_ada_embedding(text)
 
         timediff = np.array([(curtime - a).total_seconds() // 3600 for a in self.data.accessTime])
@@ -236,12 +257,14 @@ class ReflectionMemory():
 
     def reflection(self, time: datetime):
         # initiate a reflection that inserts high level knowledge to memory
+        # self.sort_data_by_createtime()
         mem_of_interest = self.data.texts[-100:]
         questions = get_questions(mem_of_interest)
         statements = sum([self.query(q, 5, time) for q in questions], [])
         insights = get_insights(statements)
         for insight in insights:
             self.add(insight, time, tag=['reflection'])
+        return insights
 
     def accumulate_importance(self, importance, tag):
         if 'reflection' in tag:
@@ -254,4 +277,12 @@ class ReflectionMemory():
 
     def maybe_reflect(self, time: datetime):
         if self.should_reflect():
-            self.reflection(time)
+            return self.reflection(time)
+        else:
+            return 'reflection reject to prevent duplicate reflecting result'
+
+    def sort_data_by_createtime(self):
+        """
+        If memory is normally used, it's likely almost sorted.
+        """
+        pass
