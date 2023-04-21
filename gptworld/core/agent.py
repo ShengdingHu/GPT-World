@@ -57,26 +57,6 @@ class GPTAgent:
 
         self.state_dict = state_dict
 
-<<<<<<< HEAD
-        self.incoming_interactions = [{"sender": "A", "message": "XXX"}]
-
-        self.incomming_objection = ["XXXX",]
-
-        self.incomming_invoice = []
-
-        self.location = [10,10]
-
-        self.summary = "XXXX"
-
-        self.plan = [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
-
-        
-
-
-    def invoice(self, ):
-        # 往 incomming invoice 里
-        pass
-=======
         # 记录当前对话历史
         self.incoming_interactions = state_dict.get('IncomingInteractions',[])
 
@@ -95,7 +75,6 @@ class GPTAgent:
         # fine-grained plan list for next task searching
         # format: [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
         self.plan = state_dict.get('Plan',[])
->>>>>>> ff1ba3d485cb5cd766ef394e8776c2ec6594bf68
 
         # Long term memory is serialized/deserialized by orjson so only file name is provided here.
         self.LongTermMemory=ReflectionMemory(state_dict,file_dir)
