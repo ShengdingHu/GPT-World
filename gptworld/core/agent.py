@@ -57,26 +57,6 @@ class GPTAgent:
 
         self.state_dict = state_dict
 
-<<<<<<< HEAD
-        self.incoming_interactions = [{"sender": "A", "message": "XXX"}]
-
-        self.incomming_objection = ["XXXX",]
-
-        self.incomming_invoice = []
-
-        self.location = [10,10]
-
-        self.summary = "XXXX"
-
-        self.plan = [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
-
-        
-
-
-    def invoice(self, ):
-        # 往 incomming invoice 里
-        pass
-=======
         # 记录当前对话历史
         self.incoming_interactions = state_dict.get('IncomingInteractions',[])
 
@@ -95,7 +75,11 @@ class GPTAgent:
         # fine-grained plan list for next task searching
         # format: [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
         self.plan = state_dict.get('Plan',[])
->>>>>>> ff1ba3d485cb5cd766ef394e8776c2ec6594bf68
+
+        # current status information
+        self.status=state_dict.get('Status',[])
+        self.status_duration=state_dict.get('StatusDuration',0)
+        self.status_start_time=state_dict.get('StatusStartTime',None)
 
         # Long term memory is serialized/deserialized by orjson so only file name is provided here.
         self.LongTermMemory=ReflectionMemory(state_dict,file_dir)
@@ -110,6 +94,7 @@ class GPTAgent:
 
         self.traits=state_dict.get("Traits",None)
 
+        # location movements
         self.movement = state_dict.get("movement", "static")
 
         self.max_velocity = state_dict.get("VelocityUpperBound", 1)
@@ -181,6 +166,7 @@ class GPTAgent:
 
     def observe(self):
         """ Update observation of around environment
+        Should return string, or subject predicate object/predicative
         """
         self.observation = self.environment.get_neighbor_environment(self.location)
         return
@@ -436,6 +422,10 @@ Innate traits: {self.traits}"""
         """ Call this method at each time frame
         """
 
+        # 产生observation的条件： following reverie, 所有observation都是主体或客体的状态，所以这一步暂时直接交给环境处理。
+        # 一类特殊状态，observation of interaction在对话结束给出摘要时才可以确定，此前不能被环境获取。reverie如何在对话开始时生成一个完整对话暂时没看明白
+        # short time observation 应该屏蔽掉同主体同状态防止冗余
+
         logger.debug("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
         
         # # 测试异步
@@ -447,12 +437,27 @@ Innate traits: {self.traits}"""
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
 
         # 1. 如果当前正在向openai请求，调过这一步
+        if self.blocking:
+            return
 
         # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
+        if self.status_start_time is None: # fixing empty start time
+            self.status_start_time = current_time
+        if self.status_start_time+datetime.timedelta(self.status_duration)>=current_time:
+            # 根据reverie，不产生新观察
+            next_plan=self.get_next_plan()
 
         # 3. 检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
         #    多个observation一起处理，处理过就扔进短期记忆。
         #    短期记忆是已经处理过的observation。
+        #    这里假定环境的observation是完整的，查重任务交给short time memory
+        self.observe()
+        for ob in self.observation:
+            if ob in self.ShortTermMemory:
+                continue
+            # self.incoming_observation
+
+
 
         # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) @TODO jingwei
 

@@ -3,6 +3,7 @@ from datetime import datetime
 import openai
 import os
 import json
+
 openai.api_key = "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"
 
 
