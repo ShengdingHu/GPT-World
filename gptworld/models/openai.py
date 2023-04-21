@@ -14,13 +14,12 @@ def chat(context, MAX_OUTPUT_TOKEN_LEN=1024) -> str:
         "messages": context,
         "max_tokens": MAX_OUTPUT_TOKEN_LEN,
         "temperature": 0.5,
-        "stop": []
     }
 
     jsondata = json.dumps(data)
     res = session.post(url = url, data = jsondata, headers = headers)
     response_dict = json.loads(res.text.strip())
-    print(response_dict)
+    # print(response_dict)
     try:
         return response_dict['choices'][0]['message']['content'].strip()
     except:
@@ -38,11 +37,18 @@ def embedding(text: str) -> List[float]:
 
     jsondata = json.dumps(data)
     res = session.post(url = url, data = jsondata, headers = headers)
+
+    # print(res)
+
     response_dict = json.loads(res.text.strip())
-    print(response_dict)
+    # print(response_dict)
 
     try:
         return response_dict['data'][0]['embedding']
     except:
         return []
 
+
+if __name__ == "__main__":
+    print(embedding("hello world"))
+    print(chat([{"role": "user", "content": "hello!"}]))
