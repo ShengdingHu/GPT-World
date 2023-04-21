@@ -12,8 +12,6 @@ from tqdm import tqdm
 from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
 
 # test: 给定一堆记忆，进行一次query，两次reflection,
-class Config:
-    pass
 
 test_query='''
     Sam Moore is conversing about Isabella Rodriguez invites Sam Moore and his wife to a Valentine's Day party at Hobbs Cafe while discussing Sam's plans to run for local mayor and their shared interests in job creation, economic growth, and community development.
@@ -25,8 +23,7 @@ openai.api_key = "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"
 
 if __name__=='__main__':
 
-    config=Config()
-    setattr(config,'memory_index','test_agent_relection')
+    config={'Memory':'test_agent_reflection'}
     r=ReflectionMemory(config)
     with open('IR_characteristics.txt','r') as f:
         lines=f.readlines()
@@ -35,7 +32,7 @@ if __name__=='__main__':
                 segs=line.strip().split(' ')
                 dt=datetime.strptime(' '.join(segs[1:3]),'%Y-%m-%d %H:%M:%S:')
                 text=' '.join(segs[3:])
-                if text.find("This is Isabella Rodriguez's plan"):
+                if text.find("This is Isabella Rodriguez's plan")!=-1:
                     tag='plan'
                 else:
                     tag='characteristics'
