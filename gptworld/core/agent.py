@@ -282,7 +282,7 @@ Innate traits: {self.traits}"""
 
         """
 
-        request_result = request_GPT.request(text_base)
+        request_result = chat(text_base)
 
         # a typical example to test the regex expressions without access to the GPT
         # request_result = """
@@ -359,7 +359,7 @@ Innate traits: {self.traits}"""
 
         """
 
-        request_result = request_GPT.request(text_base)
+        request_result = chat(text_base)
 
         # a sample
         # request_result = """
@@ -484,7 +484,7 @@ Innate traits: {self.traits}"""
         sPrompt="""\
 Summarize the dialog above.
         """
-        sSummary=request_GPT.request(sDial+sPrompt)
+        sSummary=chat(sDial+sPrompt)
         self.status = 'finishing conserving about '+sSummary
         self.status_duration = 10
         self.incoming_interactions.clear()
@@ -581,7 +581,7 @@ Summarize the dialog above.
 # Yes. <response content>
 # No.
 #                 """
-#                 result=request_GPT.request(''.join([sSummary,sTime,sStatus,sObservation,sContext,sDialog,sPrompt]))
+#                 result=chat(''.join([sSummary,sTime,sStatus,sObservation,sContext,sDialog,sPrompt]))
 #                 if result.startwith('Yes'):
 #                     content= '.'.join(result.split('.')[1:]).strip().split('\n')[0]
 #                     new_interaction={'sender':self.name,'content':content}
@@ -604,7 +604,7 @@ Also tell me if this reaction terminates {self.name}'s status. \
 Output format:
 <Yes/No>|<reaction>|<Yes/No>|<content being said>|<Yes/No>|<target name>|<Yes/No>
             """
-            result=request_GPT.request(''.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt]))
+            result=chat(''.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt]))
             pieces=result.strip().split('|')
             if pieces[0]=='Yes':
                 reaction=pieces[1]
@@ -740,13 +740,13 @@ Output format:
                 Yes. <response content>
                 No. 
                 """
-                result=request_GPT.request(''.join([sSummary,sTime,sStatus,sObservation,sContext,sDialog,sPrompt]))
-                if result.startwith('Yes'):
+                result=chat(''.join([sSummary,sTime,sStatus,sObservation,sContext,sDialog,sPrompt]))
+                if result.startswith('Yes'):
                     content= '.'.join(result.split('.')[1:]).strip().split('\n')[0]
                     new_interaction={'sender':self.name,'content':content}
                     self.incoming_interactions.append(new_interaction)
                 else:
-                    if not result.startwith('No'):
+                    if not result.startswith('No'):
                         logging.warning(logging.WARNING,'abnormal reaction response: '+result)
                     self.end_interaction(current_time)
 

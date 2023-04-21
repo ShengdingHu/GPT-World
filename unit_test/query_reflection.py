@@ -19,12 +19,12 @@ test_query='''
 test_query_time='2023-02-13 09:33:50:'
 
 openai.api_key = "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"
-
+os.environ['OPENAI_METHOD'] = "api_key"
 
 if __name__=='__main__':
 
     config={'Memory':'test_agent_reflection'}
-    r=ReflectionMemory(config)
+    r=ReflectionMemory(config,'../static_files/test_env0/')
     with open('IR_characteristics.txt','r') as f:
         lines=f.readlines()
         for line in tqdm(lines):

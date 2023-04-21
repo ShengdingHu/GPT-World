@@ -3,11 +3,12 @@ from datetime import datetime
 import openai
 import os
 import json
-from gptworld.utils.request_GPT import request
+from gptworld.models.openai import chat as request
 
 openai.api_key = "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"
 openai.api_key_path=None
 openai.organization=None
+os.environ['OPENAI_METHOD'] = "api_key"
 ## if you want to run this test, run 'query_reflection.py' first
 
 # 科目一
@@ -18,7 +19,7 @@ if os.path.exists(agent_path):
     with open(os.path.join(file_dir, file_name), 'r') as f:
         data = json.load(f)
     data['Memory']='test_agent_reflection'
-IRagent=GPTAgent(**{"state_dict": data, "file_dir": file_dir})
+IRagent=GPTAgent(**{"state_dict": data, "agent_file": '../static_files/test_env0/a_001r.json','environment':None})
 
 summary=IRagent.generate_summary(datetime.now().replace(microsecond=0))
 

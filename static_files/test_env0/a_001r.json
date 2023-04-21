@@ -1,23 +1,23 @@
 {
-    "Traits": "friendly, outgoing, hospitable",
-    "Name": "Isabella Rodriguez",
-    "Age": 34,
-    "VisionRadius": 8,
-    "AttentionBandwidth": 8,
-    "Retention": 8,
-    "Time": null,
-    "Location": {"eid": "e_004",
+    "traits": "friendly, outgoing, hospitable",
+    "name": "Isabella Rodriguez",
+    "age": 34,
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "location": {"eid": "e_004",
         "pos": [1,1]
     },
-    "VelocityUpperBound": "1/s",
-    "Moving": "false",
-    "Status": "sleeping",
-    "StatusDuration" : 0,
-    "StatusStartTime": null,
-    "Plan": [],
-    "WholeDayPlan": "This is Isabella Rodriguez's plan for Monday February 13: wake up and complete the morning routine at 6:00 am, be at the cafe to open at 8:00 am, in the morning, keep working at the cafe until 12:00 pm, when she goes out to lunch with her friends, come back to Hobbs' cafe at 2:00 pm and get ready for the Valentine's Day party, assess how to make the best party6 by gathering any supplies or materials that she needs, go out to purchase any necessary materials to finish decorating the cafe, finish decorating the cafe by 6:00 pm.",
-    "Memory": "IR",
-    "Description":[
+    "velocity_upper_bound": "1/s",
+    "moving": "false",
+    "status": "sleeping",
+    "status_duration" : 0,
+    "status_start_time": null,
+    "plan": [],
+    "whole_day_plan": "This is Isabella Rodriguez's plan for Monday February 13: wake up and complete the morning routine at 6:00 am, be at the cafe to open at 8:00 am, in the morning, keep working at the cafe until 12:00 pm, when she goes out to lunch with her friends, come back to Hobbs' cafe at 2:00 pm and get ready for the Valentine's Day party, assess how to make the best party6 by gathering any supplies or materials that she needs, go out to purchase any necessary materials to finish decorating the cafe, finish decorating the cafe by 6:00 pm.",
+    "memory": "IR",
+    "description":[
         "Isabella Rodriguez has known Arthur Burton for a few years, as he runs a bar right next door to her.",
     "Isabella Rodriguez is friends with Arthur Burton.",
     "Isabella Rodriguez is familiar with Carmen Ortiz as a customer at Hobbs Cafe.",
@@ -34,5 +34,9 @@
     "Isabella Rodriguez is a frequent customer at Hobbs Cafe and is lucky to have Maria Lopez as a loyal friend.",
     "Isabella Rodriguez and Maria Lopez have been good friends for about a year, since Maria Lopez visited Hobbs Cafe.",
     "Isabella Rodriguez is excited to be planning a Valentine's Day party at Hobbs Cafe on February 14th from 5pm and is eager to invite everyone to attend the party."
-    ]
+    ],
+    "incoming_observation":
+        [
+            "The TV is on. It plays the educational programs, which tells the history of England."
+        ]
 }
