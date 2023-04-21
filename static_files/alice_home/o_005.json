@@ -1,0 +1,22 @@
+{
+    "traits": "brandnew",
+    "name": "Television",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "location": {"eid": "e_004",
+        "pos": [25, 5]
+    },
+    "max_velocity": "0/s",
+    "moving": "false",
+    "status": "broadcasting educational program",
+    "description":
+        [
+            "television has 10 channel."
+        ],
+    "incoming_observation":
+        [
+            "The TV is on. It plays the educational programs, which tells the history of England."
+        ]
+}

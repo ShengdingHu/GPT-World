@@ -77,54 +77,54 @@ class GPTAgent:
         # 记录当前对话历史
         # 记录当前对话历史，不止包括别人说的，也包括自己说的
         # 直接根据len判断自己是否在对话中
-        self.incoming_interactions = state_dict.get('IncomingInteractions',[])
+        self.incoming_interactions = state_dict.get('incoming_interactions',[])
 
         # 记录下一轮需要处理的新observation
         # self.observation进行过去重，incoming_observation没有去重
-        self.incoming_observation = state_dict.get('IncomingObservation',[])
+        self.incoming_observation = state_dict.get('incoming_observation',[])
 
         # Parse initial location from state dict. format: {"eid": "e_004", "pos": [1,1]}
-        self.location = state_dict.get('Location',None)
+        self.location = state_dict.get('location',None)
 
         # self summary of current state.
-        self.summary = state_dict.get( 'Summary', None)
+        self.summary = state_dict.get( 'summary', None)
 
         # Broad Stroke Plan
-        self.WholeDayPlan = state_dict.get('WholeDayPlan',None)
+        self.whole_day_plan = state_dict.get('whole_day_plan',None)
 
         # fine-grained plan list for next task searching
         # format: [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
-        self.plan = state_dict.get('Plan',[])
+        self.plan = state_dict.get('plan',[])
 
         # current status information
-        self.status=state_dict.get('Status','')
-        self.status_duration=state_dict.get('StatusDuration',0)
-        self.status_start_time=state_dict.get('StatusStartTime',None)
+        self.status=state_dict.get('status','')
+        self.status_duration=state_dict.get('status_duration',0)
+        self.status_start_time=state_dict.get('status_start_time',None)
 
         # Long term memory is serialized/deserialized by orjson so only file name is provided here.
-        self.LongTermMemory=ReflectionMemory(state_dict, os.path.dirname(agent_file))
+        self.long_term_memory=ReflectionMemory(state_dict, os.path.dirname(agent_file))
 
         # Short term memory is a queue of observations recording recent observations.
-        self.ShortTermMemory=state_dict.get('ShortTermMemory',[])
+        self.short_term_memory=state_dict.get('short_term_memory',[])
 
         # basic fingerprint
-        self.name = state_dict.get("Name", None)
+        self.name = state_dict.get("name", None)
 
-        self.age= state_dict.get("Age",None)
+        self.age= state_dict.get("age",None)
 
-        self.traits= state_dict.get("Traits",None)
+        self.traits= state_dict.get("traits",None)
 
-        self.description=state_dict.get("Description",[])
+        self.description=state_dict.get("description",[])
 
         # location movements
         self.movement = state_dict.get("movement", "static")
 
-        self.max_velocity = state_dict.get("VelocityUpperBound", 1)
+        self.max_velocity = state_dict.get("max_velocity", 1)
 
         # Type of the agent, either 'objective' or 'subjective'
         self.type = state_dict.get("type", None)
 
-        self.status = state_dict.get('Status', '')
+        self.status = state_dict.get('status', '')
 
 
         # The thinking kernel
@@ -203,16 +203,16 @@ class GPTAgent:
         while len(self.incoming_observation)>0 and len(self.observation)<limit:
             ob=self.incoming_observation[0]
             self.incoming_observation.pop(0)
-            if ob not in self.ShortTermMemory:
+            if ob not in self.short_term_memory:
                 self.observation.append(ob)
-                self.ShortTermMemory=[s for s in self.ShortTermMemory if not s.split('is')[0] == ob.split('is')[0]]
-                self.ShortTermMemory.append(ob)
+                self.short_term_memory=[s for s in self.short_term_memory if not s.split('is')[0] == ob.split('is')[0]]
+                self.short_term_memory.append(ob)
         return self.observation
 
     def reflect(self,time:datetime):
         """ While the time is right, do reflection for memory
         """
-        return self.LongTermMemory.maybe_reflect(time)
+        return self.long_term_memory.maybe_reflect(time)
 
     def generate_summary(self,time:dt):
         """
@@ -226,9 +226,9 @@ class GPTAgent:
         # many different regions. Major in Electrical Engineering, but join in the Natural Language Processing Research Team
         # , very busy at his schoolwork.
         # """
-        qResList1 = self.LongTermMemory.query(f"{self.name}'s core characteristics",10,time)
-        qResList2 = self.LongTermMemory.query(f"{self.name}'s current daily plan",10,time)
-        qResList3 = self.LongTermMemory.query(f"{self.name}'s feeling about his recent progress in life",10,time)
+        qResList1 = self.long_term_memory.query(f"{self.name}'s core characteristics",10,time)
+        qResList2 = self.long_term_memory.query(f"{self.name}'s current daily plan",10,time)
+        qResList3 = self.long_term_memory.query(f"{self.name}'s feeling about his recent progress in life",10,time)
 
         q1,q2,q3=map(lambda k: '\n'.join(k),(qResList1,qResList2,qResList3))
 
@@ -465,12 +465,12 @@ Innate traits: {self.traits}"""
         return self.incoming_interactions[-1] if len(self.incoming_interactions)>0 else []
 
     def minimal_init(self,current_time: dt):
-        """If the agent has no LongTermMemory initially, we add the description about 
-        the agent as the LongTermMemory.
+        """If the agent has no long_term_memory initially, we add the description about 
+        the agent as the long_term_memory.
         """
-        if len(self.LongTermMemory.data.texts)==0:
+        if len(self.long_term_memory.data.texts)==0:
             for des in self.description:
-                self.LongTermMemory.add(des,current_time,['description'])
+                self.long_term_memory.add(des,current_time,['description'])
         if self.summary is None:
             self.generate_summary(current_time)
 
@@ -559,7 +559,7 @@ Summarize the dialog above.
             # 一点小修改：加上对话的最后几轮作为query
 
             sContext = f"Summary of relevant context from {self.name}'s memory: " + \
-                    ' '.join(sum([self.LongTermMemory.query(q,2,current_time) for q in queries],[]))
+                    ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in queries],[]))
 
 #         if len(self.incoming_interactions)>0:
 #             # is currently in an conversation
@@ -718,7 +718,7 @@ Output format:
             # 一点小修改：加上对话的最后几轮作为query
 
             sContext = f"Summary of relevant context from {self.name}'s memory: " + \
-                    ' '.join(sum([self.LongTermMemory.query(q,2,current_time) for q in queries],[]))
+                    ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in queries],[]))
 
         if len(self.incoming_interactions)>0:
             # is currently in an conversation
