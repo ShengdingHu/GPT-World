@@ -79,7 +79,7 @@ class GPTAgent:
         self.plan = state_dict.get('Plan',[])
 
         # current status information
-        self.status=state_dict.get('Status',[])
+        self.status=state_dict.get('Status','')
         self.status_duration=state_dict.get('StatusDuration',0)
         self.status_start_time=state_dict.get('StatusStartTime',None)
 
@@ -87,7 +87,7 @@ class GPTAgent:
         self.LongTermMemory=ReflectionMemory(state_dict,file_dir)
 
         # Short term memory is a queue of observations recording recent observations.
-        self.ShortTermMemory=state_dict.get('shortTermMemory',[])
+        self.ShortTermMemory=state_dict.get('ShortTermMemory',[])
 
         # basic fingerprint
         self.name = state_dict.get("Name", None)
@@ -175,7 +175,8 @@ class GPTAgent:
         """
         if limit is None:
             import math; limit=math.inf
-        self.incoming_observation.extend(self.environment.get_neighbor_environment(self.location))
+        if self.environment is not None:
+            self.incoming_observation.extend(self.environment.get_neighbor_environment(self.location))
         self.observation = []
         while len(self.incoming_observation)>0 and len(self.observation)<limit:
             ob=self.incoming_observation[0]
@@ -389,7 +390,7 @@ Innate traits: {self.traits}"""
         给出下一个plan用于立刻更新状态。如果plan用完了，立刻生成一些fine-grained plan
         """
         # default result. TODO: recursive planning from time.
-        return {'Status': 'idle', 'Duration': 3600}
+        return {'status': 'idle', 'duration': 3600}
 
     def reprioritize(self, **kwargs):
         """ Reprioritize task list
@@ -455,11 +456,11 @@ Innate traits: {self.traits}"""
 
         self.status_start_time = current_time
         sDial='\n'.join([interaction['sender']+':' +interaction['content'] for interaction in self.incoming_interactions])
-        sPrompt="""
-        Summarize the dialog above.
+        sPrompt="""\
+Summarize the dialog above.
         """
         sSummary=request_GPT.request(sDial+sPrompt)
-        self.status = 'conserving about '+sSummary
+        self.status = 'finishing conserving about '+sSummary
         self.status_duration = 10
         self.incoming_interactions.clear()
 
@@ -471,7 +472,7 @@ Innate traits: {self.traits}"""
         # 一类特殊状态，observation of interaction在对话结束给出摘要时才可以确定，此前不能被环境获取。reverie如何在对话开始时生成一个完整对话暂时没看明白
         # short time observation 应该屏蔽掉同主体同状态防止冗余
 
-        logger.debug("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
+        # logger.debug("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
         
         # # 测试异步
         # if self.state_dict['name'].startswith("A"):
@@ -502,11 +503,13 @@ Innate traits: {self.traits}"""
         #    多个observation一起处理，处理过就扔进短期记忆。
         #    短期记忆是已经处理过的observation。
         #    这里假定环境的observation是完整的，查重任务交给short time memory
-        #    逻辑是：interaction如果自己在interaction状态，则
+        #    当前设计思路 interaction不做特殊处理，防止阻塞自身和他人动作，同时支持多人讨论等场景。
         self.observe()
 
         might_react=len(self.incoming_interactions)>0 or len(self.observation)>0
         if might_react:
+            self.reflect(current_time)
+
             sSummary = self.summary
             sTime = current_time.strftime("It is %B %d, %Y, %I:%M %p.")
             sStatus= f"{self.name}'s status: {self.status}."
@@ -522,41 +525,77 @@ Innate traits: {self.traits}"""
             sContext = f"Summary of relevant context from {self.name}'s memory: " + \
                     ' '.join(sum([self.LongTermMemory.query(q,2,current_time) for q in queries],[]))
 
-        if len(self.incoming_interactions)>0:
-            # is currently in an conversation
+#         if len(self.incoming_interactions)>0:
+#             # is currently in an conversation
+#
+#             # firstly, check whether the agent is becoming the target of interaction. If yes, change its status accordintly.
+#             if (self.incoming_interactions)==1:
+#                 self.status = 'conversing with '+self.incoming_interactions[0]['sender']
+#                 self.status_start_time = current_time
+#                 import math; self.status_duration=math.inf
+#
+#             # next, check if the other agent didn't response. If so, end the interaction.
+#             if self.incoming_interactions[-1]['sender']==self.name:
+#                 self.end_interaction(current_time)
+#
+#             else:
+#                 sDialog ='Here is the dialogue history:'+'\n'.join([interaction['sender']+':' +interaction['content'] for interaction in self.incoming_interactions])
+#                 sPrompt =f"""\
+# Would {self.name} respond or stop the conversation? If yes, directly output the response. Example output:
+# Yes. <response content>
+# No.
+#                 """
+#                 result=request_GPT.request(''.join([sSummary,sTime,sStatus,sObservation,sContext,sDialog,sPrompt]))
+#                 if result.startwith('Yes'):
+#                     content= '.'.join(result.split('.')[1:]).strip().split('\n')[0]
+#                     new_interaction={'sender':self.name,'content':content}
+#                     self.incoming_interactions.append(new_interaction)
+#                 else:
+#                     if not result.startwith('No'):
+#                         logging.warning(logging.WARNING,'abnormal reaction response: '+result)
+#                     self.end_interaction(current_time)
 
-            # firstly, check whether the agent is becoming the target of interaction. If yes, change its status accordintly.
-            if (self.incoming_interactions)==1:
-                self.status = 'conversing with '+self.incoming_interactions[0]['sender']
-                self.status_start_time = current_time
-                import math; self.status_duration=math.inf
-
-            # next, check if the other agent didn't response. If so, end the interaction.
-            if self.incoming_interactions[-1]['sender']==self.name:
-                self.end_interaction(current_time)
-
-            else:
-                sDialog ='Here is the dialogue history:'+'\n'.join([interaction['sender']+':' +interaction['content'] for interaction in self.incoming_interactions])
-                sPrompt =f"""\
-                Would {self.name} respond or stop the conversation? If yes, directly output the response. Example output:
-                Yes. <response content>
-                No. 
-                """
-                result=request_GPT.request(''.join([sSummary,sTime,sStatus,sObservation,sContext,sDialog,sPrompt]))
-                if result.startwith('Yes'):
-                    content= '.'.join(result.split('.')[1:]).strip().split('\n')[0]
-                    new_interaction={'sender':self.name,'content':content}
-                    self.incoming_interactions.append(new_interaction)
+        if len(self.observation)>0:
+            #
+            sPrompt = f"""
+Should {self.name} react to the observation? Say yes or no. \
+If yes, tell me about the reaction, omitting the subjective. \
+Is this reaction about saying something?\
+If yes, tell me the content being said in double quotes. \
+Does this reaction has a specific target? \
+If yes, tell me the name or how would {self.name} call it. \
+Also tell me if this reaction terminates {self.name}'s status. \
+Output format:
+<Yes/No>|<reaction>|<Yes/No>|<content being said>|<Yes/No>|<target name>|<Yes/No>
+            """
+            result=request_GPT.request(''.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt]))
+            pieces=result.strip().split('|')
+            if pieces[0]=='Yes':
+                reaction=pieces[1]
+                should_oral=pieces[2]
+                oral=pieces[3]
+                have_target=pieces[4]
+                target=pieces[5]
+                terminate=pieces[6]
+                if should_oral:
+                    reaction_content = reaction+' Also saying: '+oral
                 else:
-                    if not result.startwith('No'):
-                        logging.warning(logging.WARNING,'abnormal reaction response: '+result)
-                    self.end_interaction(current_time)
+                    reaction_content=reaction
+                if not have_target:
+                    target=''
 
-        elif len(self.observation)>0:
-            pass
+                if self.environment is not None:
+                    self.environment.parse_action(self, target, reaction_content)
+                if terminate:
+                    self.status=reaction
+                    self.status_duration=0
+                    self.status_start_time=current_time
+                    # self.plan_in_detail()
 
 
         # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) @TODO jingwei
+
+
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
 
