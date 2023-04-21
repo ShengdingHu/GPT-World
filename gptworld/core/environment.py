@@ -103,9 +103,11 @@ class GPTWorldEnv:
         # self.operational = True
         pass
 
-    def parse_action(self, agent, target, content):
+    def parse_action(self, agent, targets, content=""):
+        # agent -> target  environment -> 还有哪些 target 会被影响到
         # 
         # update each target's incommoning_observations. 
+        # 
 
         pass
 
@@ -269,7 +271,7 @@ class GPTWorldEnv:
 
         return
     
-    def run(self, start_time=[2023, 4, 1, 7, 0, 0]):
+    def run(self, start_time=[2023, 4, 1, 7, 0, 0], debug=False):
         """The main loop 
         """
         realworld_time_delta = 8
@@ -278,7 +280,10 @@ class GPTWorldEnv:
         self.current_time = datetime.datetime(*start_time)
         while True:
             time.sleep(realworld_time_delta)
-            self.step()
+            if debug:
+                self.step_test()
+            else:
+                self.step()
             self.current_time += datetime.timedelta(seconds = env_time_delta)
     
 

@@ -23,6 +23,6 @@ if __name__ == "__main__":
     # env.mount_agent(agent1)
     # env.mount_agent(agent2)
 
-    env.run()
+    env.run(debug=True)
 
 
