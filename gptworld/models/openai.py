@@ -4,7 +4,7 @@ from typing import List
 import os
 import openai
 
-def chat(context, MAX_OUTPUT_TOKEN_LEN=1024) -> str:
+def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.5) -> str:
     if isinstance(context, str):
         context = [{"role": "user", "content": context}]
     url = "http://freegpt.club/gptworld_chat"
@@ -14,7 +14,7 @@ def chat(context, MAX_OUTPUT_TOKEN_LEN=1024) -> str:
         "model": "gpt-3.5-turbo",
         "messages": context,
         "max_tokens": MAX_OUTPUT_TOKEN_LEN,
-        "temperature": 0.5,
+        "temperature": temperature,
     }
 
     jsondata = json.dumps(data)

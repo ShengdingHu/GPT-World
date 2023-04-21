@@ -63,7 +63,8 @@ def get_questions(texts):
         ]
     )
     result = completion.choices[0].message['content']
-    questions = result.split('\n')[:3]
+    questions = [q for q in result.split('\n') if len(q.strip())>0]
+    questions=questions[:3]
     return questions
 
 
