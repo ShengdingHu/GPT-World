@@ -59,6 +59,8 @@ class GPTAgent:
 
         self.incomming_objection = ["XXXX",]
 
+        self.incomming_invoice = []
+
         self.location = [10,10]
 
         self.summary = "XXXX"
@@ -68,13 +70,9 @@ class GPTAgent:
         
 
 
-        
-
-
-
-
-
-
+    def invoice(self, ):
+        # 往 incomming invoice 里
+        pass
 
 
 
@@ -439,7 +437,7 @@ class GPTAgent:
 
         # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
 
-        # 3. 检查当前有没有new_observation (或 incoming的interaction), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
+        # 3. 检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
         #    多个observation一起处理，处理过就扔进短期记忆。
         #    短期记忆是已经处理过的observation。
 

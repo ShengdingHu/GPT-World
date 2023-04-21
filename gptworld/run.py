@@ -20,7 +20,6 @@ if __name__ == "__main__":
     print(environment_text)
 
 
-
     # env.mount_agent(agent1)
     # env.mount_agent(agent2)
 

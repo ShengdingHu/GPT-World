@@ -103,6 +103,12 @@ class GPTWorldEnv:
         # self.operational = True
         pass
 
+    def parse_action(self, agent, target, content):
+        # 
+        # update each target's incommoning_observations. 
+
+        pass
+
 
     @classmethod
     def from_file(cls, file_dir, file_name ="environment.json"):
