@@ -11,6 +11,7 @@ import re
 from sklearn.metrics.pairwise import cosine_similarity
 import logging
 import bisect
+from gptworld.models.openai import get_embedding
 
 EMBED_DIM = 1536
 SAVE_OPTIONS = orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_SERIALIZE_DATACLASS | orjson.OPT_INDENT_2
@@ -31,10 +32,7 @@ the above statements? (example format: insight \
 (because of 1, 5, 3))'''
 
 
-def get_ada_embedding(text):
-    text = text.replace("\n", " ")
-    embedding = openai.Embedding.create(input=[text], model="text-embedding-ada-002")["data"][0]["embedding"]
-    return embedding
+
 
 
 def get_importance(text):
@@ -122,7 +120,7 @@ class ReflectionMemory():
 
     """
 
-    def __init__(self, state_dict,file_dir='./') -> None:
+    def __init__(self, state_dict, file_dir='./') -> None:
         # the least importance threshold for reflection. It seems that setting it to 0 does not induce duplicate reflections
         self.reflection_threshold = state_dict.get( 'reflection_threshold', 0)
         self.memory_id = state_dict.get( 'Memory', 'default_memory')
@@ -172,7 +170,7 @@ class ReflectionMemory():
 
         self.data.texts.insert(insert_point,text)
 
-        embedding = get_ada_embedding(text)
+        embedding = get_embedding(text)
 
         vector = np.array(embedding).astype(np.float32)
         vector = vector[np.newaxis, :]
@@ -239,7 +237,7 @@ class ReflectionMemory():
 
         Returns: List[str]
         """
-        embedding = get_ada_embedding(text)
+        embedding = get_embedding(text)
 
         timediff = np.array([(curtime - a).total_seconds() // 3600 for a in self.data.accessTime])
         recency = np.power(0.99, timediff)

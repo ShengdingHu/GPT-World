@@ -16,7 +16,7 @@
     "StatusStartTime": null,
     "Plan": [],
     "WholeDayPlan": "This is Alice's plan for Thursday April 21st: wake up and complete the morning routine at 7:00 am, have breakfast with her family at 8:00 am, attend school and participate in classes from 9:00 am to 12:00 pm, have lunch at school with her friends at 12:30 pm, return home at 1:00 pm and watch her favorite TV show, practice playing the piano for 30 minutes at 2:00 pm, work on her drawing skills for an hour at 3:00 pm, go out for a 30-minute jog around the neighborhood at 4:00 pm, help her mother prepare dinner at 5:00 pm, have dinner with her family at 6:00 pm, complete her homework and review her lessons for the next day from 7:00 pm to 8:30 pm, read a book for pleasure from 8:30 pm to 9:00 pm, and then get ready for bed at 9:30 pm.",
-    "Memory": "IR",
+    "Memory": "Alice_LTM",
     "Description":
         [
             "Alice is a 10-year-old student at Town Elementary School.",
@@ -29,5 +29,9 @@
             "Alice is a fan of science fiction books and loves reading about space exploration and aliens.",
             "Alice is learning to play the piano and practices every day after school.",
             "Alice's favorite food is pizza, and she loves trying out different toppings and combinations."
+        ],
+    "IncomingObservation":
+        [
+            "The TV is on. It plays the educational programs, which tells the history of England."
         ]
 }

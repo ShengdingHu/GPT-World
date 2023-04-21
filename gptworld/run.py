@@ -3,12 +3,20 @@
 # Import necessary modules
 
 if __name__ == "__main__":
+    import argparse
     from gptworld.core.environment import GPTWorldEnv
     from gptworld.core.agent import GPTAgent
+    
+    # Create an argument parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--no_web', action='store_true', help='Starts a new subprocess to start a webpage')
+    args = parser.parse_args()
 
     # Create an instance of the environment
     env = GPTWorldEnv.from_file("static_files/alice_home/")
-    env.initialize() # this start a new subprocess to start a webpage.
+
+    if not args.no_web:
+        env.initialize() # this start a new subprocess to start a webpage.
 
 
     # Create an instance of the agent

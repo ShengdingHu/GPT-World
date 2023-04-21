@@ -5,7 +5,7 @@ import os
 import json
 
 openai.api_key = "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"
-
+openai.api_key_path=None
 
 ## if you want to run this test, run 'query_reflection.py' first
 

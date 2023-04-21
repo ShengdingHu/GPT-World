@@ -107,7 +107,7 @@
     "objects": { 
         "o_001": {
             "id": "o_001",
-            "name": "apple tree",
+            "ame": "apple tree",
             "eid": "e_002",
             "pos": [10, 130],
             "engine": "object"

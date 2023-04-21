@@ -120,7 +120,7 @@ class GPTWorldEnv:
         return cls(**{"env_json": data, "file_dir": file_dir})
         
       
-    def initialize(self, ):
+    def initialize_web(self, ):
         import multiprocessing
 
         
@@ -130,11 +130,10 @@ class GPTWorldEnv:
         logger.info("-"*20 + "\nView the demo at localhost:5173\n" + "-"*20)
 
 
-    def get_neighbor_environment(self, location: Tuple[int] = None, agent_id :str = None, critical_distance = 50):
+    def get_neighbor_environment(self, agent_id :str = None, critical_distance = 50):
         '''Provide the local environment of the location.
 
         Args:
-            location (:obj:`Tuple[int]`): The center of the view point.
             agent_id (:obj:`str`): The agent id, to filter the agent itself
             critical_distance (:obj:`int`): A distance that counts as the neighborhood.
         
@@ -142,11 +141,10 @@ class GPTWorldEnv:
             :text: the observation text. E.g., Now you are at fields. There are tractor, Bob, around you.'
         '''
 
-        if location is None and agent_id is not None:
-            location = self.env_json['objects'][agent_id]['pos']
-            env_id = self.env_json['objects'][agent_id]['eid']
+ 
+        location = self.env_json['objects'][agent_id]['pos']
+        env_id = self.env_json['objects'][agent_id]['eid']
 
-        at_area = None
         # for areaid, area in self.env_json['areas'].items():
         #     pos = area['pos']
         #     if pos[0][0] <= location[0] <= pos[1][0] and pos[0][1] <= location[1] <= pos[1][1] and env_id == :
@@ -161,15 +159,26 @@ class GPTWorldEnv:
                 if distance <= critical_distance and env_id == obj['eid']:
                     objects_within_distance.append(obj_id)
         
+        observations = []
+        template = "{} is {}."
+        for obj_id in objects_within_distance:
+            if obj_id.startswith('a'):
+                agent = self.agents[obj_id]
+                filled = template.format(agent.name, agent.status)
+            elif obj_id.startswith('o'):
+                agent = self.objects[obj_id]
+                filled = template.format(agent.name, agent.status)
+            observations.append(filled)
 
-        # Generate the observation
-        observation = {
-            "agent_location": at_area,
-            "objects_within_distance": objects_within_distance
-        }
-        observation_text = self.get_observation_text(observation)
 
-        return observation_text
+        # # Generate the observation
+        # observation = {
+        #     "agent_location": at_area,
+        #     "objects_within_distance": objects_within_distance
+        # }
+        # observation_text = self.get_observation_text(observation)
+
+        return observations
     
     def get_observation_text(self, observation):
         prompt_template = "Now you are at {}. There are {} around you."
@@ -204,9 +213,9 @@ class GPTWorldEnv:
         # create_agent
         for obj_id, obj in self.env_json['objects'].items():
             if obj_id.startswith('a'):
-                self.agents[obj_id] = GPTAgent.from_file(self.file_dir, '{}.json'.format(obj_id))
+                self.agents[obj_id] = GPTAgent(obj, os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
             elif obj['id'].startswith('o'):
-                self.objects[obj_id] = GPTAgent.from_file(self.file_dir, '{}.json'.format(obj_id))
+                self.objects[obj_id] = GPTAgent(obj, os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
 
 
     def save(self, ):
@@ -238,7 +247,7 @@ class GPTWorldEnv:
             receiver_agent.incoming_interactions.append({"sender": sender, "content": content})
         return
 
-    def step(self, **kwargs):
+    def step(self, debug=False):
         """ For each time frame, call step method for agents
         """
 
@@ -251,12 +260,16 @@ class GPTWorldEnv:
         for agent_id in self.agents:
             agent = self.agents[agent_id]
             # run agent as thread
-            thread = threading.Thread(target=agent.step, args=(self.current_time,))
-            thread_pool.append(thread)
-            thread.start() 
+            if debug:
+                agent.step_test(self.current_time)
+            else:
+                thread = threading.Thread(target=agent.step, args=(self.current_time,))
+                thread_pool.append(thread)
+                thread.start() 
 
-        for thread in thread_pool:
-            thread.join()
+        if not debug:
+            for thread in thread_pool:
+                thread.join()
 
         
         
@@ -280,10 +293,7 @@ class GPTWorldEnv:
         self.current_time = datetime.datetime(*start_time)
         while True:
             time.sleep(realworld_time_delta)
-            if debug:
-                self.step_test()
-            else:
-                self.step()
+            self.step(debug=debug)
             self.current_time += datetime.timedelta(seconds = env_time_delta)
     
 

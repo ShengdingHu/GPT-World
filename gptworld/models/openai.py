@@ -1,7 +1,8 @@
 import json
 import requests
 from typing import List
-
+import os
+import openai
 
 def chat(context, MAX_OUTPUT_TOKEN_LEN=1024) -> str:
     if isinstance(context, str):
@@ -26,29 +27,32 @@ def chat(context, MAX_OUTPUT_TOKEN_LEN=1024) -> str:
         return ""
 
 
-def embedding(text: str) -> List[float]:
-    url = "http://freegpt.club/gptworld_embedding"
-    headers={"Content-Type":"application/json"}
-    session = requests.Session()
-    data = {
-        "model": "text-embedding-ada-002",
-        "input": text
-    }
+def get_embedding(text: str) -> List[float]:
+    if os.environ['OPENAI_METHOD'] == 'pool':  # TODO, remove this in public version.
+        url = "http://freegpt.club/gptworld_embedding"
+        headers={"Content-Type":"application/json"}
+        session = requests.Session()
+        data = {
+            "model": "text-embedding-ada-002",
+            "input": text
+        }
 
-    jsondata = json.dumps(data)
-    res = session.post(url = url, data = jsondata, headers = headers)
+        jsondata = json.dumps(data)
+        res = session.post(url = url, data = jsondata, headers = headers)
 
-    # print(res)
+        # print(res)
+        response_dict = json.loads(res.text.strip())
+        try:
+            return response_dict['data'][0]['embedding']
+        except:
+            return []
+    elif os.environ['OPENAI_METHOD'] == "api_key":
+        text = text.replace("\n", " ")
+        embedding = openai.Embedding.create(input=[text], model="text-embedding-ada-002")["data"][0]["embedding"]
+        return embedding
 
-    response_dict = json.loads(res.text.strip())
-    # print(response_dict)
-
-    try:
-        return response_dict['data'][0]['embedding']
-    except:
-        return []
 
 
 if __name__ == "__main__":
-    print(embedding("hello world"))
+    print(get_embedding("hello world"))
     print(chat([{"role": "user", "content": "hello!"}]))

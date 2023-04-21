@@ -9,9 +9,10 @@ from datetime import datetime as dt
 # from gptworld.core.environment import GPTWorldEnv
 from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
 from gptworld.life_utils.agent_tool import as_tool, Tool
-from gptworld.utils import request_GPT
+# from gptworld.utils import request_GPT
 from gptworld.utils.logging import get_logger
 import os
+from gptworld.models.openai import chat
 
 
 logger = get_logger(__file__)
@@ -39,8 +40,9 @@ class GPTAgent:
     """
 
     def __init__(self,
-                 state_dict: Dict,
-                 file_dir
+                 state_dict: dict,
+                 agent_file,
+                 environment,
                  # llm: callable,
                  # tools: List[Tool],
                  # prompt_template: str
@@ -52,10 +54,12 @@ class GPTAgent:
         prompt_template: str -> a template for prompt
 
         """
-
-        self.file_dir = file_dir
-
+        self.agent_file = agent_file
+        self.id = os.path.splitext(os.path.basename(self.agent_file))[0]
+        new_state_dict = self.load_from_file(agent_file)
+        state_dict.update(new_state_dict)
         self.state_dict = state_dict
+        self.environment = environment
 
         self.incoming_interactions = [{"sender": "A", "message": "XXX"}]
 
@@ -71,9 +75,12 @@ class GPTAgent:
 
         
         # 记录当前对话历史
+        # 记录当前对话历史，不止包括别人说的，也包括自己说的
+        # 直接根据len判断自己是否在对话中
         self.incoming_interactions = state_dict.get('IncomingInteractions',[])
 
         # 记录下一轮需要处理的新observation
+        # self.observation进行过去重，incoming_observation没有去重
         self.incoming_observation = state_dict.get('IncomingObservation',[])
 
         # Parse initial location from state dict. format: {"eid": "e_004", "pos": [1,1]}
@@ -90,18 +97,21 @@ class GPTAgent:
         self.plan = state_dict.get('Plan',[])
 
         # Long term memory is serialized/deserialized by orjson so only file name is provided here.
-        self.LongTermMemory=ReflectionMemory(state_dict,file_dir)
+        self.LongTermMemory=ReflectionMemory(state_dict, os.path.dirname(agent_file))
 
         # Short term memory is a queue of observations recording recent observations.
-        self.ShortTermMemory=state_dict.get('shortTermMemory',[])
+        self.ShortTermMemory= state_dict.get('shortTermMemory',[])
 
         # basic fingerprint
         self.name = state_dict.get("Name", None)
 
-        self.age=state_dict.get("Age",None)
+        self.age= state_dict.get("Age",None)
 
-        self.traits=state_dict.get("Traits",None)
+        self.traits= state_dict.get("Traits",None)
 
+        self.description=state_dict.get("Description",[])
+
+        # location movements
         self.movement = state_dict.get("movement", "static")
 
         self.max_velocity = state_dict.get("VelocityUpperBound", 1)
@@ -109,9 +119,8 @@ class GPTAgent:
         # Type of the agent, either 'objective' or 'subjective'
         self.type = state_dict.get("type", None)
 
-        # Initialized at mount time
-        self.environment = None
-        self.environment_id = None
+        self.status = state_dict.get('Status', '')
+
 
         # The thinking kernel
         # self.llm = llm
@@ -158,28 +167,39 @@ class GPTAgent:
         # 往 incomming invoice 里
         pass
 
-    @classmethod
-    def from_file(cls, file_dir, file_name):
-        logger.debug(file_dir)
-        agent_path = os.path.join(file_dir, file_name)
-        if os.path.exists(agent_path):
-            with open(os.path.join(file_dir, file_name), 'r') as f:
+
+    def load_from_file(self, agent_file):
+        if os.path.exists(agent_file):
+            with open(agent_file, 'r') as f:
                 data = json.load(f)
-            return cls(**{"state_dict": data, "file_dir": file_dir})
+            state_dict = data
+            return state_dict
         else:
-            logger.warning(f"No config of {agent_path} found!")
-            return None
+            logger.warning(f"No config of {agent_file} found!")
+            return {}
 
     def available_actions(self):
         """ return available actions I can handle
         """
         return self.tool_names
 
-    def observe(self):
+    def observe(self,limit=None):
         """ Update observation of around environment
+        Should return string, or subject predicate object/predicative
+        observation has a upper limit,
         """
-        self.observation = self.environment.get_neighbor_environment(self.location)
-        return
+        if limit is None:
+            import math; limit=math.inf
+        self.incoming_observation.extend(self.environment.get_neighbor_environment(self.id))
+        self.observation = []
+        while len(self.incoming_observation)>0 and len(self.observation)<limit:
+            ob=self.incoming_observation[0]
+            self.incoming_observation.pop(0)
+            if ob not in self.ShortTermMemory:
+                self.observation.append(ob)
+                self.ShortTermMemory=[s for s in self.ShortTermMemory if not s.split('is')[0] == ob.split('is')[0]]
+                self.ShortTermMemory.append(ob)
+        return self.observation
 
     def reflect(self,time:datetime):
         """ While the time is right, do reflection for memory
@@ -208,7 +228,7 @@ class GPTAgent:
         How would one describe {self.name}'s core characteristics given the following statements?
         {q1}
         """
-        result1 = request_GPT.request(query1)
+        result1 = chat(query1)
 
         # 'daily occupation' is ambiguous and performs bad in searching daily requirements and summarizing schedule.
         query2 = f"""
@@ -216,21 +236,22 @@ class GPTAgent:
         {q2}
         """
 
-        result2 = request_GPT.request(query2)
+        result2 = chat(query2)
 
         query3 = f"""
         What might be {self.name}'s feeling about his recent progress in life given the following statements?
         {q3}
         """
 
-        result3 = request_GPT.request(query3)
+        result3 = chat(query3)
 
         BasicInfo=f"""\
 Name: {self.name} (age: {self.age})
 Innate traits: {self.traits}"""
 
         # Notice the order of these results in the example of GA paper/
-        return BasicInfo+result1 + result3 + result2
+        self.summary=BasicInfo+result1 + result3 + result2
+        return self.summary
 
     def plan_in_broad_strokes(agent, date: datetime.date) -> List[dict]:
         """
@@ -378,6 +399,13 @@ Innate traits: {self.traits}"""
         else:
             raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
 
+    def get_next_plan(self,current_time:dt):
+        """
+        给出下一个plan用于立刻更新状态。如果plan用完了，立刻生成一些fine-grained plan
+        """
+        # default result. TODO: recursive planning from time.
+        return {'Status': 'idle', 'Duration': 3600}
+
     def reprioritize(self, **kwargs):
         """ Reprioritize task list
         """
@@ -421,14 +449,39 @@ Innate traits: {self.traits}"""
         :param sender: the sender of action
         """
         self.incoming_interactions.append({"sender": sender, "content": content})
-        return
+
 
     def get_out_interaction(self) -> List:
         """ Get my outgoing interactions queue
         """
-        return self.outgoing_interactions
+        return self.incoming_interactions[-1] if len(self.incoming_interactions)>0 else []
 
-    def step(self, current_time):
+    def minimal_init(self,current_time: dt):
+        """If the agent has no LongTermMemory initially, we add the description about 
+        the agent as the LongTermMemory.
+        """
+        if len(self.LongTermMemory.data.texts)==0:
+            for des in self.description:
+                self.LongTermMemory.add(des,current_time,['description'])
+        if self.summary is None:
+            self.generate_summary(current_time)
+
+    def end_interaction(self,current_time:dt):
+        """
+        结束当前对话，为自己生成对话摘要并放在自己的状态中。依靠环境将此对话摘要存入自己记忆
+        """
+
+        self.status_start_time = current_time
+        sDial='\n'.join([interaction['sender']+':' +interaction['content'] for interaction in self.incoming_interactions])
+        sPrompt="""
+        Summarize the dialog above.
+        """
+        sSummary=request_GPT.request(sDial+sPrompt)
+        self.status = 'conserving about '+sSummary
+        self.status_duration = 10
+        self.incoming_interactions.clear()
+
+    def step(self, current_time:dt):
         """ Call this method at each time frame
         """
 
@@ -439,6 +492,93 @@ Innate traits: {self.traits}"""
         #     time.sleep(20)
         # logger.debug("Agent {} is done".format(self.state_dict['name']))
 
+        # 为了让agent正常工作，memory, plan, summary不能是空的。因此做一次类似于每日开始时应该进行的初始化
+        self.minimal_init(current_time)
+
+        if self.state_dict['name'].startswith("A"):
+            from IPython import embed; embed()
+
+        # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
+
+        # 1. 如果当前正在向openai请求，调过这一步
+
+        # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
+        if self.status_start_time is None: # fixing empty start time
+            self.status_start_time = current_time
+        if self.status_start_time+datetime.timedelta(self.status_duration)>=current_time:
+            # 根据reverie，不产生新观察
+            # 对话过程不会随便转状态，因此把对话duration直接设置无限
+            next_plan=self.get_next_plan(current_time)
+            self.status_start_time=current_time
+            self.status=next_plan['status']
+            self.status_duration=next_plan['duration']
+
+        # 3. 检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
+        #    多个observation一起处理，处理过就扔进短期记忆。
+        #    短期记忆是已经处理过的observation。
+
+        # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) @TODO jingwei
+
+        # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
+
+
+        # # 测试异步
+        # if self.state_dict['name'].startswith("A"):
+        #     time.sleep(20)
+        # logger.debug("Agent {} is done".format(self.state_dict['name']))
+        #    这里假定环境的observation是完整的，查重任务交给short time memory
+        #    逻辑是：interaction如果自己在interaction状态，则
+        self.observe()
+
+        might_react=len(self.incoming_interactions)>0 or len(self.observation)>0
+        if might_react:
+            sSummary = self.summary
+            sTime = current_time.strftime("It is %B %d, %Y, %I:%M %p.")
+            sStatus= f"{self.name}'s status: {self.status}."
+            sObservation = "Observation: " + '\n'.join(self.observation)
+            queries=self.observation
+            if len(self.incoming_interactions)>0:
+                for i,interaction in reversed(self.incoming_interactions):
+                    if i>=2:
+                        break
+                    queries.append(interaction['sender']+':' +interaction['content'])
+            # 一点小修改：加上对话的最后几轮作为query
+
+            sContext = f"Summary of relevant context from {self.name}'s memory: " + \
+                    ' '.join(sum([self.LongTermMemory.query(q,2,current_time) for q in queries],[]))
+
+        if len(self.incoming_interactions)>0:
+            # is currently in an conversation
+
+            # firstly, check whether the agent is becoming the target of interaction. If yes, change its status accordintly.
+            if (self.incoming_interactions)==1:
+                self.status = 'conversing with '+self.incoming_interactions[0]['sender']
+                self.status_start_time = current_time
+                import math; self.status_duration=math.inf
+
+            # next, check if the other agent didn't response. If so, end the interaction.
+            if self.incoming_interactions[-1]['sender']==self.name:
+                self.end_interaction(current_time)
+
+            else:
+                sDialog ='Here is the dialogue history:'+'\n'.join([interaction['sender']+':' +interaction['content'] for interaction in self.incoming_interactions])
+                sPrompt =f"""\
+                Would {self.name} respond or stop the conversation? If yes, directly output the response. Example output:
+                Yes. <response content>
+                No. 
+                """
+                result=request_GPT.request(''.join([sSummary,sTime,sStatus,sObservation,sContext,sDialog,sPrompt]))
+                if result.startwith('Yes'):
+                    content= '.'.join(result.split('.')[1:]).strip().split('\n')[0]
+                    new_interaction={'sender':self.name,'content':content}
+                    self.incoming_interactions.append(new_interaction)
+                else:
+                    if not result.startwith('No'):
+                        logging.warning(logging.WARNING,'abnormal reaction response: '+result)
+                    self.end_interaction(current_time)
+
+        elif len(self.observation)>0:
+            pass
 
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
 
@@ -456,18 +596,114 @@ Innate traits: {self.traits}"""
 
 
         return
+
+
     
-    def step_test(self, current_time):
+    def step_test(self, current_time:dt):
         """ Call this method at each time frame
         """
 
-        logger.debug("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
+        
 
+        logger.debug("Agent {}, Current Time: {}".format(self.name, str(current_time)) )
+        
         # # 测试异步
         # if self.state_dict['name'].startswith("A"):
         #     time.sleep(20)
         # logger.debug("Agent {} is done".format(self.state_dict['name']))
 
+        # 为了让agent正常工作，memory, plan, summary不能是空的。因此做一次类
+        # 似于每日开始时应该进行的初始化
+        from IPython import embed; embed(header="601")
+        
+        self.minimal_init(current_time)
+
+        if self.state_dict['name'].startswith("A"):
+            from IPython import embed; embed()
+
+        # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
+
+        # 1. 如果当前正在向openai请求，调过这一步
+
+        # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
+        if self.status_start_time is None: # fixing empty start time
+            self.status_start_time = current_time
+            self.status_duration = 1 
+
+        if self.status_start_time+datetime.timedelta(self.status_duration)>=current_time:
+            # 根据reverie，不产生新观察
+            # 对话过程不会随便转状态，因此把对话duration直接设置无限
+            next_plan=self.get_next_plan(current_time)
+            self.status_start_time=current_time
+            self.status=next_plan['status']
+            self.status_duration=next_plan['duration']
+
+        # 3. 检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
+        #    多个observation一起处理，处理过就扔进短期记忆。
+        #    短期记忆是已经处理过的observation。
+
+        # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) @TODO jingwei
+
+        # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
+
+
+        # # 测试异步
+        # if self.state_dict['name'].startswith("A"):
+        #     time.sleep(20)
+        # logger.debug("Agent {} is done".format(self.state_dict['name']))
+        #    这里假定环境的observation是完整的，查重任务交给short time memory
+        #    逻辑是：interaction如果自己在interaction状态，则
+        self.observe()
+
+        might_react=len(self.incoming_interactions)>0 or len(self.observation)>0
+        if might_react:
+            sSummary = self.summary
+            sTime = current_time.strftime("It is %B %d, %Y, %I:%M %p.")
+            sStatus= f"{self.name}'s status: {self.status}."
+            sObservation = "Observation: " + '\n'.join(self.observation)
+            queries=self.observation
+            if len(self.incoming_interactions)>0:
+                for i,interaction in reversed(self.incoming_interactions):
+                    if i>=2:
+                        break
+                    queries.append(interaction['sender']+':' +interaction['content'])
+            # 一点小修改：加上对话的最后几轮作为query
+
+            sContext = f"Summary of relevant context from {self.name}'s memory: " + \
+                    ' '.join(sum([self.LongTermMemory.query(q,2,current_time) for q in queries],[]))
+
+        if len(self.incoming_interactions)>0:
+            # is currently in an conversation
+
+            # firstly, check whether the agent is becoming the target of interaction. If yes, change its status accordintly.
+            if (self.incoming_interactions)==1:
+                self.status = 'conversing with '+self.incoming_interactions[0]['sender']
+                self.status_start_time = current_time
+                import math; self.status_duration=math.inf
+
+            # next, check if the other agent didn't response. If so, end the interaction.
+            if self.incoming_interactions[-1]['sender']==self.name:
+                self.end_interaction(current_time)
+
+            else:
+                sDialog ='Here is the dialogue history:'+'\n'.join([interaction['sender']+':' +interaction['content'] for interaction in self.incoming_interactions])
+                sPrompt =f"""\
+                Would {self.name} respond or stop the conversation? If yes, directly output the response. Example output:
+                Yes. <response content>
+                No. 
+                """
+                result=request_GPT.request(''.join([sSummary,sTime,sStatus,sObservation,sContext,sDialog,sPrompt]))
+                if result.startwith('Yes'):
+                    content= '.'.join(result.split('.')[1:]).strip().split('\n')[0]
+                    new_interaction={'sender':self.name,'content':content}
+                    self.incoming_interactions.append(new_interaction)
+                else:
+                    if not result.startwith('No'):
+                        logging.warning(logging.WARNING,'abnormal reaction response: '+result)
+                    self.end_interaction(current_time)
+
+        elif len(self.observation)>0:
+            pass
 
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
 
