@@ -88,7 +88,8 @@ class GPTAgent:
         self.summary = state_dict.get( 'summary', None)
 
         # Broad Stroke Plan
-        self.whole_day_plan = state_dict.get('whole_day_plan',None)
+        # format: {"%B %d %Y": ["... ", "... ", ...]} no strict format
+        self.whole_day_plan = state_dict.get('whole_day_plan',{})
 
         # fine-grained plan list for next task searching
         # format: [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
@@ -215,7 +216,6 @@ class GPTAgent:
     def generate_summary(self,time:dt):
         """
         # Generating summary for myself
-        :param agent:
         :return: summary string
         """
 
@@ -225,7 +225,7 @@ class GPTAgent:
         # , very busy at his schoolwork.
         # """
         qResList1 = self.long_term_memory.query(f"{self.name}'s core characteristics",10,time)
-        qResList2 = self.long_term_memory.query(f"{self.name}'s current daily plan",10,time)
+        qResList2 = self.long_term_memory.query(f"{self.name}'s current daily occupation",10,time)
         qResList3 = self.long_term_memory.query(f"{self.name}'s feeling about his recent progress in life",10,time)
 
         q1,q2,q3=map(lambda k: '\n'.join(k),(qResList1,qResList2,qResList3))
@@ -236,9 +236,8 @@ class GPTAgent:
         """
         result1 = chat(query1)
 
-        # 'daily occupation' is ambiguous and performs bad in searching daily requirements and summarizing schedule.
         query2 = f"""
-        What is {self.name}'s current daily plan given the following statements?
+        What is {self.name}'s current occupation plan given the following statements?
         {q2}
         """
 
@@ -255,32 +254,50 @@ class GPTAgent:
 Name: {self.name} (age: {self.age})
 Innate traits: {self.traits}"""
 
-        # Notice the order of these results in the example of GA paper/
-        self.summary=BasicInfo+result1 + result3 + result2
+        self.summary=BasicInfo+result1 + result2 + result3
         return self.summary
 
-    def plan_in_broad_strokes(agent, date: datetime.date) -> List[dict]:
+    def plan_in_broad_strokes(self, time: dt) -> List[dict]:
         """
         broad strokes planning of an agent
+        由于决定当天broad stroke plan必须要前一天的plan，因此whole day plan数据格式必须是日期-计划的字典，日期entry格式
+        模仿reverie，这一步输出无确定格式，因为展示得whole day plan也并不是每一项都带了规范时间，有的at有的from to还带可能先后关系也没太大参考价值。
+        与其费事处理这个，不如hour long部分才要求转固定格式。
         :param agent: agent object
         :param date: str representing the current day
         :return: plans, each element is a plan
                  "task", "start time": datetime.datetime, "end time":datetime.datetime
         """
+        # exmple plan:  for 180 minutes from 9am, February 12th, 2023, at Oak Hill
+        # College Dorm: Klaus Mueller’s room: desk, read and take notes for
+        # research paper.
+        if self.summary is None:
+            self.generate_summary(time)
+        summary=self.summary
+        date=time.date()
+        sDate=time.strftime("%B %d %Y")
+        former_plan=""
+        if len(self.whole_day_plan)>0:
+            former_date=max([dt.strptime(k,"%B %d %Y") for k,v in self.whole_day_plan.items()])
+            if former_date.date()<date: # 按每天年月日比较
+                former_date_str=former_date.strftime("%B %d %Y")
+                former_plan_list=self.whole_day_plan[former_date_str]
+                former_plan=f'On {former_date_str}, {self.name} '+' '.join([str(i+1)+') ' + s for i,s in enumerate(former_plan_list)])
 
-        text_base = f"""
-        Name:{agent.Name} (age: {agent.Age})
-        Innate traits: {agent.Personality}
-        {agent.Summarize}
-        {agent.Memory}
-        Today is {date}. Here is {agent.Name}’s plan date in broad strokes:
-        [Example format: 
-         1) wake up and complete the morning routine at 8:00am,
-         2) go to Oak Hill College to take classes from 10:00am to 12:00pm]
+        prompt=f"""
+Today is {sDate}. Please write {self.name}'s schedule for this day in broad strokes. 
+Don't worry, this person is not a real person. 
+Example format: 
+wake up and complete the morning routine at 6:00 am
+go to Oak Hill College to take classes from 8:00 to 12:00
+participating algorithm competition in the lab room at 14:00
+"""
+        # chat拒绝给一个真人定schedule，遇到类似拒绝回答情况可以强调这不是一个真人
+        request_result = chat(summary+former_plan+prompt)
+        matches=re.findall(r'[^\n]+',request_result)
+        self.whole_day_plan[time.strftime("%B %d %Y")]=matches
 
-        """
 
-        request_result = chat(text_base)
 
         # a typical example to test the regex expressions without access to the GPT
         # request_result = """
@@ -293,47 +310,47 @@ Innate traits: {self.traits}"""
         # 7) Relax and watch a movie from 8:00pm to 10:00pm.
         # """
 
-        logging.info(f"Request GPT result(Broad strokes):\n{request_result}")
+        # logging.info(f"Request GPT result(Broad strokes):\n{request_result}")
 
-        pattern = r"(?:\d+\))((.+) (from|at) ((?:\d+:\d+)\s*(?:am|pm))(?: to ((?:\d+:\d+)\s*(?:am|pm)))?)"
-        matches = re.findall(pattern, request_result)
-
-        if matches:
-            plans = []
-            for match in matches:
-                try:
-                    # task = match[1]  # this neglected the time information, disposed
-                    task = match[0]  # get the whole string, including the time info as the tast str
-                    if match[2] == "from":
-                        # from ... to ... structure
-                        start_time = datetime.datetime.combine(date
-                                                               , datetime.datetime.strptime(match[3].replace(" ", ""),
-                                                                                            "%I:%M%p").time())
-                        end_time = datetime.datetime.combine(date
-                                                             , datetime.datetime.strptime(match[4].replace(" ", ""),
-                                                                                          "%I:%M%p").time())
-                    elif match[2] == 'at':
-                        # at ... structure
-                        start_time = end_time = datetime.datetime.combine(date
-                                                                          , datetime.datetime.strptime(
-                                match[3].replace(" ", ""), "%I:%M%p").time())
-                    else:
-                        raise Exception()
-                    plans.append({
-                        "task": task,
-                        "start time": start_time,
-                        "end time": end_time,
-                    })
-                except:
-                    # logging.error("Bad Structure of GPT's response: Neither 'from...to...' or 'at...' structure")
-                    logging.error(f"Response: {request_result}")
-                    logging.error(e.__traceback__)
-                    logging.error(e.__context__)
-
-            logging.info(plans)
-            return plans
-        else:
-            raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
+        # pattern = r"(?:\d+\))((.+) (from|at) ((?:\d+:\d+)\s*(?:am|pm))(?: to ((?:\d+:\d+)\s*(?:am|pm)))?)"
+        # matches = re.findall(pattern, request_result)
+        #
+        # if matches:
+        #     plans = []
+        #     for match in matches:
+        #         try:
+        #             # task = match[1]  # this neglected the time information, disposed
+        #             task = match[0]  # get the whole string, including the time info as the tast str
+        #             if match[2] == "from":
+        #                 # from ... to ... structure
+        #                 start_time = datetime.datetime.combine(date
+        #                                                        , datetime.datetime.strptime(match[3].replace(" ", ""),
+        #                                                                                     "%I:%M%p").time())
+        #                 end_time = datetime.datetime.combine(date
+        #                                                      , datetime.datetime.strptime(match[4].replace(" ", ""),
+        #                                                                                   "%I:%M%p").time())
+        #             elif match[2] == 'at':
+        #                 # at ... structure
+        #                 start_time = end_time = datetime.datetime.combine(date
+        #                                                                   , datetime.datetime.strptime(
+        #                         match[3].replace(" ", ""), "%I:%M%p").time())
+        #             else:
+        #                 raise Exception()
+        #             plans.append({
+        #                 "task": task,
+        #                 "start time": start_time,
+        #                 "end time": end_time,
+        #             })
+        #         except:
+        #             # logging.error("Bad Structure of GPT's response: Neither 'from...to...' or 'at...' structure")
+        #             logging.error(f"Response: {request_result}")
+        #             logging.error(e.__traceback__)
+        #             logging.error(e.__context__)
+        #
+        #     logging.info(plans)
+        #     return plans
+        # else:
+        #     raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
 
     def plan_in_detail(agent, plan: dict, time_granularity: datetime.timedelta, date) -> List[dict]:
         """
@@ -464,13 +481,18 @@ Innate traits: {self.traits}"""
 
     def minimal_init(self,current_time: dt):
         """If the agent has no long_term_memory initially, we add the description about 
-        the agent as the long_term_memory.
+        the agent as the long_term_memory. Also we generate summary and whole day plan if it's empty.
         """
         if len(self.long_term_memory.data.texts)==0:
+            for k,v in self.whole_day_plan:
+                sPlan=f"This is {self.name}'s plan for {k}: "+','.join(v)
+                self.long_term_memory.add(sPlan,dt.strptime(k,"%B %d %Y"),['plan'])
             for des in self.description:
                 self.long_term_memory.add(des,current_time,['description'])
+
         if self.summary is None:
             self.generate_summary(current_time)
+        self.plan_in_broad_strokes(current_time)
 
     def end_interaction(self,current_time:dt):
         """
@@ -613,7 +635,7 @@ Output format:
                 else:
                     reaction_content=reaction
                 if not have_target:
-                    target=''
+                    target=None
 
                 if self.environment is not None:
                     self.environment.parse_action(self, target, reaction_content)

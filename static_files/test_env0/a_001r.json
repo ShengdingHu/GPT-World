@@ -15,7 +15,14 @@
     "status_duration" : 0,
     "status_start_time": null,
     "plan": [],
-    "whole_day_plan": "This is Isabella Rodriguez's plan for Monday February 13: wake up and complete the morning routine at 6:00 am, be at the cafe to open at 8:00 am, in the morning, keep working at the cafe until 12:00 pm, when she goes out to lunch with her friends, come back to Hobbs' cafe at 2:00 pm and get ready for the Valentine's Day party, assess how to make the best party6 by gathering any supplies or materials that she needs, go out to purchase any necessary materials to finish decorating the cafe, finish decorating the cafe by 6:00 pm.",
+    "whole_day_plan": {"February 13 2023":[
+        "wake up and complete the morning routine at 6:00 am",
+        "be at the cafe to open at 8:00 am",
+        "in the morning, keep working at the cafe until 12:00 pm when she goes out to lunch with her friends",
+        "come back to Hobbs' cafe at 2:00 pm and get ready for the Valentine's Day party",
+        "assess how to make the best party6 by gathering any supplies or materials that she needs",
+        "go out to purchase any necessary materials to finish decorating the cafe, finish decorating the cafe by 6:00 pm."
+    ]},
     "memory": "IR",
     "description":[
         "Isabella Rodriguez has known Arthur Burton for a few years, as he runs a bar right next door to her.",
