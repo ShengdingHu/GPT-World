@@ -487,6 +487,51 @@ Summarize the dialog above.
         self.status_duration = 10
         self.incoming_interactions.clear()
 
+    def initialize_map_status():
+        pass
+
+    def find_movement(self, target_description):
+        prompt = """
+        I am now trying to get to the target location: {},
+        and my current location is {} in current layer.
+        Which location should I go to in order to reach my target location within the same layer.
+        Show as [x, y]:
+        """.format(target, '[{}, {}]'.format(self.location[0], self.location[1]))
+
+        """
+        获取环境和地图信息，还需要补充API
+        """
+
+        target = json.loads(chat(prompt))
+        map = self.initialize_map_status()
+        size = [100, 100]
+
+        def reachable(pos):
+            if pos == self.location or pos == target: return True
+            return map[pos] == "empty"
+
+        from queue import Queue
+        directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]
+
+        d = {target : 0}
+
+        Q = Queue(maxsize=0)
+        Q.push(target)
+        while not Q.empty():
+            u = Q.get()
+            for x, y in directions:
+                v = [u[0] + x, u[1] + y]
+                if reachable(v) and (v not in d):
+                    d[v] = d[u] + 1
+                    Q.put(v)
+
+        u = self.location
+        for x, y in directions:
+            v = [u[0] + x, u[1] + y]
+            if reachable(v) and d[u] == d[v] + 1:
+                self.movement = v
+                break
+
     def step(self, current_time:dt):
         """ Call this method at each time frame
         """
@@ -626,6 +671,7 @@ Output format:
         # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) @TODO jingwei
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
+        self.find_movement()
 
         return
 
