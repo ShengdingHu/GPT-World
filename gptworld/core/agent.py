@@ -489,11 +489,15 @@ Summarize the dialog above.
 
     def initialize_map_status(self):
         map = {}
-        for it in self.environment.env_json['objects']:
-            for pos in it['location']:
-                map[pos] = it['name']
+        for id, info in self.environment.env_json['areas']:
+            for i in range(info['pos'][0][0], info['pos'][1][0] + 1):
+                for j in range(info['pos'][0][1], info['pos'][1][1] + 1):
+                    map[[i, j]] = info['border']
         return map
                 
+    def unreachable_signal(self, target):
+        self.observe()
+        print('Target {} is unreacable.'.format(target))
 
     def find_movement(self, target_description):
         prompt = """
@@ -501,20 +505,28 @@ Summarize the dialog above.
         I am now trying to get to the target location: {},
         and my current location is {} in current layer.
         Which location should I go to in order to reach my target location within the same layer.
-        Show as [x, y]:
-        """.format(self.environment.get_neighbor_environment(self.id), target_description, '[{}, {}]'.format(self.location[0], self.location[1]))
+        Show me the target object's id. If you can't find it, print ERROR.
+        """.format(json.dumps(self.environment.env_json), target_description, '[{}, {}]'.format(self.location[0], self.location[1]))
 
-        """
-        获取环境和地图信息，还需要补充API
-        """
+        target_id = chat(prompt)
+        target = None
+        for id, info in self.environment.env_json['objects']:
+            if id == target_id:
+                area_delta = self.environment.env_json['areas'][info['eid']]['pos']
+                relative_pos = info['pos'][0]
+                target = [relative_pos[0] + area_delta[0], relative_pos[1] + area_delta[1]]
+                break
 
-        target = json.loads(chat(prompt))
+        if target_id == "ERROR" or target == None:
+            self.unreachable_signal("[N/A]")
+            return
+
+        size = self.environment.env_json['size']
         map = self.initialize_map_status()
-        size = [100, 100]
 
         def reachable(pos):
-            if pos == self.location or pos == target: return True
-            return map[pos] == "empty"
+            if not (1 <= pos[0] <= size[0] and 1 <= pos[1] <= size[1]): return False
+            return pos not in map or map[pos] != 3
 
         from queue import Queue
         directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]
@@ -540,7 +552,7 @@ Summarize the dialog above.
                 self.movement = v
                 break
         
-        assert False, "Target is unreachable!"
+        self.unreachable_signal(target)
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
