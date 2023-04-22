@@ -487,16 +487,22 @@ Summarize the dialog above.
         self.status_duration = 10
         self.incoming_interactions.clear()
 
-    def initialize_map_status():
-        pass
+    def initialize_map_status(self):
+        map = {}
+        for it in self.environment.env_json['objects']:
+            for pos in it['location']:
+                map[pos] = it['name']
+        return map
+                
 
     def find_movement(self, target_description):
         prompt = """
+        This map is like: {}.
         I am now trying to get to the target location: {},
         and my current location is {} in current layer.
         Which location should I go to in order to reach my target location within the same layer.
         Show as [x, y]:
-        """.format(target, '[{}, {}]'.format(self.location[0], self.location[1]))
+        """.format(self.environment.get_neighbor_environment(self.id), target_description, '[{}, {}]'.format(self.location[0], self.location[1]))
 
         """
         获取环境和地图信息，还需要补充API
@@ -525,12 +531,16 @@ Summarize the dialog above.
                     d[v] = d[u] + 1
                     Q.put(v)
 
+        self.movement = self.location
+
         u = self.location
         for x, y in directions:
             v = [u[0] + x, u[1] + y]
             if reachable(v) and d[u] == d[v] + 1:
                 self.movement = v
                 break
+        
+        assert False, "Target is unreachable!"
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
