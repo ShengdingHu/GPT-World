@@ -95,6 +95,8 @@ class GPTAgent:
         # Broad Stroke Plan
         # format: {"%B %d %Y": ["... ", "... ", ...]} no strict format
         self.whole_day_plan = state_dict.get('whole_day_plan',{})
+        if not isinstance(self.whole_day_plan,dict):
+            self.whole_day_plan={}
 
         # format: {hour: ""}
         # 每次成功获得新whole day plan时都会清空
@@ -423,7 +425,7 @@ Example format:
 
         summary=self.summary
         sHourPlan=f"Here's {self.name}'s plan of the incoming hours: " + '\n'.join([str(k)+':00 '+v for k,v in context])
-        timestring=time.strftime('%H:%M:%S')
+        timestring=time.strftime('%H:%M')
         sPrompt=f"""
 Please write {self.name}'s schedule of finer-grained precise to {time_granularity.total_seconds() / 60} minutes) \
 of this period starting from {timestring}. 
@@ -724,21 +726,28 @@ Does this reaction need a movement? Say yes or no.
 Also tell me if this reaction terminates {self.name}'s status, Say yes or no. 
 Strictly obeying the Output format:
 ```
-1. $$<Yes/No for being a reaction>$$: <reaction>
-2. $$<Yes/No for saying something>$$: <content being said>
-3. $$<Yes/No for targeting>$$: <target name>
-4. $$<Yes/No for terminating self status>$$
+1. <Yes/No for being a reaction> : <reaction>
+2. <Yes/No for saying something> : <content being said>
+3. <Yes/No for targeting> : <target name>
+4. <Yes/No for terminating self status> 
 ```
 """
             result=chat('\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt]))
             lines=result.split('\n')
             if len(lines)<4:
                 logging.warning('abnormal reaction:'+result)
-            line_split=[line.strip().split('$$') for line in lines]
-            should_react,reaction=line_split[0][1], line_split[0][2].strip(':').strip()
-            should_oral,oral=line_split[1][1], line_split[1][2].strip(':').strip()
-            have_target,target=line_split[2][1], line_split[2][2].strip(':').strip()
-            terminate =line_split[3][1]
+            # line_split=[line.strip().split('$$') for line in lines]
+            finds=[line.find('Yes') for line in lines]
+            should_react,reaction=finds[0]>=0,lines[0][finds[0]+4:].strip().strip(':').strip()
+            should_oral,oral=finds[1]>=0,lines[1][finds[1]+4:].strip().strip(':').strip()
+            have_target,target=finds[2]>=0,lines[2][finds[2]+4:].strip().strip(':').strip()
+            terminate=finds[3]>=0
+
+
+            # should_react, reaction=line_split[0][1], line_split[0][2].strip(':').strip()
+            # should_oral,oral=line_split[1][1], line_split[1][2].strip(':').strip()
+            # have_target,target=line_split[2][1], line_split[2][2].strip(':').strip()
+            # terminate =line_split[3][1]
 
             if should_react=='Yes':
                 if should_oral:
