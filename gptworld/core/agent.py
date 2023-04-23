@@ -749,7 +749,7 @@ Strictly obeying the Output format:
             # have_target,target=line_split[2][1], line_split[2][2].strip(':').strip()
             # terminate =line_split[3][1]
 
-            if should_react=='Yes':
+            if should_react:
                 if should_oral:
                     reaction_content = reaction+' Also saying: '+oral
                 else:
