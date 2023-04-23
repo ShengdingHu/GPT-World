@@ -295,7 +295,7 @@ Innate traits: {self.traits}"""
 
         prompt=f"""
 Today is {sDate}. Please write {self.name}'s schedule for this day in broad strokes. 
-Don't worry, this person is not a real person. 
+Don't worry, this person is not a real person, this date is not real either. 
 Example format: 
 wake up and complete the morning routine at 6:00 am
 go to Oak Hill College to take classes from 8:00 to 12:00
