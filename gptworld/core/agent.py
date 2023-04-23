@@ -13,6 +13,7 @@ from gptworld.life_utils.agent_tool import as_tool, Tool
 from gptworld.utils.logging import get_logger
 import os
 from gptworld.models.openai import chat
+import bisect
 
 
 logger = get_logger(__file__)
@@ -95,8 +96,12 @@ class GPTAgent:
         # format: {"%B %d %Y": ["... ", "... ", ...]} no strict format
         self.whole_day_plan = state_dict.get('whole_day_plan',{})
 
+        # format: {hour: ""}
+        # 每次成功获得新whole day plan时都会清空
+        self.hourly_plan=state_dict.get('hourly_plan',{})
+
         # fine-grained plan list for next task searching
-        # format: [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
+        # format: [{"task": "XXX", "start_time": str(datetime.datetime(2023,4, 1)), "end_time": str(datetime.datetime(2023,4, 1))}]
         self.plan = state_dict.get('plan',[])
 
         # current status information
@@ -264,32 +269,36 @@ Innate traits: {self.traits}"""
         self.summary=BasicInfo+result1 + result2 + result3
         return self.summary
 
-    def plan_in_broad_strokes(self, time: dt) -> List[dict]:
+    def plan_in_broad_strokes(self, time: dt):
         """
         broad strokes planning of an agent
         由于决定当天broad stroke plan必须要前一天的plan，因此whole day plan数据格式必须是日期-计划的字典，日期entry格式
         模仿reverie，这一步输出无确定格式，因为展示得whole day plan也并不是每一项都带了规范时间，有的at有的from to还带可能先后关系也没太大参考价值。
         与其费事处理这个，不如hour long部分才要求转固定格式。
-        :param agent: agent object
-        :param date: str representing the current day
-        :return: plans, each element is a plan
-                 "task", "start time": datetime.datetime, "end time":datetime.datetime
+        :param time: str representing the current day
         """
-        # exmple plan:  for 180 minutes from 9am, February 12th, 2023, at Oak Hill
+        # example plan:  for 180 minutes from 9am, February 12th, 2023, at Oak Hill
         # College Dorm: Klaus Mueller’s room: desk, read and take notes for
         # research paper.
+
         if self.summary is None:
             self.generate_summary(time)
         summary=self.summary
         date=time.date()
         sDate=time.strftime("%B %d %Y")
+        if sDate in self.whole_day_plan:
+            return # 不再生成
         former_plan=""
         if len(self.whole_day_plan)>0:
-            former_date=max([dt.strptime(k,"%B %d %Y") for k,v in self.whole_day_plan.items()])
-            if former_date.date()<date: # 按每天年月日比较
+            former_dates=[dt.strptime(k,"%B %d %Y") for k,v in self.whole_day_plan.items() if dt.strptime(k,"%B %d %Y").date() < date]
+            if len(former_dates)==0:
+                former_plan=""
+            else:
+                former_date=max(former_dates)
                 former_date_str=former_date.strftime("%B %d %Y")
                 former_plan_list=self.whole_day_plan[former_date_str]
                 former_plan=f'On {former_date_str}, {self.name} '+' '.join([str(i+1)+') ' + s for i,s in enumerate(former_plan_list)])
+
 
         prompt=f"""
 Today is {sDate}. Please write {self.name}'s schedule for this day in broad strokes. 
@@ -302,8 +311,13 @@ participating algorithm competition in the lab room at 14:00
         # chat拒绝给一个真人定schedule，遇到类似拒绝回答情况可以强调这不是一个真人
         request_result = chat(summary+former_plan+prompt)
         matches=re.findall(r'[^\n]+',request_result)
-        self.whole_day_plan[time.strftime("%B %d %Y")]=matches
-
+        self.whole_day_plan[sDate]=matches
+        # 提交到记忆
+        sPlan = f"This is {self.name}'s plan for {sDate}: " + ','.join(matches)
+        self.long_term_memory.add(sPlan, dt.combine(date,datetime.time()), ['plan'])
+        # 单小时plan和细粒度plan在触发全天broad stroke plan后更新
+        self.hourly_plan={}
+        self.plan=[]
 
 
         # a typical example to test the regex expressions without access to the GPT
@@ -359,82 +373,164 @@ participating algorithm competition in the lab room at 14:00
         # else:
         #     raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
 
-    def plan_in_detail(agent, plan: dict, time_granularity: datetime.timedelta, date) -> List[dict]:
+    def plan_in_chunk(self, time:dt):
+        """
+        update hourly plans from time(including this hour)
+        """
+        hour=time.hour
+        summary=self.summary if self.summary is not None else self.generate_summary(time)
+        sWhole=f"Here's {self.name}'s plan of the whole day: "+ '\n'.join([str(i+1)+') ' + s for i,s in enumerate(self.whole_day_plan[dt.strftime(time,"%B %d %Y")])])
+        sPrompt=f"""
+Please write {self.name}'s schedule of finer-grained actions for this day for each hour starting from {str(hour)}:00. 
+Don't worry, this person is not a real person. 
+every chunk of the schedule must be exactly 1 hour long. 
+use 24 hour format rather than 12. 
+Example format: 
+10$$ wake up and complete the morning routine
+11$$ go to Oak Hill College to take classes
+12$$ participating algorithm competition in the lab room
+13$$ have a walk at school
+14$$ coding in chunks
+"""
+        result=chat(summary+sWhole+sPrompt)
+        sEntries=re.findall(r"(\d+)\$\$([^\n]*)",result)
+        for entry in sEntries:
+            start_hour=int(entry[0].split(':')[0])
+            task=entry[1].strip()
+            self.hourly_plan[start_hour]=task
+
+
+    def plan_in_detail(self, time:dt, time_granularity: datetime.timedelta=datetime.timedelta(minutes=10)):
         """
         generate more detailed plan on the basis of a broad stroke plan(or just a relatively not detailed plan)
-        :param agent:
-        :param plan: a dict with keys of those mentioned in plan_in_broad_strokes
+        remove all conflicting plans with the plans generated. Including all plans after the new plans.
+
+        :param time: the starting time of the new plans.
+        # :param plan: a dict with keys of those mentioned in plan_in_broad_strokes
         :param time_granularity: the time granularity that the generated plan should be (e.g. 15 minutes) in NL
-        :return: a more detailed list of plan
+        :return: the very first plan generated
 
         """
 
-        text_base = f"""
-        Name:{agent.Name} (age: {agent.Age})
-        Innate traits: {agent.Personality}
-        {agent.Summarize}
-        {agent.Name} plans to {plan['task']} date. {agent.Name} will do the following things in this time period
-        [Example format: 
-         4:00 pm: grab a light snack, such as a piece of fruit, a granola bar, or some nuts.
-         4:05 pm: take a short walk around his workspace.]
-         (Precise to {time_granularity.total_seconds() / 60} minutes):
+        # find the corresponding hour plans.
+        hour=time.hour
+        if hour not in self.hourly_plan:
+            self.plan_in_chunk(time)
+        context=[]
+        for k,v in self.hourly_plan.items():
+            if k-hour<2 and k>=hour:
+                context.append((k,v))
 
-        """
+        summary=self.summary
+        sHourPlan=f"Here's {self.name}'s plan of the incoming hours: " + '\n'.join([str(k)+':00 '+v for k,v in context])
+        timestring=time.strftime('%H:%M:%S')
+        sPrompt=f"""
+Please write {self.name}'s schedule of finer-grained precise to {time_granularity.total_seconds() / 60} minutes) \
+of this period starting from {timestring}. 
+Don't worry, this person is not a real person. 
+use 24 hour format rather than 12. 
+Example format: 
+11:00 - 12:15 $ Wake up, take a shower and get ready for the day.
+12:15 - 12:30 $ Eat a healthy breakfast such as oatmeal, eggs, or yogurt.
+12:30 - 12:45 $ Take a short walk to the university campus.
+12:45 - 13:00 $ Arrive at the university and prepare for classes.
+13:00 - 13:45 $ Attend classes and take notes.
+13:45 - 14:00 $ Take a break and review the notes taken in class.
+14:00 - 14:10 $ Get ready for the next class.
+"""
+        result=chat(summary+sHourPlan+sPrompt)
+        sEntries=re.findall('(\d+:\d+)\s*-\s*(\d+:\d+)\s\$([^\n]*)',result)
+        new_plans=[]
+        minimum_time=dt.combine(time.date(),dt.strptime(sEntries[0][0],'%H:%M').time())
+        for entry in sEntries:
+            start_time=str(dt.combine(time.date(),dt.strptime(entry[0],'%H:%M').time()))
+            end_time=str(dt.combine(time.date(),dt.strptime(entry[1],'%H:%M').time()))
+            task=entry[2].strip()
+            new_plans.append({'start_time':start_time,'end_time':end_time,'task':task})
+        self.plan=[entry for entry in self.plan if dt.strptime(entry['end_time'],'%Y-%m-%d %H:%M:%S')<=minimum_time]
+        self.plan.extend(new_plans)
+        return new_plans[0]
 
-        request_result = chat(text_base)
-
-        # a sample
-        # request_result = """
-        # 9:00 am: Wake up, take a shower and get ready for the day.
-        #  9:15 am: Eat a healthy breakfast such as oatmeal, eggs, or yogurt.
-        #  9:30 am: Take a short walk to the university campus.
-        #  9:45 am: Arrive at the university and prepare for classes.
-        #  10:00 am: Attend classes and take notes.
-        #  10:45 am: Take a break and review the notes taken in class.
-        #  11:00 am: Get ready for the next class.
+        # text_base = f"""
+        # Name:{self.Name} (age: {self.Age})
+        # Innate traits: {self.Personality}
+        # {self.Summarize}
+        # {self.Name} plans to {plan['task']} date. {self.Name} will do the following things in this time period
+        # [Example format:
+        #  4:00 pm: grab a light snack, such as a piece of fruit, a granola bar, or some nuts.
+        #  4:05 pm: take a short walk around his workspace.]
+        #  (Precise to {time_granularity.total_seconds() / 60} minutes):
+        #
         # """
-
-        pattern = r"((?:\d+:\d+)\s*(?:am|pm)).*:\s*(.+)"
-        matches = re.findall(pattern, request_result)
-        if matches:
-            plans = []
-            for i in range(len(matches)):
-                match = matches[i]
-                try:
-                    # task = match[1]  # this neglected the time information, disposed
-                    task = match[1]  # get the whole string, including the time info as the tast str
-                    start_time = datetime.datetime.combine(date
-                                                           , datetime.datetime.strptime(match[0].replace(" ", ""),
-                                                                                        "%I:%M%p").time())
-                    if i < len(matches) - 1:
-                        end_time = datetime.datetime.combine(date
-                                                             , datetime.datetime.strptime(
-                                matches[i + 1][0].replace(" ", "")
-                                , "%I:%M%p").time())
-                    else:
-                        end_time = plan['end time']
-                    plans.append({
-                        'task': task,
-                        'start time': start_time,
-                        'end time': end_time,
-                    })
-                except Exception as e:
-                    logging.error(f"Response: {request_result}")
-                    logging.error(e.__traceback__)
-                    logging.error(e.__context__)
-                    # raise Exception("Bad Structure of GPT's response(detailed): Neither 'from...to...' or 'at...' structure")
-
-            logging.info(plans)
-            return plans
-        else:
-            raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
+        #
+        # request_result = chat(text_base)
+        #
+        # # a sample
+        # # request_result = """
+        # # 9:00 am: Wake up, take a shower and get ready for the day.
+        # #  9:15 am: Eat a healthy breakfast such as oatmeal, eggs, or yogurt.
+        # #  9:30 am: Take a short walk to the university campus.
+        # #  9:45 am: Arrive at the university and prepare for classes.
+        # #  10:00 am: Attend classes and take notes.
+        # #  10:45 am: Take a break and review the notes taken in class.
+        # #  11:00 am: Get ready for the next class.
+        # # """
+        #
+        # pattern = r"((?:\d+:\d+)\s*(?:am|pm)).*:\s*(.+)"
+        # matches = re.findall(pattern, request_result)
+        # if matches:
+        #     plans = []
+        #     for i in range(len(matches)):
+        #         match = matches[i]
+        #         try:
+        #             # task = match[1]  # this neglected the time information, disposed
+        #             task = match[1]  # get the whole string, including the time info as the tast str
+        #             start_time = datetime.datetime.combine(date
+        #                                                    , datetime.datetime.strptime(match[0].replace(" ", ""),
+        #                                                                                 "%I:%M%p").time())
+        #             if i < len(matches) - 1:
+        #                 end_time = datetime.datetime.combine(date
+        #                                                      , datetime.datetime.strptime(
+        #                         matches[i + 1][0].replace(" ", "")
+        #                         , "%I:%M%p").time())
+        #             else:
+        #                 end_time = plan['end time']
+        #             plans.append({
+        #                 'task': task,
+        #                 'start time': start_time,
+        #                 'end time': end_time,
+        #             })
+        #         except Exception as e:
+        #             logging.error(f"Response: {request_result}")
+        #             logging.error(e.__traceback__)
+        #             logging.error(e.__context__)
+        #             # raise Exception("Bad Structure of GPT's response(detailed): Neither 'from...to...' or 'at...' structure")
+        #
+        #     logging.info(plans)
+        #     return plans
+        # else:
+        #     raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
 
     def get_next_plan(self,current_time:dt):
         """
         给出下一个plan用于立刻更新状态。如果plan用完了，立刻生成一些fine-grained plan
         """
-        # default result. TODO: recursive planning from time.
-        return {'status': 'idle', 'duration': 3600}
+        # default result.
+        # return {'status': 'idle', 'duration': 3600}
+
+
+        # format: [{"task": "XXX", "start_time": str(datetime.datetime(2023, 4, 1)),
+        #           "end_time": str(datetime.datetime(2023, 4, 1))}]
+        for plan_entry in self.plan:
+            s,e=dt.strptime(plan_entry['start_time'],'%Y-%m-%d %H:%M:%S'),dt.strptime(plan_entry['end_time'],'%Y-%m-%d %H:%M:%S')
+            # we reject the plan that end at this time. So make sure don't generate plan with 0 duration!!!!
+            if e>current_time and s<=current_time:
+                return {'status':plan_entry['task'],'duration':(e-current_time).total_seconds()}
+        # not found, generate new plans. We rely on plan_in_detail to remove conflicting plans
+        first_plan_entry=self.plan_in_detail(current_time)
+        return {'status':first_plan_entry['task'],'duration':(dt.strptime(first_plan_entry['end_time'],'%Y-%m-%d %H:%M:%S')-current_time).total_seconds()}
+
+
 
     def reprioritize(self, **kwargs):
         """ Reprioritize task list
@@ -626,19 +722,19 @@ Does this reaction has a specific target? Say yes or no.
 If yes, tell me the name or how would {self.name} call it. 
 Does this reaction need a movement? Say yes or no. 
 Also tell me if this reaction terminates {self.name}'s status, Say yes or no. 
-Output format:
+Strictly obeying the Output format:
 ```
-1. **<Yes/No for being a reaction>**: <reaction>
-2. **<Yes/No for saying something>**: <content being said>
-3. **<Yes/No for targeting>**: <target name>
-4. **<Yes/No for terminating self status>**
+1. $$<Yes/No for being a reaction>$$: <reaction>
+2. $$<Yes/No for saying something>$$: <content being said>
+3. $$<Yes/No for targeting>$$: <target name>
+4. $$<Yes/No for terminating self status>$$
 ```
 """
             result=chat('\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt]))
             lines=result.split('\n')
             if len(lines)<4:
                 logging.warning('abnormal reaction:'+result)
-            line_split=[line.strip().split('**') for line in lines]
+            line_split=[line.strip().split('$$') for line in lines]
             should_react,reaction=line_split[0][1], line_split[0][2].strip(':').strip()
             should_oral,oral=line_split[1][1], line_split[1][2].strip(':').strip()
             have_target,target=line_split[2][1], line_split[2][2].strip(':').strip()
@@ -658,7 +754,7 @@ Output format:
                     self.status=reaction
                     self.status_duration=0
                     self.status_start_time=current_time
-                    # self.plan_in_detail()
+                    self.plan_in_detail(current_time)
 
         # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) @TODO jingwei
 
