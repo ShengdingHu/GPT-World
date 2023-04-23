@@ -10,13 +10,14 @@ if __name__ == "__main__":
     # Create an argument parser
     parser = argparse.ArgumentParser()
     parser.add_argument('--no_web', action='store_true', help='Starts a new subprocess to start a webpage')
+    parser.add_argument('--debug', action='store_true', help='If enabled, we will not use thread, so that debug becomes easier.')
     args = parser.parse_args()
 
     # Create an instance of the environment
     env = GPTWorldEnv.from_file("static_files/alice_home/")
 
     if not args.no_web:
-        env.initialize() # this start a new subprocess to start a webpage.
+        env.initialize_web() # this start a new subprocess to start a webpage.
 
 
     # Create an instance of the agent
@@ -31,6 +32,6 @@ if __name__ == "__main__":
     # env.mount_agent(agent1)
     # env.mount_agent(agent2)
 
-    env.run(debug=True)
+    env.run(debug=args.debug)
 
 

@@ -1,31 +1,60 @@
 
 (installation)=
-# Installation
 
 
-The lasted version of OpenDelta is tested on on [Python 3.8](https://www.python.org/) and [Pytorch 1.12](<https://pytorch.org/>). Other versions are likely to be supported as well.
+## Installation
 
-
-## install the lastest version
 ```bash
-pip install git+https://github.com/thunlp/OpenDelta.git
-```
-
-## install the lastest pip version (more stable)
-```bash
-pip install opendelta
-```
-
-## build from source
-```bash
-git clone git@github.com:thunlp/OpenDelta.git
-cd OpenDelta
-```
-then 
-```
-python setup.py install
-```
-or if you want to do some modifications on the code for your research:
-```
 python setup.py develop
 ```
+or
+```bash
+python setup.py install
+```
+
+
+## Check your connectivity with the model engine.
+
+```bash
+python -c "from gptworld.models.openai import chat; print(chat('Hello'))"
+python -c "from gptworld.models.openai import get_embedding; print(get_embedding('Hello'))"
+```
+If it prints `Hello! How may I assist you today?`, it is connected!
+
+
+## Check your local environment for the web demo.
+We use Vue + TypeScipt + Phaser3 as the frontend, and use a simple flask app as
+ the backend. So if you want to run smoothly, you may want to install them first.
+
+
+```bash
+pip install Flask
+pip install Flask_CORS
+cd game/text_grid
+npm install
+npm install phaser
+```
+
+To check they are correctly installed, do the following：
+1. 
+```bash
+cd game/text_grid
+python app.py
+```
+2. 
+```bash
+cd game/text_grid/frontend
+npm run dev
+```
+This will give a port (default: http://localhost:5173), view it in your browser.
+
+
+
+# Config your json file
+
+convention list:
+
+- The name and id should be unique for each agent, object, envs
+  
+
+

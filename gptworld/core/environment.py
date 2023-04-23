@@ -8,6 +8,9 @@ import subprocess
 from gptworld.utils.logging import get_logger
 import os
 import datetime
+from gptworld.models.openai import chat
+import re
+
 
 logger = get_logger(__file__)
 logger.debug = print
@@ -104,10 +107,53 @@ class GPTWorldEnv:
         pass
 
     def parse_action(self, agent, targets, content=""):
-        # agent -> target  environment -> 还有哪些 target 会被影响到
-        # 
-        # update each target's incommoning_observations. 
-        # 
+        logger.debug(f"Environment receives action: {agent.name} -> {targets} : {content}")
+
+        EnvironmentPrompt = f"""You are simulating an environment. When an action happens
+        in your environment, you should paraphrase the action to agents and objects in 
+        your environment. In 
+        your environment there are the following agent:
+        """
+
+        number = 1
+        for a_id in self.agents:
+            ag = self.agents[a_id]
+            if ag.eid == agent.eid and a_id != agent.id:
+                EnvironmentPrompt += f"{number}. To {ag.name}: content\n"
+                number += 1
+        for o_id in self.objects:
+            obj = self.objects[o_id]
+            if obj.eid == agent.eid and o_id != agent.id:
+                EnvironmentPrompt += f"{number}. To {obj.name}: content\n"
+                number += 1
+            
+
+        EnvironmentPrompt += f"\nNow please paraphrase the following action: ```{agent.name} -> {targets} : {content}``` to each of these agents and objects. Please paraphrase using the following format: \n1. To XXX: XXX\n2. To XXX: XXX"
+        
+        result = chat(EnvironmentPrompt)
+
+        lines = result.split("\n")
+        send_content = {}
+        for line in lines:
+            sline = line.split(":")
+            target, content = sline[0], ":".join(sline[1:])
+            target = re.split(r'\d+\. ', target)[1][3:]
+            send_content[target] = content
+
+        for a_id in self.agents:
+            ag = self.agents[a_id]
+            if ag.eid == agent.eid and a_id != agent.id:
+                if ag.name in send_content:
+                    ag.add_observation(send_content[ag.name])
+  
+        for o_id in self.objects:
+            obj = self.objects[o_id]
+            if obj.eid == agent.eid and o_id != agent.id:
+                if obj.name in send_content:
+                    obj.add_observation(send_content[obj.name])
+        
+
+        logger.debug("Env broadcast the following content.")
 
         pass
 
@@ -142,19 +188,17 @@ class GPTWorldEnv:
         '''
 
  
-        location = self.env_json['objects'][agent_id]['pos']
+        location = self.env_json['objects'][agent_id]['location']
         env_id = self.env_json['objects'][agent_id]['eid']
 
-        # for areaid, area in self.env_json['areas'].items():
-        #     pos = area['pos']
-        #     if pos[0][0] <= location[0] <= pos[1][0] and pos[0][1] <= location[1] <= pos[1][1] and env_id == :
         at_area = self.env_json['areas'][env_id]['name']
         
         # Find objects within the agent's reach in distance
         objects_within_distance = []
+        
         for obj_id, obj in self.env_json['objects'].items():
             if obj_id != agent_id:
-                obj_location = obj['pos']
+                obj_location = obj['location']
                 distance = abs(obj_location[0] - location[0]) + abs(obj_location[1] - location[1])
                 if distance <= critical_distance and env_id == obj['eid']:
                     objects_within_distance.append(obj_id)
@@ -261,7 +305,7 @@ class GPTWorldEnv:
             agent = self.agents[agent_id]
             # run agent as thread
             if debug:
-                agent.step_test(self.current_time)
+                agent.step(self.current_time)
             else:
                 thread = threading.Thread(target=agent.step, args=(self.current_time,))
                 thread_pool.append(thread)

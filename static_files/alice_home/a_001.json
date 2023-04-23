@@ -6,9 +6,8 @@
     "attention_bandwidth": 8,
     "retention": 8,
     "time": null,
-    "location": {"eid": "e_004",
-        "pos": [25, 15]
-    },
+    "eid": "e_004",
+    "location": [25, 15],
     "max_velocity": "1/s",
     "moving": "false",
     "status": "Watching TV",
@@ -32,5 +31,5 @@
         ],
     "incoming_observation":
         [
-        ]
+                ]
 }

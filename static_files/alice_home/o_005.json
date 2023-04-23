@@ -5,9 +5,8 @@
     "attention_bandwidth": 8,
     "retention": 8,
     "time": null,
-    "location": {"eid": "e_004",
-        "pos": [25, 5]
-    },
+    "eid": "e_004",
+    "location": [25, 5],
     "max_velocity": "0/s",
     "moving": "false",
     "status": "broadcasting educational programs, which tells the history of England",
