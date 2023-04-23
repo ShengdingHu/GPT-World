@@ -132,6 +132,8 @@ class GPTWorldEnv:
         
         result = chat(EnvironmentPrompt)
 
+        logger.debug(f"Env broadcast the following content: {result}")
+
         lines = result.split("\n")
         send_content = {}
         for line in lines:
@@ -152,8 +154,6 @@ class GPTWorldEnv:
                 if obj.name in send_content:
                     obj.add_observation(send_content[obj.name])
         
-
-        logger.debug("Env broadcast the following content.")
 
         pass
 

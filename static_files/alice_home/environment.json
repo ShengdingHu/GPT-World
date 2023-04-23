@@ -152,14 +152,14 @@
         "a_001": {
             "id": "a_001",
             "name": "Alice",
-            "eid": "e_004",
-            "location": [25, 15]
+            "eid": "e_005",
+            "location": [10, 15]
         },
         "a_002": {
             "id": "a_002",
             "name": "Bob",
-            "eid": "e_004",
-            "location": [20, 15]
+            "eid": "e_006",
+            "location": [10, 15]
         }
     }
 }
