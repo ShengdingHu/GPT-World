@@ -28,6 +28,7 @@ class GameScene extends Scene {
 
   async load_file(){
     const response = await fetch('http://localhost:5001/read_file?file_path=alice_home/environment.json');
+    console.log(response);
     const data = await response.json();
     this.mydata = data['message'];
     return Promise.resolve();
