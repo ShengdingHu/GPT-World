@@ -1,7 +1,10 @@
 {
     "IdentityPrompt": "I am a tree",
-    "name": "tree",
-    "Location": "e_001:[(1,3)]",
+    "id": "o_002",
+    "name": "apple tree",
+    "eid": "e_002",
+    "location": [20, 130],
+    "engine": "object",
     "VelocityUpperBound": "0/s",
     "Moving": "false",
     "Schedule": {

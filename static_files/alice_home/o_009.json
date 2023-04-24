@@ -1,0 +1,20 @@
+{
+    "traits": "brandnew",
+    "name": "Book Shelf",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_010",
+    "location": [10, 15],
+    "max_velocity": "0/s",
+    "moving": "false",
+    "status": "",
+    "memory":
+        [
+            "Book Title: Alexander and the Quest for the Magical Crystal \n Content: Once upon a time, in a far-off land, there was a young prince named Alexander who had everything he could ever want. He had a beautiful palace to live in, servants to attend to his every need, and a loving family who adored him. However, Alexander was not happy. He longed for adventure and excitement.\nOne day, while exploring the woods near the palace, Alexander stumbled upon an old man who was lost and in need of help. Alexander took the man back to the palace and cared for him until he was well again. The old man was grateful and told Alexander that he would be rewarded for his kindness.\nThat night, Alexander had a dream where he was visited by a fairy who told him that he must go on a quest to find the magical crystal that would bring happiness to the land. The fairy warned Alexander that the quest would be dangerous and difficult, but Alexander was determined to find the crystal and bring happiness to his people.\nSo, Alexander set out on his quest with his trusty horse, Braveheart. Along the way, he encountered many challenges and obstacles, but he never gave up. He fought fierce dragons, crossed treacherous rivers, and climbed mountains so high that they touched the clouds.\nFinally, after many months of traveling, Alexander reached the cave where the crystal was said to be located. He bravely entered the cave and found the crystal, shining bright and radiating happiness.\nAlexander knew that he had to bring the crystal back to his people. He carefully carried the crystal back to the palace, where he was greeted with cheers and applause. He presented the crystal to his father, the king, who placed it in the center of the throne room.\nFrom that day on, the crystal brought happiness and joy to the land. Alexander was hailed as a hero, and he knew that he had found the adventure and excitement that he had been looking for. He had also discovered something more important - the joy that comes from helping others and making the world a better place. "
+        ],
+    "incoming_observation":
+        [
+        ]
+}

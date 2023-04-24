@@ -9,13 +9,15 @@
     "location": [25, 5],
     "max_velocity": "0/s",
     "moving": "false",
-    "status": "broadcasting educational programs, which tells the history of England",
-    "description":
+    "status": "off",
+    "memory":
         [
-            "television has 10 channel."
+            "television has 10 channel.",
+            "Channel 1: History Channel",
+            "Channel 2: Entertainment Channel",
+            "Channel 3: Science Chaneel"
         ],
     "incoming_observation":
         [
-            "The TV is on. It plays the educational programs, which tells the history of England."
         ]
 }
