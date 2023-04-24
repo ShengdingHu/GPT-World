@@ -2,6 +2,7 @@ import threading
 import time
 import json
 from gptworld.core.agent import GPTAgent
+from gptworld.core.object import GPTObject
 from typing import Dict, List, Tuple
 # from gptworld.core.time_system impor, MOVEMENT_TICK
 import subprocess
@@ -257,9 +258,9 @@ class GPTWorldEnv:
         # create_agent
         for obj_id, obj in self.env_json['objects'].items():
             if obj_id.startswith('a'):
-                self.agents[obj_id] = GPTAgent(obj, os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
+                self.agents[obj_id] = GPTAgent(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
             elif obj['id'].startswith('o'):
-                self.objects[obj_id] = GPTAgent(obj, os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
+                self.objects[obj_id] = GPTObject(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
 
 
     def save(self, ):

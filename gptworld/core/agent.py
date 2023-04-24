@@ -32,7 +32,6 @@ class GPTAgent:
     """
 
     def __init__(self,
-                 state_dict: dict,
                  agent_file,
                  environment,
                  # llm: callable,
@@ -51,7 +50,7 @@ class GPTAgent:
         self.agent_file = agent_file
         self.id = os.path.splitext(os.path.basename(self.agent_file))[0]
         new_state_dict = self.load_from_file(agent_file)
-        state_dict.update(new_state_dict)
+        state_dict = new_state_dict
         self.state_dict = state_dict
         self.environment = environment
 
@@ -839,7 +838,7 @@ Strictly obeying the Output format:
         # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) @TODO jingwei
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
-        from IPython import embed; embed(header="833")
+        # from IPython import embed; embed(header="833")
         if movement:
             self.find_movement(reaction)
 
@@ -987,7 +986,7 @@ Output format:
                 if not have_target:
                     target=''
 
-                from IPython import embed; embed(header="in 774")
+                # from IPython import embed; embed(header="in 774")
                 if self.environment is not None:
                     self.environment.parse_action(self, target, reaction_content)
                 if terminate:

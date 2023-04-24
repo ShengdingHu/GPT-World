@@ -102,6 +102,65 @@
                 ]
             ],
             "color": "0xD3D3D3"
+        },
+        "e_007": {
+            "location": [
+                [
+                    150,100
+                ],
+                [
+                    200,
+                    150
+                ]
+            ],
+            "name": "Dining Room",
+            "id": "e_007",
+            "border": 3,
+            "color": "0xD387D3"
+        },
+        "e_008": {
+            "location": [
+                [
+                    150, 50
+                ],
+                [
+                    200,
+                    90
+                ]
+            ],
+            "name": "Kitchen",
+            "id": "e_008",
+            "border": 3,
+            "color": "0xF4D3D3"
+        },
+        "e_009": {
+            "location": [
+                [
+                    150,100
+                ],
+                [
+                    200,
+                    150
+                ]
+            ],
+            "name": "Dining Room",
+            "id": "e_009",
+            "border": 3,
+            "color": "0xD3D3D3"
+        },
+        "e_010": {
+            "location": [
+                [
+                    150,0
+                ],
+                [
+                    200,40
+                ]
+            ],
+            "name": "Reading Room",
+            "id": "e_010",
+            "border": 3,
+            "color": "0xD3D3D3"
         }
     },
     "objects": { 
@@ -160,6 +219,31 @@
             "name": "Bob",
             "eid": "e_006",
             "location": [10, 15]
+        },
+        "o_007": {
+            "id": "o_007",
+            "name": "Alarm",
+            "eid": "e_005",
+            "location": [10, 20],
+            "size": [1, 1],
+            "engine": "object"
+        },
+        "o_008": {
+            "id": "o_008",
+            "name": "dining table",
+            "eid": "e_009",
+            "location": [10, 15],
+            "size": [10, 10],
+            "engine": "object"
+        },
+        "o_009": {
+            "id": "o_009",
+            "name": "Book Shelf",
+            "eid": "e_010",
+            "location": [10, 15],
+            "size": [10, 10],
+            "engine": "object"
         }
+
     }
 }
