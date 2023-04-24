@@ -113,11 +113,6 @@ class GPTObject(EnvElem):
             sStatus= f"{self.name}'s status: {self.status}."
             sObservation = "Observation: " + '\n'.join(self.observation)
             queries=self.observation
-            if len(self.incoming_interactions)>0:
-                for i,interaction in reversed(self.incoming_interactions):
-                    if i>=2:
-                        break
-                    queries.append(interaction['sender']+':' +interaction['content'])
             # 一点小修改：加上对话的最后几轮作为query
 
             sContext = f"Summary of relevant context from {self.name}'s memory: " + \
@@ -146,7 +141,9 @@ Strictly obeying the Output format:
 5. <Yes/No for movement>
 ```
 """
-            result=chat('\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt]))
+            send_message = '\n'.join([sTime,sStatus,sObservation,sContext,sPrompt])
+            logger.debug("Prompt of {self.name}'s reaction: "+send_message)
+            result=chat(send_message)
             
             lines=result.split('\n')
             if len(lines)<5:

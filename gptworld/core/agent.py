@@ -160,6 +160,8 @@ class EnvElem:
         if len(self.pending_observation) > 0:
             self.incoming_observation.extend(self.pending_observation)
             self.pending_observation = []
+    
+
         
 
 
@@ -664,18 +666,25 @@ Strictly obeying the Output format:
 5. <Yes/No for movement>
 ```
 """
-            result=chat('\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt]))
+            try_num = 0
+            while try_num < 3:
+                result=chat('\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt]))
             
-            lines=result.split('\n')
-            if len(lines)<5:
-                logging.warning('abnormal reaction:'+result)
-            # line_split=[line.strip().split('$$') for line in lines]
-            finds=[line.find('Yes') for line in lines]
-            should_react,reaction=finds[0]>=0,lines[0][finds[0]+4:].strip().strip(':').strip()
-            should_oral,oral=finds[1]>=0,lines[1][finds[1]+4:].strip().strip(':').strip()
-            have_target,target=finds[2]>=0,lines[2][finds[2]+4:].strip().strip(':').strip()
-            terminate=finds[3]>=0
-            movement=finds[4]>=0
+                try:
+                    lines=result.split('\n')
+                    if len(lines)<5:
+                        logging.warning('abnormal reaction:'+result)
+                    # line_split=[line.strip().split('$$') for line in lines]
+                    finds=[line.find('Yes') for line in lines]
+                    should_react,reaction=finds[0]>=0,lines[0][finds[0]+4:].strip().strip(':').strip()
+                    should_oral,oral=finds[1]>=0,lines[1][finds[1]+4:].strip().strip(':').strip()
+                    have_target,target=finds[2]>=0,lines[2][finds[2]+4:].strip().strip(':').strip()
+                    terminate=finds[3]>=0
+                    movement=finds[4]>=0
+                    break
+                except IndexError:
+                    logging.debug(f"Generated reaction {result}. Retrying...")
+                    pass
 
 
             # should_react, reaction=line_split[0][1], line_split[0][2].strip(':').strip()

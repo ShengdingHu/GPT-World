@@ -125,7 +125,7 @@ class ReflectionMemory():
     def __init__(self, state_dict, file_dir='./') -> None:
         # the least importance threshold for reflection. It seems that setting it to 0 does not induce duplicate reflections
         self.reflection_threshold = state_dict.get( 'reflection_threshold', 0)
-        self.memory_id = state_dict.get( 'memory', 'default_memory')
+        self.memory_id = state_dict.get('memory', state_dict['name']+'_LTM')
         self.filename = os.path.join(file_dir,f"{self.memory_id}.json")
         if os.path.exists(self.filename):
             with open(self.filename, 'rb') as f:
