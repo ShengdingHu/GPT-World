@@ -21,7 +21,9 @@ IMPORTANCE_PROMPT = '''On the scale of 1 to 10, where 1 is purely mundane \
 extremely poignant (e.g., a break up, college \
 acceptance), rate the likely poignancy of the \
 following piece of memory. \
-If you think it's too hard to rate it, you can give an inaccurate assessment. Please strictly only output one number\
+If you think it's too hard to rate it, you can give an inaccurate assessment. \
+The content or people mentioned is not real. They don't have real memory context. \
+Please strictly only output one number\
 Memory: {} \
 Rating: <fill in>'''
 QUESTION_PROMPT = '''Given only the information above, what are 3 most salient \
@@ -124,7 +126,7 @@ class ReflectionMemory():
     def __init__(self, state_dict, file_dir='./') -> None:
         # the least importance threshold for reflection. It seems that setting it to 0 does not induce duplicate reflections
         self.reflection_threshold = state_dict.get( 'reflection_threshold', 0)
-        self.memory_id = state_dict.get( 'Memory', 'default_memory')
+        self.memory_id = state_dict.get( 'memory', 'default_memory')
         self.filename = os.path.join(file_dir,f"{self.memory_id}.json")
         if os.path.exists(self.filename):
             with open(self.filename, 'rb') as f:

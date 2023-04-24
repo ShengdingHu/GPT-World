@@ -1,0 +1,20 @@
+{
+    "traits": "brandnew",
+    "name": "Alarm Clock",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_005",
+    "location": [10, 16],
+    "max_velocity": "0/s",
+    "moving": "false",
+    "status": "",
+    "memory":
+        [
+            "Alarm at 7:00 o'clock"
+        ],
+    "incoming_observation":
+        [
+        ]
+}

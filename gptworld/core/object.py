@@ -19,9 +19,7 @@ logger = get_logger(__file__)
 logger.debug = print
 logger.info = print
 
-"""
-Agent class implements the static, mind, inner, and cognitive process
-"""
+
 
 # # The color for intermediate result
 # RESET = "\033[0m"  # reset color output
@@ -36,16 +34,17 @@ Agent class implements the static, mind, inner, and cognitive process
 
 
 class GPTObject:
-    """ Simple Implementation of Chain of Thought & Task Based Agent
     """
+    Object class implements the inactive objects, which has the ability to 
+    1. produce routine action, such as growing, broadcasting a long-message. 
+    2. react to the outside observation within the objects's ability.
+    """
+
 
     def __init__(self,
                  state_dict: dict,
                  agent_file,
                  environment,
-                 # llm: callable,
-                 # tools: List[Tool],
-                 # prompt_template: str
                  ):
         """ Intialize an agent.
         state_dict: Dict -> a state dict which contains all the information about the agent
@@ -61,7 +60,6 @@ class GPTObject:
         self.state_dict = state_dict
         self.environment = environment
 
-        self.incoming_interactions = [{"sender": "A", "message": "XXX"}]
 
         self.incomming_objection = ["XXXX",]
 
@@ -77,7 +75,7 @@ class GPTObject:
         # 记录当前对话历史
         # 记录当前对话历史，不止包括别人说的，也包括自己说的
         # 直接根据len判断自己是否在对话中
-        self.incoming_interactions = state_dict.get('incoming_interactions',[])
+        # self.incoming_interactions = state_dict.get('incoming_interactions',[])
 
         # 记录下一轮需要处理的新observation
         # self.observation进行过去重，incoming_observation没有去重
@@ -94,7 +92,7 @@ class GPTObject:
 
         # fine-grained plan list for next task searching
         # format: [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
-        self.plan = state_dict.get('plan',[])
+        # self.plan = state_dict.get('plan',[])
 
         # current status information
         self.status=state_dict.get('status','')
@@ -214,211 +212,6 @@ class GPTObject:
         """
         return self.long_term_memory.maybe_reflect(time)
 
-    def generate_summary(self,time:dt):
-        """
-        # Generating summary for myself
-        :param agent:
-        :return: summary string
-        """
-
-        # retrieved_record = """
-        # Chris is a undergraduate student in Tsinghua University, Love to play tennis and expand knowledge on
-        # many different regions. Major in Electrical Engineering, but join in the Natural Language Processing Research Team
-        # , very busy at his schoolwork.
-        # """
-        qResList1 = self.long_term_memory.query(f"{self.name}'s core characteristics",10,time)
-        qResList2 = self.long_term_memory.query(f"{self.name}'s current daily plan",10,time)
-        qResList3 = self.long_term_memory.query(f"{self.name}'s feeling about his recent progress in life",10,time)
-
-        q1,q2,q3=map(lambda k: '\n'.join(k),(qResList1,qResList2,qResList3))
-
-        query1 = f"""
-        How would one describe {self.name}'s core characteristics given the following statements?
-        {q1}
-        """
-        result1 = chat(query1)
-
-        # 'daily occupation' is ambiguous and performs bad in searching daily requirements and summarizing schedule.
-        query2 = f"""
-        What is {self.name}'s current daily plan given the following statements?
-        {q2}
-        """
-
-        result2 = chat(query2)
-
-        query3 = f"""
-        What might be {self.name}'s feeling about his recent progress in life given the following statements?
-        {q3}
-        """
-
-        result3 = chat(query3)
-
-        BasicInfo=f"""\
-Name: {self.name} (age: {self.age})
-Innate traits: {self.traits}"""
-
-        # Notice the order of these results in the example of GA paper/
-        self.summary=BasicInfo+result1 + result3 + result2
-        return self.summary
-
-    def plan_in_broad_strokes(agent, date: datetime.date) -> List[dict]:
-        """
-        broad strokes planning of an agent
-        :param agent: agent object
-        :param date: str representing the current day
-        :return: plans, each element is a plan
-                 "task", "start time": datetime.datetime, "end time":datetime.datetime
-        """
-
-        text_base = f"""
-        Name:{agent.Name} (age: {agent.Age})
-        Innate traits: {agent.Personality}
-        {agent.Summarize}
-        {agent.Memory}
-        Today is {date}. Here is {agent.Name}’s plan date in broad strokes:
-        [Example format: 
-         1) wake up and complete the morning routine at 8:00am,
-         2) go to Oak Hill College to take classes from 10:00am to 12:00pm]
-
-        """
-
-        request_result = request_GPT.request(text_base)
-
-        # a typical example to test the regex expressions without access to the GPT
-        # request_result = """
-        # 1) Wake up at 8:00am and have breakfast,
-        # 2) Go to the library to do some research from 10:00am to 12:00pm,
-        # 3) Have lunch at 12:30pm,
-        # 4) Play tennis from 2:00pm to 4:00pm,
-        # 5) Go back to the library to do research from 4:30pm to 6:30pm,
-        # 6) Have dinner at 7:00pm,
-        # 7) Relax and watch a movie from 8:00pm to 10:00pm.
-        # """
-
-        logging.info(f"Request GPT result(Broad strokes):\n{request_result}")
-
-        pattern = r"(?:\d+\))((.+) (from|at) ((?:\d+:\d+)\s*(?:am|pm))(?: to ((?:\d+:\d+)\s*(?:am|pm)))?)"
-        matches = re.findall(pattern, request_result)
-
-        if matches:
-            plans = []
-            for match in matches:
-                try:
-                    # task = match[1]  # this neglected the time information, disposed
-                    task = match[0]  # get the whole string, including the time info as the tast str
-                    if match[2] == "from":
-                        # from ... to ... structure
-                        start_time = datetime.datetime.combine(date
-                                                               , datetime.datetime.strptime(match[3].replace(" ", ""),
-                                                                                            "%I:%M%p").time())
-                        end_time = datetime.datetime.combine(date
-                                                             , datetime.datetime.strptime(match[4].replace(" ", ""),
-                                                                                          "%I:%M%p").time())
-                    elif match[2] == 'at':
-                        # at ... structure
-                        start_time = end_time = datetime.datetime.combine(date
-                                                                          , datetime.datetime.strptime(
-                                match[3].replace(" ", ""), "%I:%M%p").time())
-                    else:
-                        raise Exception()
-                    plans.append({
-                        "task": task,
-                        "start time": start_time,
-                        "end time": end_time,
-                    })
-                except:
-                    # logging.error("Bad Structure of GPT's response: Neither 'from...to...' or 'at...' structure")
-                    logging.error(f"Response: {request_result}")
-                    logging.error(e.__traceback__)
-                    logging.error(e.__context__)
-
-            logging.info(plans)
-            return plans
-        else:
-            raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
-
-    def plan_in_detail(agent, plan: dict, time_granularity: datetime.timedelta, date) -> List[dict]:
-        """
-        generate more detailed plan on the basis of a broad stroke plan(or just a relatively not detailed plan)
-        :param agent:
-        :param plan: a dict with keys of those mentioned in plan_in_broad_strokes
-        :param time_granularity: the time granularity that the generated plan should be (e.g. 15 minutes) in NL
-        :return: a more detailed list of plan
-
-        """
-
-        text_base = f"""
-        Name:{agent.Name} (age: {agent.Age})
-        Innate traits: {agent.Personality}
-        {agent.Summarize}
-        {agent.Name} plans to {plan['task']} date. {agent.Name} will do the following things in this time period
-        [Example format: 
-         4:00 pm: grab a light snack, such as a piece of fruit, a granola bar, or some nuts.
-         4:05 pm: take a short walk around his workspace.]
-         (Precise to {time_granularity.total_seconds() / 60} minutes):
-
-        """
-
-        request_result = request_GPT.request(text_base)
-
-        # a sample
-        # request_result = """
-        # 9:00 am: Wake up, take a shower and get ready for the day.
-        #  9:15 am: Eat a healthy breakfast such as oatmeal, eggs, or yogurt.
-        #  9:30 am: Take a short walk to the university campus.
-        #  9:45 am: Arrive at the university and prepare for classes.
-        #  10:00 am: Attend classes and take notes.
-        #  10:45 am: Take a break and review the notes taken in class.
-        #  11:00 am: Get ready for the next class.
-        # """
-
-        pattern = r"((?:\d+:\d+)\s*(?:am|pm)).*:\s*(.+)"
-        matches = re.findall(pattern, request_result)
-        if matches:
-            plans = []
-            for i in range(len(matches)):
-                match = matches[i]
-                try:
-                    # task = match[1]  # this neglected the time information, disposed
-                    task = match[1]  # get the whole string, including the time info as the tast str
-                    start_time = datetime.datetime.combine(date
-                                                           , datetime.datetime.strptime(match[0].replace(" ", ""),
-                                                                                        "%I:%M%p").time())
-                    if i < len(matches) - 1:
-                        end_time = datetime.datetime.combine(date
-                                                             , datetime.datetime.strptime(
-                                matches[i + 1][0].replace(" ", "")
-                                , "%I:%M%p").time())
-                    else:
-                        end_time = plan['end time']
-                    plans.append({
-                        'task': task,
-                        'start time': start_time,
-                        'end time': end_time,
-                    })
-                except Exception as e:
-                    logging.error(f"Response: {request_result}")
-                    logging.error(e.__traceback__)
-                    logging.error(e.__context__)
-                    # raise Exception("Bad Structure of GPT's response(detailed): Neither 'from...to...' or 'at...' structure")
-
-            logging.info(plans)
-            return plans
-        else:
-            raise Exception(f"Regex parsing error after requesting plans. Request result: {request_result}")
-
-    def get_next_plan(self,current_time:dt):
-        """
-        给出下一个plan用于立刻更新状态。如果plan用完了，立刻生成一些fine-grained plan
-        """
-        # default result. TODO: recursive planning from time.
-        return {'status': 'idle', 'duration': 3600}
-
-    def reprioritize(self, **kwargs):
-        """ Reprioritize task list
-        """
-        # TODO: implement reprioritize : 凡哥、京伟
-        return
 
     def action(self, receiver: str, action_type: str, content: str):
         """ Create an action targeted on other agents
@@ -498,14 +291,8 @@ Summarize the dialog above.
         # 一类特殊状态，observation of interaction在对话结束给出摘要时才可以确定，此前不能被环境获取。reverie如何在对话开始时生成一个完整对话暂时没看明白
         # short time observation 应该屏蔽掉同主体同状态防止冗余
 
-        # logger.debug("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
-        
-        # # 测试异步
-        # if self.state_dict['name'].startswith("A"):
-        #     time.sleep(20)
-        # logger.debug("Agent {} is done".format(self.state_dict['name']))
+        logger.debug("Object {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
 
-        # 为了让agent正常工作，memory, plan, summary不能是空的。因此做一次类似于每日开始时应该进行的初始化
         self.minimal_init(current_time)
 
 
@@ -513,32 +300,6 @@ Summarize the dialog above.
 
         # 1. 如果当前正在向openai请求，调过这一步
 
-        # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
-        if self.status_start_time is None: # fixing empty start time
-            self.status_start_time = current_time
-        if self.status_start_time+datetime.timedelta(self.status_duration)>=current_time:
-            # 根据reverie，不产生新观察
-            # 对话过程不会随便转状态，因此把对话duration直接设置无限
-            next_plan=self.get_next_plan(current_time)
-            self.status_start_time=current_time
-            self.status=next_plan['status']
-            self.status_duration=next_plan['duration']
-
-        # 3. 检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
-        #    多个observation一起处理，处理过就扔进短期记忆。
-        #    短期记忆是已经处理过的observation。
-
-        # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) @TODO jingwei
-
-        # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
-
-
-        # # 测试异步
-        # if self.state_dict['name'].startswith("A"):
-        #     time.sleep(20)
-        # logger.debug("Agent {} is done".format(self.state_dict['name']))
-        #    这里假定环境的observation是完整的，查重任务交给short time memory
-        #    当前设计思路 interaction不做特殊处理，防止阻塞自身和他人动作，同时支持多人讨论等场景。
         self.observe()
 
         might_react=len(self.incoming_interactions)>0 or len(self.observation)>0
