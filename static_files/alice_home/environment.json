@@ -151,7 +151,7 @@
         "e_010": {
             "location": [
                 [
-                    150,0
+                    150,1
                 ],
                 [
                     200,40
@@ -206,7 +206,7 @@
             "eid": "e_005",
             "location": [10, 15],
             "size": [10, 10],
-            "engine": "object"
+            "engine": "environment"
         },
         "a_001": {
             "id": "a_001",
@@ -244,6 +244,5 @@
             "size": [10, 10],
             "engine": "object"
         }
-
     }
 }
