@@ -19,8 +19,9 @@ if os.path.exists(agent_path):
     with open(os.path.join(file_dir, file_name), 'r') as f:
         data = json.load(f)
     data['memory']='test_agent_reflection'
-IRagent=GPTAgent(**{"state_dict": data, "agent_file": './static_files/test_env0/a_001r_no_exist.json','environment':None})
+IRagent=GPTAgent(**{ "agent_file": './static_files/test_env0/a_001r.json','environment':None})
 
+# if you don't have a memory file, comment this line. Summary test is included in step() test.
 summary=IRagent.generate_summary(datetime.now().replace(microsecond=0))
 
 # 科目二
