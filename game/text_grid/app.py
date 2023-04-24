@@ -1,5 +1,4 @@
 from flask import Flask, request, send_file
-from flask_socketio import SocketIO, emit
 import os
 from flask import jsonify
 from flask_cors import CORS
@@ -61,10 +60,10 @@ def read_environment():
     return jsonify(data)
 
 
-@socketio.on('tunnel')
-def handle_message(message):
-    print('Received message: ' + message)
-    emit('response', {'data': message})
+# @socketio.on('tunnel')
+# def handle_message(message):
+#     print('Received message: ' + message)
+#     emit('response', {'data': message})
 
 
 if __name__ == '__main__':
