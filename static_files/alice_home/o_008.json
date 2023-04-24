@@ -1,18 +1,18 @@
 {
     "traits": "brandnew",
-    "name": "Alarm Clock",
+    "name": "dining table",
     "vision_radius": 8,
     "attention_bandwidth": 8,
     "retention": 8,
     "time": null,
-    "eid": "e_005",
-    "location": [10, 20],
+    "eid": "e_009",
+    "location": [10, 15],
     "max_velocity": "0/s",
     "moving": "false",
     "status": "",
     "memory":
         [
-            "Alarm at 7:00 o'clock"
+            ""
         ],
     "incoming_observation":
         [

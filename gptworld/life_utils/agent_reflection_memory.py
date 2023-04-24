@@ -11,8 +11,7 @@ import re
 from sklearn.metrics.pairwise import cosine_similarity
 import logging
 import bisect
-from gptworld.models.openai import get_embedding
-
+from gptworld.models.openai import get_embedding, chat
 EMBED_DIM = 1536
 SAVE_OPTIONS = orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_SERIALIZE_DATACLASS | orjson.OPT_INDENT_2
 
@@ -58,13 +57,13 @@ def get_importance(text):
 
 def get_questions(texts):
     prompt = '\n'.join(texts) + '\n' + QUESTION_PROMPT
-    completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
-    )
-    result = completion.choices[0].message['content']
+    # completion = openai.ChatCompletion.create(
+    #     model="gpt-3.5-turbo",
+    #     messages=[
+    #         {"role": "user", "content": prompt}
+    #     ]
+    # )
+    result = chat(prompt)
     questions = [q for q in result.split('\n') if len(q.strip())>0]
     questions=questions[:3]
     return questions

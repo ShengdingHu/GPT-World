@@ -2,7 +2,7 @@ import threading
 import time
 import json
 from gptworld.core.agent import GPTAgent
-from gptworld.core.object import GPTObject
+from gptworld.core.object import GPTObject, GPTEnvObject
 from typing import Dict, List, Tuple
 # from gptworld.core.time_system impor, MOVEMENT_TICK
 import subprocess
@@ -107,6 +107,9 @@ class GPTWorldEnv:
         # self.operational = True
         pass
 
+    def get_area_name(self, eid):
+        return self.env_json['areas'][eid]['name']
+
     def parse_action(self, agent, targets, content=""):
         logger.debug(f"Environment receives action: {agent.name} -> {targets} : {content}")
 
@@ -153,7 +156,8 @@ class GPTWorldEnv:
             obj = self.objects[o_id]
             if obj.eid == agent.eid and o_id != agent.id:
                 if obj.name in send_content:
-                    obj.add_observation(send_content[obj.name])
+                    if isinstance(obj, GPTObject):
+                        obj.add_observation(send_content[obj.name])
         
 
         pass
@@ -259,9 +263,13 @@ class GPTWorldEnv:
         for obj_id, obj in self.env_json['objects'].items():
             if obj_id.startswith('a'):
                 self.agents[obj_id] = GPTAgent(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
-            elif obj['id'].startswith('o'):
+            elif obj['id'].startswith('o') and obj['engine'] == 'object':
                 self.objects[obj_id] = GPTObject(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
+            elif obj['id'].startswith('o') and obj['engine'] == 'environment':
+                self.objects[obj_id] = GPTEnvObject(obj, environment=self)
 
+            
+            
 
     def save(self, ):
         '''Save the environment to a database.
@@ -311,6 +319,17 @@ class GPTWorldEnv:
                 thread = threading.Thread(target=agent.step, args=(self.current_time,))
                 thread_pool.append(thread)
                 thread.start() 
+        
+        for obj_id in self.objects:
+            object = self.objects[obj_id]
+            if isinstance(object, GPTObject):
+                if debug:
+                    object.step(self.current_time)
+                else:
+                    thread = threading.Thread(target=object.step, args=(self.current_time,))
+                    thread_pool.append(thread)
+                    thread.start() 
+            
 
         if not debug:
             for thread in thread_pool:
