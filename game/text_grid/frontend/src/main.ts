@@ -28,6 +28,7 @@ class GameScene extends Scene {
 
   async load_file(){
     const response = await fetch('http://localhost:5001/read_file?file_path=alice_home/environment.json');
+    console.log(response);
     const data = await response.json();
     this.mydata = data['message'];
     return Promise.resolve();
@@ -79,15 +80,15 @@ class GameScene extends Scene {
       }
 
       this.gridGraphics.fillRect(
-        ORIGIN_X - this.squareSize /2 + this.squareSize * (area.pos[0][0] -1),
-        ORIGIN_Y - this.squareSize / 2+ this.squareSize * (area.pos[0][1] -1),
-        (area.pos[1][0] - area.pos[0][0] + 1)* this.squareSize,
-        (area.pos[1][1] - area.pos[0][1] + 1 )* this.squareSize
+        ORIGIN_X - this.squareSize /2 + this.squareSize * (area.location[0][0] -1),
+        ORIGIN_Y - this.squareSize / 2+ this.squareSize * (area.location[0][1] -1),
+        (area.location[1][0] - area.location[0][0] + 1)* this.squareSize,
+        (area.location[1][1] - area.location[0][1] + 1 )* this.squareSize
       );
       // Add the text in the middle of the strokeRect, with the text value of area.name
       this.add.text(
-        100 - this.squareSize /2 + this.squareSize * (area.pos[0][0] -1) + ((area.pos[1][0] - area.pos[0][0] )* this.squareSize)/2,
-        100 - this.squareSize / 2+ this.squareSize * (area.pos[0][1] -1) + ((area.pos[1][1] - area.pos[0][1] )* this.squareSize)/2,
+        100 - this.squareSize /2 + this.squareSize * (area.location[0][0] -1) + ((area.location[1][0] - area.location[0][0] )* this.squareSize)/2,
+        100 - this.squareSize / 2+ this.squareSize * (area.location[0][1] -1) + ((area.location[1][1] - area.location[0][1] )* this.squareSize)/2,
         area.name,
         {
           font: '15px Arial',
@@ -109,8 +110,8 @@ class GameScene extends Scene {
 
       console.log("obj", obj)
 
-      let obj_x = obj.pos[0] + this.mydata.areas[obj.eid].pos[0][0]
-      let obj_y = obj.pos[1] + this.mydata.areas[obj.eid].pos[0][1]
+      let obj_x = obj.location[0] + this.mydata.areas[obj.eid].location[0][0]
+      let obj_y = obj.location[1] + this.mydata.areas[obj.eid].location[0][1]
 
       console.log("obj_x, obj_y", obj_x, obj_y)
       // Check if the object already exists in the scene
