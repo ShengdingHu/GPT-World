@@ -177,7 +177,7 @@ Strictly obeying the Output format:
                     self.status=reaction
                     self.status_duration=0
                     self.status_start_time=current_time
-                    self.plan_in_detail(current_time)
+                    # self.plan_in_detail(current_time)
 
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
 

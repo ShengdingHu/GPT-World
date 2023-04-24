@@ -158,6 +158,8 @@ class EnvElem:
                 self.observation.append(ob)
                 self.short_term_memory=[s for s in self.short_term_memory if not s.split('is')[0] == ob.split('is')[0]]
                 self.short_term_memory.append(ob)
+                # observation在这里不能直接拉进记忆，否则query出来的全是observation，没有意义
+                # 在reaction判定结束以后再拉近记忆比较好。
         return self.observation
     
     def reflect(self,time:datetime):
@@ -743,6 +745,10 @@ Strictly obeying the Output format:
                     self.status_duration=0
                     self.status_start_time=current_time
                     self.plan_in_detail(current_time)
+
+        # 3.5 observation拉入记忆
+        for ob in self.observation:
+            self.long_term_memory.add(ob,current_time,['observation'])
 
         # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) 
 

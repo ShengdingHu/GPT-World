@@ -282,10 +282,11 @@ class ReflectionMemory():
         return self.accumulated_importance >= self.reflection_threshold
 
     def maybe_reflect(self, time: datetime):
-        if self.should_reflect():
-            return self.reflection(time)
-        else:
-            return 'reflection reject to prevent duplicate reflecting result'
+        if not self.should_reflect():
+            return 'reflection reject: prevent duplicate reflecting result'
+        if self.data.texts.__len__()==0:
+            return 'reflection reject: no memory'
+        return self.reflection(time)
 
     def sort_data_by_createtime(self):
         """
