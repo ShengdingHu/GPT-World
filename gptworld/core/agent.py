@@ -220,8 +220,8 @@ class GPTAgent(EnvElem):
         # fine-grained plan list for next task searching
         # format: [{"task": "XXX", "start_time": str(datetime.datetime(2023,4, 1)), "end_time": str(datetime.datetime(2023,4, 1))}]
         self.plan = self.state_dict.get('plan',[])
-
-        logger.info(f"{type(self)} {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
+        if self.environment is not None:
+            logger.info(f"{type(self)} {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
 
 
 
@@ -328,7 +328,7 @@ participating algorithm competition in the lab room at 14:00
 
         matches = re.findall(r'[^\n]+', request_result)
 
-        logging.info(self.whole_day_plan)
+        # logging.info(self.whole_day_plan)
 
         self.whole_day_plan[sDate]=matches
         # 提交到记忆
@@ -487,7 +487,7 @@ Example format:
         """
         if len(self.long_term_memory.data.texts)==0:
 
-            logging.info(self.whole_day_plan)
+            # logging.info(self.whole_day_plan)
 
             for k,v in self.whole_day_plan.items():
                 sPlan=f"This is {self.name}'s plan for {k}: "+','.join(v)
