@@ -589,7 +589,7 @@ Example format:
         the agent as the long_term_memory. Also we generate summary and whole day plan if it's empty.
         """
         if len(self.long_term_memory.data.texts)==0:
-            for k,v in self.whole_day_plan:
+            for k,v in self.whole_day_plan.items():
                 sPlan=f"This is {self.name}'s plan for {k}: "+','.join(v)
                 self.long_term_memory.add(sPlan,dt.strptime(k,"%B %d %Y"),['plan'])
             for des in self.description:
