@@ -242,6 +242,12 @@ class ReflectionMemory():
 
         timediff = np.array([(curtime - a).total_seconds() // 3600 for a in self.data.accessTime])
         recency = np.power(0.99, timediff)
+        # logging.info(self.data.embeddings)
+        # logging.info(np.array(embedding)[np.newaxis, :])
+
+        if len(self.data.embeddings) == 0:
+            return []
+
         relevance = cosine_similarity(np.array(embedding)[np.newaxis, :], self.data.embeddings)[0]
         importance = self.data.importance / 10
 

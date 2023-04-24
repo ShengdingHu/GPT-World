@@ -3,7 +3,10 @@ from datetime import datetime
 import openai
 import os
 import json
+import logging
 from gptworld.models.openai import chat as request
+
+logging.basicConfig(level=logging.INFO)
 
 openai.api_key = "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"
 openai.api_key_path=None
@@ -13,12 +16,16 @@ os.environ['OPENAI_METHOD'] = "api_key"
 
 # 科目一
 file_dir='unit_test'
-file_name='../static_files/test_env0/a_001r.json'
-agent_path = os.path.join(file_dir, file_name)
+# file_name='static_files/test_env0/a_001r.json'
+# agent_path = os.path.join(file_dir, file_name)
+# print(agent_path)
+agent_path = "static_files/test_env0/a_001r.json"
 if os.path.exists(agent_path):
-    with open(os.path.join(file_dir, file_name), 'r') as f:
+    with open(agent_path, 'r') as f:
         data = json.load(f)
     data['Memory']='test_agent_reflection'
+else:
+    print("File No found")
 IRagent=GPTAgent(**{"state_dict": data, "agent_file": './static_files/test_env0/a_001r.json','environment':None})
 
 summary=IRagent.generate_summary(datetime.now().replace(microsecond=0))

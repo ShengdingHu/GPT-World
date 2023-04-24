@@ -95,6 +95,8 @@ class GPTAgent:
         # format: {"%B %d %Y": ["... ", "... ", ...]} no strict format
         self.whole_day_plan = state_dict.get('whole_day_plan',{})
 
+        logging.info(self.whole_day_plan)
+
         # fine-grained plan list for next task searching
         # format: [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
         self.plan = state_dict.get('plan',[])
@@ -168,6 +170,15 @@ class GPTAgent:
 
         # the agent is calling language model
         self.blocking = False
+
+        # the total number of steps the agent has gone through
+        self.step_cnt = 0  # TODO: Later add this key into the dictionary of agent static files and import that value
+
+        # how many logical frames to do a summary
+        self.summary_interval = 1000
+
+        # how many logical frames to do a reflection
+        self.reflection_interval = 100
 
         return
     
@@ -304,7 +315,7 @@ participating algorithm competition in the lab room at 14:00
         matches=re.findall(r'[^\n]+',request_result)
         self.whole_day_plan[time.strftime("%B %d %Y")]=matches
 
-
+        logging.info(self.whole_day_plan)
 
         # a typical example to test the regex expressions without access to the GPT
         # request_result = """
@@ -491,7 +502,8 @@ participating algorithm competition in the lab room at 14:00
         the agent as the long_term_memory. Also we generate summary and whole day plan if it's empty.
         """
         if len(self.long_term_memory.data.texts)==0:
-            for k,v in self.whole_day_plan:
+            logging.info(self.whole_day_plan)
+            for k,v in self.whole_day_plan.items():
                 sPlan=f"This is {self.name}'s plan for {k}: "+','.join(v)
                 self.long_term_memory.add(sPlan,dt.strptime(k,"%B %d %Y"),['plan'])
             for des in self.description:
@@ -532,7 +544,7 @@ Summarize the dialog above.
         # 一类特殊状态，observation of interaction在对话结束给出摘要时才可以确定，此前不能被环境获取。reverie如何在对话开始时生成一个完整对话暂时没看明白
         # short time observation 应该屏蔽掉同主体同状态防止冗余
 
-        logger.debug("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
+        logger.info("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
         
         # # 测试异步
         # if self.state_dict['name'].startswith("A"):
@@ -660,7 +672,15 @@ Output format:
                     self.status_start_time=current_time
                     # self.plan_in_detail()
 
-        # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) @TODO jingwei
+        # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) 
+
+        self.step_cnt += 1
+        if self.step_cnt % self.summary_interval == 0:
+            self.generate_summary(current_time)
+
+        if self.step_cnt % self.reflection_interval == 0:
+            self.reflect(current_time)
+
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
 
