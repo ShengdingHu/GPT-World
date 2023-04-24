@@ -2,7 +2,6 @@ import json
 import requests
 from typing import List
 import os
-import openai
 
 def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.5) -> str:
     if isinstance(context, str):
