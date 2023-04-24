@@ -30,18 +30,18 @@ We use Vue + TypeScipt + Phaser3 as the frontend, and use a simple flask app as
 ```bash
 pip install Flask
 pip install Flask_CORS
-cd game/text_grid
+cd game/text_grid/frontend
 npm install
 npm install phaser
 ```
 
 To check they are correctly installed, do the following：
-1. 
+1. check the backend.
 ```bash
 cd game/text_grid
 python app.py
 ```
-2. 
+2. check the frontend.
 ```bash
 cd game/text_grid/frontend
 npm run dev

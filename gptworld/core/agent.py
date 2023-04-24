@@ -11,6 +11,7 @@ from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
 from gptworld.life_utils.agent_tool import as_tool, Tool
 # from gptworld.utils import request_GPT
 from gptworld.utils.logging import get_logger
+from gptworld.utils.envlog import envlog
 import os
 from gptworld.models.openai import chat
 import bisect
@@ -24,16 +25,6 @@ logger.info = print
 Agent class implements the static, mind, inner, and cognitive process
 """
 
-# # The color for intermediate result
-# RESET = "\033[0m"  # reset color output
-# GREEN = "\033[92m"  # Green text
-# MAGENTA = "\033[35m"  # Magenta text
-# RED = "\033[31m"  # Red text
-# BOLD = "\033[1m"  # Bold text
-# BLUE = "\033[34m"  # Blue text
-#
-# MAX_SHORT_TERM_MEMORY = 1500
-# MAX_LONG_TERM_MEMORY = 1500
 
 
 class GPTAgent:
@@ -41,7 +32,6 @@ class GPTAgent:
     """
 
     def __init__(self,
-                 state_dict: dict,
                  agent_file,
                  environment,
                  # llm: callable,
@@ -60,7 +50,7 @@ class GPTAgent:
         self.agent_file = agent_file
         self.id = os.path.splitext(os.path.basename(self.agent_file))[0]
         new_state_dict = self.load_from_file(agent_file)
-        state_dict.update(new_state_dict)
+        state_dict = new_state_dict
         self.state_dict = state_dict
         self.environment = environment
 
@@ -449,6 +439,8 @@ Example format:
             end_time=str(dt.combine(time.date(),dt.strptime(entry[1],'%H:%M').time()))
             task=entry[2].strip()
             new_plans.append({'start_time':start_time,'end_time':end_time,'task':task})
+        
+        envlog(self.name, "Plan: " + json.dumps(new_plans))
         self.plan=[entry for entry in self.plan if dt.strptime(entry['end_time'],'%Y-%m-%d %H:%M:%S')<=minimum_time]
         self.plan.extend(new_plans)
         return new_plans[0]
@@ -622,6 +614,79 @@ Summarize the dialog above.
             self.incoming_observation.extend(self.pending_observation)
             self.pending_observation = []
 
+    def initialize_map_status(self):
+        map = {}
+        for id, info in self.environment.env_json['areas']:
+            for i in range(info['pos'][0][0], info['pos'][1][0] + 1):
+                for j in range(info['pos'][0][1], info['pos'][1][1] + 1):
+                    map[[i, j]] = info['border']
+        return map
+                
+    def unreachable_signal(self, target):
+        self.observe()  # TODO: 为什么这里要 observe
+        print('Target {} is unreacable.'.format(target))
+
+    def find_movement(self, target_description):
+
+        # def filter(env_json):
+            
+
+
+        prompt = """
+        This map is like: {}.
+        I am now trying to get to the target location: {},
+        and my current location is {} in current layer.
+        Which location should I go to in order to reach my target location within the same layer.
+        Show me the target object's id. If you can't find it, print ERROR.
+        """.format(json.dumps(self.environment.env_json), target_description, '[{}, {}]'.format(self.location[0], self.location[1]))
+
+        target_id = chat(prompt)
+        from IPython import embed; embed(header='in 645')
+        target = None
+        for id, info in self.environment.env_json['objects'].items():
+            if id == target_id:
+                area_delta = self.environment.env_json['areas'][info['eid']]['location']
+                relative_pos = info['location'][0]
+                target = [relative_pos[0] + area_delta[0], relative_pos[1] + area_delta[1]]
+                break
+
+        if target_id == "ERROR" or target == None:
+            self.unreachable_signal("[N/A]")
+            return
+
+        size = self.environment.env_json['size']
+        map = self.initialize_map_status()
+
+        def reachable(pos):
+            if not (1 <= pos[0] <= size[0] and 1 <= pos[1] <= size[1]): return False
+            return pos not in map or map[pos] != 3
+
+        from queue import Queue
+        directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]
+
+        d = {target : 0}
+
+        Q = Queue(maxsize=0)
+        Q.push(target)
+        while not Q.empty():
+            u = Q.get()
+            for x, y in directions:
+                v = [u[0] + x, u[1] + y]
+                if reachable(v) and (v not in d):
+                    d[v] = d[u] + 1
+                    Q.put(v)
+
+        self.movement = self.location
+
+        u = self.location
+        for x, y in directions:
+            v = [u[0] + x, u[1] + y]
+            if reachable(v) and d[u] == d[v] + 1:
+                self.movement = v
+                break
+        
+        self.unreachable_signal(target)
+
     def step(self, current_time:dt):
         """ Call this method at each time frame
         """
@@ -716,25 +781,28 @@ Summarize the dialog above.
         if len(self.observation)>0:
             #
             sPrompt = f"""
-Should {self.name} react to the observation? Say yes or no. 
+1. Should {self.name} react to the observation? Say yes or no. 
 If yes, tell me about the reaction, omitting the subjective. For example, say 'eating' instead of '{self.name} eats'.  
-Is this reaction about saying something? Say yes or no.  
+2. Is this reaction about saying something? Say yes or no.  
 If yes, tell me the content being said in double quotes. 
-Does this reaction has a specific target? Say yes or no. 
+3. Does this reaction has a specific target? Say yes or no. 
 If yes, tell me the name or how would {self.name} call it. 
-Does this reaction need a movement? Say yes or no. 
-Also tell me if this reaction terminates {self.name}'s status, Say yes or no. 
+4. Also tell me if this reaction terminates {self.name}'s status, Say yes or no. 
+5. Does this reaction involve {self.name} moving to a new location? Say yes or no. 
 Strictly obeying the Output format:
+
 ```
 1. <Yes/No for being a reaction> : <reaction>
 2. <Yes/No for saying something> : <content being said>
 3. <Yes/No for targeting> : <target name>
 4. <Yes/No for terminating self status> 
+5. <Yes/No for movement>
 ```
 """
             result=chat('\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt]))
+            
             lines=result.split('\n')
-            if len(lines)<4:
+            if len(lines)<5:
                 logging.warning('abnormal reaction:'+result)
             # line_split=[line.strip().split('$$') for line in lines]
             finds=[line.find('Yes') for line in lines]
@@ -742,6 +810,7 @@ Strictly obeying the Output format:
             should_oral,oral=finds[1]>=0,lines[1][finds[1]+4:].strip().strip(':').strip()
             have_target,target=finds[2]>=0,lines[2][finds[2]+4:].strip().strip(':').strip()
             terminate=finds[3]>=0
+            movement=finds[4]>=0
 
 
             # should_react, reaction=line_split[0][1], line_split[0][2].strip(':').strip()
@@ -757,6 +826,7 @@ Strictly obeying the Output format:
                 if not have_target:
                     target=None
 
+                envlog(self.name, reaction_content)
                 if self.environment is not None:
                     self.environment.parse_action(self, target, reaction_content)
                 if terminate:
@@ -768,6 +838,9 @@ Strictly obeying the Output format:
         # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) @TODO jingwei
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
+        # from IPython import embed; embed(header="833")
+        if movement:
+            self.find_movement(reaction)
 
         return
 
@@ -913,7 +986,7 @@ Output format:
                 if not have_target:
                     target=''
 
-                from IPython import embed; embed(header="in 774")
+                # from IPython import embed; embed(header="in 774")
                 if self.environment is not None:
                     self.environment.parse_action(self, target, reaction_content)
                 if terminate:
