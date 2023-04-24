@@ -2,7 +2,7 @@ import json
 import requests
 from typing import List
 import os
-import openai
+
 
 def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.5) -> str:
     if isinstance(context, str):
@@ -54,7 +54,6 @@ def get_embedding(text: str) -> List[float]:
         text = text.replace("\n", " ")
         embedding = openai.Embedding.create(input=[text], model="text-embedding-ada-002")["data"][0]["embedding"]
         return embedding
-
 
 
 if __name__ == "__main__":

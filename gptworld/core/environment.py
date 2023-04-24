@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple
 # from gptworld.core.time_system impor, MOVEMENT_TICK
 import subprocess
 from gptworld.utils.logging import get_logger
+from gptworld.utils.UILogging import UILogging
 import os
 import datetime
 from gptworld.models.openai import chat
@@ -21,50 +22,9 @@ logger.info =  print
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-
-
-
 def run_dev():
     subprocess.run(['npm', 'run', 'dev'], cwd=f'{CURRENT_DIR}/../../game/text_grid/frontend', capture_output=True,shell=True)
     subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../..//game/text_grid', capture_output=True,shell=True)
-
-
-def action_parser():
-    """ Parser parses natural language to identify the broadcasting target(s).
-        Broadcast the message to the observation of the relevant agent(s).
-    """
-
-    prompt = """
-    Example 1
-    Thought:
-    I need to send a text message to my parents and tell them that I am fine
-    Knowledge:
-    Relationship=["Father": "Lao Wang", "Mother": "Lao Li"]
-    API Call:
-    "Lao Wang", "messaging", "I'm fine"
-    "Lao Li", "messaging", "I'm fine"
-
-    Example 2:
-    Thought:
-    I want to inform my friends that I want to have a party on Sunday
-    Knowledge:
-    Friend: ["Little A", "Little B", "Little C"]
-    API Call:
-    "Little A", "messaging", "I want to have a party on Sunday"
-    "Little B", "messaging", "I want to have a party on Sunday"
-    "Little C", "Text message", "I want to have a party on Sunday"
-
-    Have you discovered the pattern? The first is the only existing named entity (not a reference), the second is the action, and the third is the specific content. If the action is given, it is best to choose from it, if you have other unprovided actions, you could use "misc". The content may not be provided.
-
-    Here is a new scenario:
-    Thought:
-    I want to start the car
-    Knowledge:
-    ParentElement: ["Das Auto A100": "start engine", "get off", "open windows", "misc"]
-    API Call:
-    """
-    
-    return
 
 
 class GPTWorldEnv:
@@ -89,11 +49,11 @@ class GPTWorldEnv:
         self.agents, self.objects = {}, {}
 
         self.load_objects_and_agents()
+
+        self.uilogging = UILogging(file_dir)
         
         logger.debug("Initialize Complete!")
-
         
-
         # TODO: grid mapping from position tuple to agent id
         # self.grid: Dict[Tuple[int, int], str] = {}
 

@@ -1,12 +1,12 @@
 import './style.css';
 import { Scene, Game, WEBGL, GameObjects} from 'phaser';
 
+
 const API_ROOT = "http://localhost:5001";
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const ORIGIN_X = 100;
 const ORIGIN_Y = 100;
-
 
 function loadIcon(name: string, scene: Scene) {
   let url = API_ROOT+"/text_to_icon?name="+name;
@@ -29,13 +29,13 @@ async function loadTile(name: string, scene: Scene) {
   scene.load.start();
 }
 
-
 class GameScene extends Scene {
   private readonly gridWidth = 100;
   private readonly gridHeight = 100;
   private readonly squareSize = 5;
   private gridGraphics!: GameObjects.Graphics;
   private mydata: any;
+  private lastTime: integer | undefined;
 
   constructor() {
     super('scene-game');
@@ -87,10 +87,12 @@ class GameScene extends Scene {
       const width = (area.location[1][0] - area.location[0][0] + 1)* this.squareSize;
       const height = (area.location[1][1] - area.location[0][1] + 1 )* this.squareSize;
 
+      // draw the border for the upcoming block
       const graphics = this.add.graphics();
       graphics.lineStyle(4, 0xEEE8CD, 1.0);
-      graphics.strokeRect(x-1, y-1, width+1, height+1);
+      graphics.strokeRect(x-2, y-2, width+2, height+2);
       
+      // draw a block with background image
       const tileSprite = this.add.tileSprite(x, y, width, height, area.name);
       tileSprite.setOrigin(0, 0);
 
@@ -162,11 +164,9 @@ class GameScene extends Scene {
         );
         obj_title.setName(object_key+"_title");
 
-
       }
     }
   }
-
 
   async create() {
     await this.load_file();
@@ -176,7 +176,7 @@ class GameScene extends Scene {
     this.place_objects();
   }
 
-    /// Use the update() function to update the square's locationition every 1 second to the left
+  // Use the update() function to update the square's locationition every 1 second to the left
   update(time, delta) {
       // Set the scene's time event to update the square's locationition every 1 second to the left
       if (time > this.lastTime + 1000) {
