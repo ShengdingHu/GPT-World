@@ -12,6 +12,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import logging
 import bisect
 from gptworld.models.openai import get_embedding, chat
+from gptworld.utils.envlog import envlog
 EMBED_DIM = 1536
 SAVE_OPTIONS = orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_SERIALIZE_DATACLASS | orjson.OPT_INDENT_2
 
@@ -38,14 +39,8 @@ the above statements? (example format: insight \
 
 def get_importance(text):
     prompt = IMPORTANCE_PROMPT.format(text)
-    completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.
-    )
-    result = completion.choices[0].message['content']
+    result = chat(prompt)
+
     try:
         score = int(re.findall(r'\s*(\d+)\s*', result)[0])
     except:
@@ -74,13 +69,7 @@ def get_insights(statements):
     for i, st in enumerate(statements):
         prompt += (str(i + 1) + '. ' + st + '\n')
     prompt += INSIGHT_PROMPT
-    completion = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "user", "content": prompt}
-        ]
-    )
-    result = completion.choices[0].message['content']
+    result = chat(prompt)
     insights = result.split('\n')[:5]
     insights = ['.'.join(i.split('.')[1:]) for i in insights]
     # remove insight pointers for now
@@ -124,6 +113,7 @@ class ReflectionMemory():
 
     def __init__(self, state_dict, file_dir='./') -> None:
         # the least importance threshold for reflection. It seems that setting it to 0 does not induce duplicate reflections
+        self.name = state_dict['name']
         self.reflection_threshold = state_dict.get( 'reflection_threshold', 0)
         self.memory_id = state_dict.get('memory', state_dict['name']+'_LTM')
         self.filename = os.path.join(file_dir,f"{self.memory_id}.json")
@@ -268,6 +258,7 @@ class ReflectionMemory():
         questions = get_questions(mem_of_interest)
         statements = sum([self.query(q, 5, time) for q in questions], [])
         insights = get_insights(statements)
+        envlog(self.name, f"Insights: {insights}")
         for insight in insights:
             self.add(insight, time, tag=['reflection'])
         return insights

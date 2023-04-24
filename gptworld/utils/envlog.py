@@ -15,4 +15,4 @@ def envlog(domain, message):
     and a file for web demo.
     '''
 
-    print(f"{BLUE}{domain}: {RESET}{message}")
+    print(f"{RED}{domain}: {RESET}{message}")

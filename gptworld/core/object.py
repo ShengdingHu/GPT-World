@@ -142,19 +142,27 @@ Strictly obeying the Output format:
 ```
 """
             send_message = '\n'.join([sTime,sStatus,sObservation,sContext,sPrompt])
-            logger.debug("Prompt of {self.name}'s reaction: "+send_message)
-            result=chat(send_message)
-            
-            lines=result.split('\n')
-            if len(lines)<5:
-                logging.warning('abnormal reaction:'+result)
-            # line_split=[line.strip().split('$$') for line in lines]
-            finds=[line.find('Yes') for line in lines]
-            should_react,reaction=finds[0]>=0,lines[0][finds[0]+4:].strip().strip(':').strip()
-            should_oral,oral=finds[1]>=0,lines[1][finds[1]+4:].strip().strip(':').strip()
-            have_target,target=finds[2]>=0,lines[2][finds[2]+4:].strip().strip(':').strip()
-            terminate=finds[3]>=0
-            movement=finds[4]>=0
+            try_num = 0
+            while try_num < 3:
+                result=chat(send_message)
+                try:
+                    lines=result.split('\n')
+                    if len(lines)<5:
+                        logging.warning('abnormal reaction:'+result)
+                    # line_split=[line.strip().split('$$') for line in lines]
+                    finds=[line.find('Yes') for line in lines]
+                    should_react,reaction=finds[0]>=0,lines[0][finds[0]+4:].strip().strip(':').strip()
+                    should_oral,oral=finds[1]>=0,lines[1][finds[1]+4:].strip().strip(':').strip()
+                    have_target,target=finds[2]>=0,lines[2][finds[2]+4:].strip().strip(':').strip()
+                    terminate=finds[3]>=0
+                    movement=finds[4]>=0
+                    break
+                except IndexError:
+                    logging.debug(f"Generated reaction {result}. Retrying...")
+                    pass
+
+            logger.debug(f"Prompt of {self.name}'s reaction: "+send_message+"Return message is "+result)
+
 
 
             # should_react, reaction=line_split[0][1], line_split[0][2].strip(':').strip()

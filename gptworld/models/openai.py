@@ -2,6 +2,7 @@ import json
 import requests
 from typing import List
 import os
+import openai
 
 def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.5) -> str:
     if isinstance(context, str):
@@ -18,7 +19,7 @@ def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.5) -> str:
 
     jsondata = json.dumps(data)
     res = session.post(url = url, data = jsondata, headers = headers)
-    print("->", res.text)
+    # print("->", res.text)
     response_dict = json.loads(res.text.strip())
     # print(response_dict)
     try:
@@ -28,8 +29,8 @@ def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.5) -> str:
 
 
 def get_embedding(text: str) -> List[float]:
-    # if os.environ['OPENAI_METHOD'] == 'pool':  # TODO, remove this in public version.
-    if True:
+    # if os.environ['OPENAI_METHOD'] == 'pool':  # TODO, remove this in public ver–sion.
+    if os.environ['OPENAI_METHOD'] == "pool":
         url = "http://freegpt.club/gptworld_embedding"
         headers={"Content-Type":"application/json"}
         session = requests.Session()
@@ -41,7 +42,7 @@ def get_embedding(text: str) -> List[float]:
         jsondata = json.dumps(data)
         res = session.post(url = url, data = jsondata, headers = headers)
 
-        print("->", res.text)
+        # print("->", res.text)
 
         # print(res)
         response_dict = json.loads(res.text.strip())

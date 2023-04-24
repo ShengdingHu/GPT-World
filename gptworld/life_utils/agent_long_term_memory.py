@@ -7,16 +7,13 @@ import orjson
 from typing import Any, List, Optional
 import numpy as np
 import os
+from gptworld.models.openai import get_embedding
 
 
 # TODO: the long term memory module need to be integrated into the agent.
 
 
-def get_ada_embedding(text):
-    text = text.replace("\n", " ")
-    # TODO: try to use request to replace openai.Embedding.create
-    embedding = openai.Embedding.create(input=[text], model="text-embedding-ada-002")["data"][0]["embedding"]
-    return embedding
+
 
 
 EMBED_DIM = 1536
@@ -61,7 +58,7 @@ class LongTermMemory():
             return ""
         self.data.texts.append(text)
 
-        embedding = get_ada_embedding(text)
+        embedding = get_embedding(text)
 
         vector = np.array(embedding).astype(np.float32)
         vector = vector[np.newaxis, :]
@@ -112,7 +109,7 @@ class LongTermMemory():
 
         Returns: List[str]
         """
-        embedding = get_ada_embedding(text)
+        embedding = get_embedding(text)
 
         scores = np.dot(self.data.embeddings, embedding)
 

@@ -142,7 +142,7 @@ class EnvElem:
         Should return string, or subject predicate object/predicative
         observation has a upper limit,
         """
-        logger.debug(f"{self.name} is observing ...")
+        logger.debug(f"{self.name} is observing and generate short-term memory...")
 
         if limit is None:
             import math; limit=math.inf
@@ -160,6 +160,7 @@ class EnvElem:
                 self.short_term_memory.append(ob)
                 # observation在这里不能直接拉进记忆，否则query出来的全是observation，没有意义
                 # 在reaction判定结束以后再拉近记忆比较好。
+        envlog(self.name, f"short-term memory: {self.short_term_memory}")
         return self.observation
     
     def reflect(self,time:datetime):
@@ -612,9 +613,7 @@ Summarize the dialog above.
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
 
         # 1. 如果当前正在向openai请求，调过这一步
-
         self._move_pending_observation()
-
         # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
         if self.status_start_time is None: # fixing empty start time
             self.status_start_time = current_time
@@ -625,14 +624,13 @@ Summarize the dialog above.
             self.status_start_time=current_time
             self.status=next_plan['status']
             self.status_duration=next_plan['duration']
-
+            envlog(f"{self.name}", f"status: {self.status}, duration: {self.status_duration}")
         # 3. 检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
         #    多个observation一起处理，处理过就扔进短期记忆。
         #    短期记忆是已经处理过的observation。
         #    这里假定环境的observation是完整的，查重任务交给short time memory
         #    当前设计思路 interaction不做特殊处理，防止阻塞自身和他人动作，同时支持多人讨论等场景。
         self.observe()
-
         might_react=len(self.incoming_interactions)>0 or len(self.observation)>0
         if might_react:
             self.reflect(current_time)
@@ -649,8 +647,10 @@ Summarize the dialog above.
                     queries.append(interaction['sender']+':' +interaction['content'])
             # 一点小修改：加上对话的最后几轮作为query
 
-            sContext = f"Summary of relevant context from {self.name}'s memory: " + \
-                    ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in queries],[]))
+            memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in queries],[])).strip()
+            if len(memory_string) > 0:
+                memory_string = "Empty"
+            sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
 
 #         if len(self.incoming_interactions)>0:
 #             # is currently in an conversation
@@ -704,9 +704,10 @@ Strictly obeying the Output format:
 ```
 """
             try_num = 0
+            send_message = '\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt])
+            logger.debug(f"Prompt of {self.name}'s reaction: "+send_message)
             while try_num < 3:
-                result=chat('\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt]))
-            
+                result=chat(send_message)
                 try:
                     lines=result.split('\n')
                     if len(lines)<5:
@@ -721,7 +722,11 @@ Strictly obeying the Output format:
                     break
                 except IndexError:
                     logging.debug(f"Generated reaction {result}. Retrying...")
+                    try_num += 1
+                    should_react = False
                     pass
+            
+                
 
 
             # should_react, reaction=line_split[0][1], line_split[0][2].strip(':').strip()
@@ -745,6 +750,9 @@ Strictly obeying the Output format:
                     self.status_duration=0
                     self.status_start_time=current_time
                     self.plan_in_detail(current_time)
+                
+            if movement:
+                self.find_movement(reaction)
 
         # 3.5 observation拉入记忆
         for ob in self.observation:
@@ -762,8 +770,6 @@ Strictly obeying the Output format:
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
         # from IPython import embed; embed(header="833")
-            if movement:
-                self.find_movement(reaction)
-
+            
         return
 
