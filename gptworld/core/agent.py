@@ -5,6 +5,7 @@ from typing import Dict, List
 import tiktoken
 import logging
 import datetime
+from time import sleep
 from datetime import datetime as dt
 # from gptworld.core.environment import GPTWorldEnv
 from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
@@ -313,7 +314,16 @@ participating algorithm competition in the lab room at 14:00
 """
         # chat拒绝给一个真人定schedule，遇到类似拒绝回答情况可以强调这不是一个真人
         request_result = chat(summary+former_plan+prompt)
-        matches=re.findall(r'[^\n]+',request_result)
+
+        # deal with the situation where Chat-GPT refuse to give a plan
+        bad_response_pattern = "As an AI language model"
+        warning_to_gpt = "\nJust use the information above to generate the plan."
+
+        while re.search(pattern=bad_response_pattern, string=request_result):
+            request_result = chat(summary+former_plan+prompt + warning_to_gpt)
+            sleep(1)
+
+        matches = re.findall(r'[^\n]+', request_result)
 
         logging.info(self.whole_day_plan)
 
@@ -445,7 +455,14 @@ Example format:
 14:00 - 14:10 $ Get ready for the next class.
 """
         result=chat(summary+sHourPlan+sPrompt)
+
         sEntries=re.findall('(\d+:\d+)\s*-\s*(\d+:\d+)\s\$([^\n]*)',result)
+
+        if not sEntries:
+            logging.error("Regex Parsing Error in plan_in_detail")
+            logging.error("Chat result = " + result)
+            raise Exception("Regex Error")
+
         new_plans=[]
         minimum_time=dt.combine(time.date(),dt.strptime(sEntries[0][0],'%H:%M').time())
         for entry in sEntries:
