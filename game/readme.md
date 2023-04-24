@@ -16,8 +16,9 @@ npm install phaser
 
  (without the main loop of the GPTWorld)
 
-1. at game/text_grid
+1. Open a terminal
 ```bash
+cd game/text_grid
 python app.py
 ```
 

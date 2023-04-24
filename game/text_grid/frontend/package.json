@@ -13,6 +13,8 @@
     "vite": "^4.2.0"
   },
   "dependencies": {
-    "phaser": "^3.60.0"
+    "phaser": "^3.60.0",
+    "socket.io-client": "^4.6.1",
+    "vue-socket.io": "^3.0.10"
   }
 }

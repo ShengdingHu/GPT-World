@@ -1,4 +1,5 @@
 from flask import Flask, request, send_file
+from flask_socketio import SocketIO, emit
 import os
 from flask import jsonify
 from flask_cors import CORS
@@ -40,7 +41,6 @@ def text_to_tile_route():
 ########################################################
 
 
-
 @app.route('/read_environment', methods=['GET'])
 def read_environment():
 
@@ -61,14 +61,10 @@ def read_environment():
     return jsonify(data)
 
 
-# @app.route('/read_file', methods=['GET'])
-# def read_file_route():
-#     file_path = request.args.get('file_path')
-#     with open(f"{PARENT_DIR}/../../static_files/{file_path}", 'r') as f:
-#         content = json.load(f)
-    
-#     data = {'message': content}
-#     return jsonify(data)
+@socketio.on('tunnel')
+def handle_message(message):
+    print('Received message: ' + message)
+    emit('response', {'data': message})
 
 
 if __name__ == '__main__':
