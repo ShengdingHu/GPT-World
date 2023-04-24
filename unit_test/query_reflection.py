@@ -23,7 +23,7 @@ os.environ['OPENAI_METHOD'] = "api_key"
 
 if __name__=='__main__':
 
-    config={'Memory':'test_agent_reflection'}
+    config={'memory':'IR'}
     r=ReflectionMemory(config,'../static_files/test_env0/')
     with open('IR_characteristics.txt','r') as f:
         lines=f.readlines()

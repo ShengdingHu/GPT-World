@@ -8,7 +8,7 @@ from gptworld.models.openai import chat as request
 openai.api_key = "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"
 openai.api_key_path=None
 openai.organization=None
-os.environ['OPENAI_METHOD'] = "api_key"
+os.environ['OPENAI_METHOD'] = "pool"
 ## if you want to run this test, run 'query_reflection.py' first
 
 # 科目一
@@ -18,9 +18,10 @@ agent_path = os.path.join(file_dir, file_name)
 if os.path.exists(agent_path):
     with open(os.path.join(file_dir, file_name), 'r') as f:
         data = json.load(f)
-    data['Memory']='test_agent_reflection'
-IRagent=GPTAgent(**{"state_dict": data, "agent_file": './static_files/test_env0/a_001r.json','environment':None})
+    data['memory']='test_agent_reflection'
+IRagent=GPTAgent(**{ "agent_file": './static_files/test_env0/a_001r.json','environment':None})
 
+# if you don't have a memory file, comment this line. Summary test is included in step() test.
 summary=IRagent.generate_summary(datetime.now().replace(microsecond=0))
 
 # 科目二
@@ -79,4 +80,4 @@ observations="""1. Isabella Rodriguez enjoys hosting dinner parties for her frie
 for ob in observations:
     IRagent.incoming_observation.append(ob)
     if len(IRagent.incoming_observation)>2:
-        IRagent.step(datetime.now().replace(microsecond=0))
+        IRagent.step(datetime(2023,4,23,9,0,0).replace(microsecond=0))

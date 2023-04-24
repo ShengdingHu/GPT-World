@@ -164,9 +164,9 @@ class GameScene extends Scene {
 
   }
 
-    /// Use the update() function to update the square's position every 1 second to the left
+    /// Use the update() function to update the square's locationition every 1 second to the left
   update(time, delta) {
-      // Set the scene's time event to update the square's position every 1 second to the left
+      // Set the scene's time event to update the square's locationition every 1 second to the left
       if (time > this.lastTime + 1000) {
         console.log("update!")
         this.place_objects()
