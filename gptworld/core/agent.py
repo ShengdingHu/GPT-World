@@ -11,15 +11,13 @@ from datetime import datetime as dt
 from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
 from gptworld.life_utils.agent_tool import as_tool, Tool
 # from gptworld.utils import request_GPT
-from gptworld.utils.logging import get_logger
+
 import os
-from gptworld.models.openai import chat
-import bisect
+from gptworld.models.openai_api import chat
 
+import gptworld.utils.logging as logging
+logger = logging.get_logger(__name__)
 
-logger = get_logger(__file__)
-logger.debug = print
-logger.info = print
 
 
 """
@@ -226,7 +224,7 @@ class GPTAgent(EnvElem):
         # format: [{"task": "XXX", "start_time": str(datetime.datetime(2023,4, 1)), "end_time": str(datetime.datetime(2023,4, 1))}]
         self.plan = self.state_dict.get('plan',[])
         if self.environment is not None:
-            logger.info(f"{type(self)} {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
+            logger.info(f"Agent {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
 
 
 

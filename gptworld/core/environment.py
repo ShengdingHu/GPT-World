@@ -6,25 +6,28 @@ from gptworld.core.object import GPTObject, GPTEnvObject
 from typing import Dict, List, Tuple
 # from gptworld.core.time_system impor, MOVEMENT_TICK
 import subprocess
-from gptworld.utils.logging import get_logger
+
 from gptworld.utils.uilogging import UILogging
 import os
 import datetime
-from gptworld.models.openai import chat
+from gptworld.models.openai_api import chat
 import re
 
+import gptworld.utils.logging as logging
+logger = logging.get_logger(__name__)
 
-logger = get_logger(__file__)
-logger.debug = print
-logger.info =  print
 
 # Use the os module to get the absolute dir path of the current file
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def run_dev():
-    subprocess.run(['npm', 'run', 'dev'], cwd=f'{CURRENT_DIR}/../../game/text_grid/frontend', capture_output=True,shell=True)
-    subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../..//game/text_grid', capture_output=True,shell=True)
+def run_backend():
+    subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../../game/text_grid', capture_output=True, shell=True)
+
+def run_frontend():
+    subprocess.run(['npm run --silent dev'], cwd=f'{CURRENT_DIR}/../../game/text_grid/frontend', capture_output=True, shell=True)
+
+
 
 
 class GPTWorldEnv:
@@ -136,10 +139,13 @@ class GPTWorldEnv:
         import multiprocessing
 
         
-        process = multiprocessing.Process(target=run_dev)
-        process.start()
+    
+        process_backend = multiprocessing.Process(target=run_backend)
+        process_frontend = multiprocessing.Process(target=run_frontend)
+        process_backend.start()
+        process_frontend.start()
 
-        logger.info("-"*20 + "\nView the demo at localhost:5173\n" + "-"*20)
+        logger.critical("\n\033[1m\033[93m"+"-"*20 + "\nView your little world at http://localhost:5173\n" + "-"*20)
 
 
     def get_neighbor_environment(self, agent_id :str = None, critical_distance = 50):

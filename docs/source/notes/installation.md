@@ -16,8 +16,8 @@ python setup.py install
 ## Check your connectivity with the model engine.
 
 ```bash
-python -c "from gptworld.models.openai import chat; print(chat('Hello'))"
-python -c "from gptworld.models.openai import get_embedding; print(get_embedding('Hello'))"
+python -c "from gptworld.models.openai_api import chat; print(chat('Hello'))"
+python -c "from gptworld.models.openai_api import get_embedding; print(get_embedding('Hello'))"
 ```
 If it prints `Hello! How may I assist you today?`, it is connected!
 
