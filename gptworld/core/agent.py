@@ -103,7 +103,7 @@ class EnvElem:
         return
     
     def invoice(self, ):
-        # 往 incomming invoice 里
+        # 往incomming_invoice里 加一个invoice，并让agent能够最高优先级地响应这个输入
         pass
 
 
