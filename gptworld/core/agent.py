@@ -21,6 +21,8 @@ logger = get_logger(__file__)
 logger.debug = print
 logger.info = print
 
+INVOICE_PATH = "./static_files/" + "invoice.txt"
+# print(os.path.exists(INVOICE_PATH))
 
 """
 Agent class implements the static, mind, inner, and cognitive process
@@ -66,7 +68,7 @@ class EnvElem:
         # interaction
         self.incoming_interactions = [{"sender": "A", "message": "XXX"}]
         self.incomming_objection = []
-        self.incomming_invoice = []
+        self.incoming_invoice = ""  # empty str represents no invoice, later can be changed to list
 
         # 记录当前对话历史，不止包括别人说的，也包括自己说的
         # 直接根据len判断自己是否在对话中
@@ -612,8 +614,27 @@ Summarize the dialog above.
 
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
 
+
+
+        # 0. If incoming_invoice is available, process it with the highest priority
+
+        if os.path.exists(INVOICE_PATH):
+            logger.info("FOUND INVOICE")
+            with open(INVOICE_PATH, 'r') as fp:
+                self.incoming_invoice = fp.read()
+                if self.incoming_invoice:
+                    # have incoming invoice
+                    # do with the top priority
+                    self.incoming_observation.extend(self.incoming_invoice)
+                    logger.debug(self.incoming_invoice)
+                    self.incoming_invoice = ""
+                else:
+                    logger.debug("EMPTY INVOICE FILE")
+        else:
+            logger.debug("NO INVOICE FILE")
         # 1. 如果当前正在向openai请求，调过这一步
-        self._move_pending_observation()
+        if not self.incoming_invoice:  # Only move the pending observation without any incoming invoice
+            self._move_pending_observation()
         # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
         if self.status_start_time is None: # fixing empty start time
             self.status_start_time = current_time
@@ -770,6 +791,6 @@ Strictly obeying the Output format:
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
         # from IPython import embed; embed(header="833")
-            
+
         return
 

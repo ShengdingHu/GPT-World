@@ -90,7 +90,8 @@ Output format:
 2. I cannot move
 3. I cannot shut down myself unless some one do so. 
 """
-        self.summary=f'Pretend you are a {self.name}, obeying following rules:\n' + chat(sumPrompt)
+        # self.summary=f'Pretend you are a {self.name}, obeying following rules:\n' + chat(sumPrompt)
+        self.summary = ""
 
         self.blocking = False
         logger.info(f"Objects {self.name} mounted into area {self.environment.get_area_name(self.eid)}")

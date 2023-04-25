@@ -9,6 +9,7 @@ from backend.text_to_image import TextToImage
 
 
 PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
+INVOICE_PATH = f"{PARENT_DIR}/../../static_files/" + "invoice.txt"
 
 app = Flask(__name__)
 CORS(app)
@@ -42,8 +43,8 @@ def text_to_tile_route():
 
 @app.route('/read_environment', methods=['GET'])
 def read_environment():
-
     file_path = request.args.get('file_path')
+    # print(f"{PARENT_DIR}/../../static_files/{file_path}")
     with open(f"{PARENT_DIR}/../../static_files/{file_path}", 'r') as f:
         content = json.load(f)
     
@@ -58,6 +59,16 @@ def read_environment():
 
     data = {'message': content}
     return jsonify(data)
+
+
+def drop_invoice(invoice: str):
+    """
+    drop invoice to a file for the agent to be notified.
+    TODO: later connect with the HTML <text>
+    """
+
+    with open(INVOICE_PATH, 'w') as fp:
+        print(str, fp)
 
 
 # @socketio.on('tunnel')
