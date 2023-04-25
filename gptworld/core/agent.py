@@ -12,7 +12,6 @@ from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
 from gptworld.life_utils.agent_tool import as_tool, Tool
 # from gptworld.utils import request_GPT
 from gptworld.utils.logging import get_logger
-from gptworld.utils.envlog import envlog
 import os
 from gptworld.models.openai import chat
 import bisect
@@ -21,6 +20,7 @@ import bisect
 logger = get_logger(__file__)
 logger.debug = print
 logger.info = print
+
 
 """
 Agent class implements the static, mind, inner, and cognitive process
@@ -160,7 +160,7 @@ class EnvElem:
                 self.short_term_memory.append(ob)
                 # observation在这里不能直接拉进记忆，否则query出来的全是observation，没有意义
                 # 在reaction判定结束以后再拉近记忆比较好。
-        envlog(self.name, f"short-term memory: {self.short_term_memory}")
+        self.environment.uilogging(self.name, f"short-term memory: {self.short_term_memory}")
         return self.observation
     
     def reflect(self,time:datetime):
@@ -427,7 +427,7 @@ Example format:
             task=entry[2].strip()
             new_plans.append({'start_time':start_time,'end_time':end_time,'task':task})
         
-        envlog(self.name, "Plan: " + json.dumps(new_plans))
+        self.environment.uilogging(self.name, "Plan: " + json.dumps(new_plans))
         self.plan=[entry for entry in self.plan if dt.strptime(entry['end_time'],'%Y-%m-%d %H:%M:%S')<=minimum_time]
         self.plan.extend(new_plans)
         return new_plans[0]
@@ -624,7 +624,7 @@ Summarize the dialog above.
             self.status_start_time=current_time
             self.status=next_plan['status']
             self.status_duration=next_plan['duration']
-            envlog(f"{self.name}", f"status: {self.status}, duration: {self.status_duration}")
+            self.environment.uilogging(f"{self.name}", f"status: {self.status}, duration: {self.status_duration}")
         # 3. 检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
         #    多个observation一起处理，处理过就扔进短期记忆。
         #    短期记忆是已经处理过的observation。
@@ -742,7 +742,7 @@ Strictly obeying the Output format:
                 if not have_target:
                     target=None
 
-                envlog(self.name, reaction_content)
+                self.environment.uilogging(self.name, reaction_content)
                 if self.environment is not None:
                     self.environment.parse_action(self, target, reaction_content)
                 if terminate:

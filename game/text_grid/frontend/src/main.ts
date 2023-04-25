@@ -2,62 +2,74 @@ import './style.css';
 import { Scene, Game, WEBGL, GameObjects} from 'phaser';
 
 
+const API_ROOT = "http://localhost:5001";
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
+const ORIGIN_X = 100;
+const ORIGIN_Y = 100;
 
-const ORIGIN_X = 100
-const ORIGIN_Y = 100
+function loadIcon(name: string, scene: Scene) {
+  let url = API_ROOT+"/text_to_icon?name="+name;
+  fetch(url)
+    .then(response => response.blob())
+    .then(blob => {
+      const imageUrl = URL.createObjectURL(blob);
+      scene.load.image(name, imageUrl);
+      scene.load.start();
+
+    });
+}
+
+async function loadTile(name: string, scene: Scene) {
+  let url = API_ROOT+"/text_to_tile?name="+name;
+  const response = await fetch(url);
+  const blob = await response.blob();
+  const imageUrl = URL.createObjectURL(blob);
+  scene.load.image(name, imageUrl);
+  scene.load.start();
+}
 
 class GameScene extends Scene {
   private readonly gridWidth = 100;
   private readonly gridHeight = 100;
   private readonly squareSize = 5;
   private gridGraphics!: GameObjects.Graphics;
-  private square!: GameObjects.Sprite;
-  // Declare a variable named mydata of any type
   private mydata: any;
-
-
-
-  private currentCol = 1;
-  private currentRow = 1;
+  private lastTime: integer | undefined;
 
   constructor() {
     super('scene-game');
   }
 
   async load_file(){
-    const response = await fetch('http://localhost:5001/read_file?file_path=alice_home/environment.json');
+    const response = await fetch(API_ROOT+"/read_environment?file_path=alice_home/environment.json");
     console.log(response);
     const data = await response.json();
     this.mydata = data['message'];
     return Promise.resolve();
   }
 
-  preload() {
-    this.load.image('object', 'assets/square.png');
+  async load_tile(){
+    let areas_key = Object.keys(this.mydata.areas)
+    for (let i=0; i < areas_key.length; i++){
+      let area_key = areas_key[i]
+      let area = this.mydata.areas[area_key];
+      await loadTile(area.name, this);
+    }
   }
 
-  getRandomColor(): number {
-    // Generate a random 24-bit number
-    const color = Math.floor(Math.random() * 0xffffff);
-  
-    return color;
+  async preload() {
   }
-    
+
   async create_scene(){
     await this.load_file();
 
-    console.log(this.mydata)
-
     this.lastTime = 0;
-
-
     this.gridGraphics = this.add.graphics();
 
     console.log(this.mydata.areas);
 
-    this.gridGraphics.lineStyle(5, 0x080808, 1.0);
+    this.gridGraphics.lineStyle(4, 0xEEE8CD, 1.0);
     this.gridGraphics.strokeRect(
       ORIGIN_X - this.squareSize / 2 - 4,
       ORIGIN_Y - this.squareSize / 2 - 4,
@@ -65,26 +77,25 @@ class GameScene extends Scene {
       this.mydata.size[1] * this.squareSize + 8
     );
 
-
     let areas_key = Object.keys(this.mydata.areas)
     for (let i=0; i < areas_key.length; i++){
       let area_key = areas_key[i]
       let area = this.mydata.areas[area_key];
-      let randomcolor = this.getRandomColor()
-      console.log(randomcolor)
-      
-      if (area.hasOwnProperty('color')) {
-        this.gridGraphics.fillStyle(parseInt(area['color'], 16), 1);
-      } else {
-        this.gridGraphics.fillStyle(0xffffff, 1);
-      }
 
-      this.gridGraphics.fillRect(
-        ORIGIN_X - this.squareSize /2 + this.squareSize * (area.location[0][0] -1),
-        ORIGIN_Y - this.squareSize / 2+ this.squareSize * (area.location[0][1] -1),
-        (area.location[1][0] - area.location[0][0] + 1)* this.squareSize,
-        (area.location[1][1] - area.location[0][1] + 1 )* this.squareSize
-      );
+      const x = ORIGIN_X - this.squareSize /2 + this.squareSize * (area.location[0][0] -1);
+      const y = ORIGIN_Y - this.squareSize / 2+ this.squareSize * (area.location[0][1] -1);
+      const width = (area.location[1][0] - area.location[0][0] + 1)* this.squareSize;
+      const height = (area.location[1][1] - area.location[0][1] + 1 )* this.squareSize;
+
+      // draw the border for the upcoming block
+      const graphics = this.add.graphics();
+      graphics.lineStyle(4, 0xEEE8CD, 1.0);
+      graphics.strokeRect(x-2, y-2, width+2, height+2);
+      
+      // draw a block with background image
+      const tileSprite = this.add.tileSprite(x, y, width, height, area.name);
+      tileSprite.setOrigin(0, 0);
+
       // Add the text in the middle of the strokeRect, with the text value of area.name
       this.add.text(
         100 - this.squareSize /2 + this.squareSize * (area.location[0][0] -1) + ((area.location[1][0] - area.location[0][0] )* this.squareSize)/2,
@@ -93,7 +104,8 @@ class GameScene extends Scene {
         {
           font: '15px Arial',
           fill: '#000000',
-          border: null
+          backgroundColor: '#ffffff',
+          padding: 5
         }
       );
     }
@@ -108,8 +120,6 @@ class GameScene extends Scene {
       let object_key = objects_key[i]
       let obj = this.mydata.objects[object_key];
 
-      console.log("obj", obj)
-
       let obj_x = obj.location[0] + this.mydata.areas[obj.eid].location[0][0]
       let obj_y = obj.location[1] + this.mydata.areas[obj.eid].location[0][1]
 
@@ -117,23 +127,26 @@ class GameScene extends Scene {
       // Check if the object already exists in the scene
       let existingObj = this.children.getByName(obj.id);
       if (existingObj) {
+        
         // If the object already exists, update its location
         existingObj.x = ORIGIN_X + obj_x * this.squareSize - this.squareSize / 2;
         existingObj.y = ORIGIN_Y + obj_y * this.squareSize - this.squareSize / 2;
         let existingObj_title = this.children.getByName(obj.id+"_title");
         existingObj_title.x = existingObj.x;
         existingObj_title.y = existingObj.y;
+        existingObj.setTexture(obj.name);
+
       } else {
-        console.log("Here", obj)
-        
-        // If the object does not exist, create a new sprite for it
+
+        loadIcon(obj.name, this);
+
         let newObj = this.add.sprite(
           ORIGIN_X + obj_x * this.squareSize  - this.squareSize / 2,
           ORIGIN_Y + obj_y * this.squareSize  - this.squareSize / 2,
-          'object'
+          obj.name
         );
 
-        newObj.setScale(this.squareSize / 30);
+        newObj.setScale(this.squareSize / 60);
         newObj.setName(object_key);
         // Change the color of the sprite to white
         newObj.setTint(0xffffff);
@@ -146,25 +159,24 @@ class GameScene extends Scene {
             font: '15px Arial',
             fill: '#000000',
             backgroundColor: '#ffffff',
-            padding: 5
+            padding: 2
           }
         );
         obj_title.setName(object_key+"_title");
-
 
       }
     }
   }
 
-
-  create() {
-    this.lastTime = 0.0
-    this.create_scene()
-    this.place_objects()
-
+  async create() {
+    await this.load_file();
+    await this.load_tile();
+    this.lastTime = 0.0;
+    this.create_scene();
+    this.place_objects();
   }
 
-    /// Use the update() function to update the square's locationition every 1 second to the left
+  // Use the update() function to update the square's locationition every 1 second to the left
   update(time, delta) {
       // Set the scene's time event to update the square's locationition every 1 second to the left
       if (time > this.lastTime + 1000) {

@@ -81,7 +81,17 @@ class GPTObject(EnvElem):
 
         """
         super().__init__(agent_file=agent_file, environment=environment)
-        
+
+        sumPrompt=f"""Give me rules and characteristics of a {self.name} \
+especially on what circumstances it can change or cannot change its status \
+and what kind of status changing can be done without human intervention. 
+Output format:
+1. I grow very slowly.
+2. I cannot move
+3. I cannot shut down myself unless some one do so. 
+"""
+        self.summary=f'Pretend you are a {self.name}, obeying following rules:\n' + chat(sumPrompt)
+
         self.blocking = False
         logger.info(f"Objects {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
 
@@ -97,7 +107,8 @@ class GPTObject(EnvElem):
 
         logger.debug("Object {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
 
-        
+        if self.status_start_time is None: # fixing empty start time
+            self.status_start_time = current_time
 
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
 
@@ -110,13 +121,13 @@ class GPTObject(EnvElem):
             self.reflect(current_time)
 
             sTime = current_time.strftime("It is %B %d, %Y, %I:%M %p.")
-            sStatus= f"{self.name}'s status: {self.status}."
+            sStatus= f"{self.name}'s status: {self.status} for {(current_time-self.status_start_time).total_seconds()} seconds."
             sObservation = "Observation: " + '\n'.join(self.observation)
-            queries=self.observation
+            # queries=self.observation
             # 一点小修改：加上对话的最后几轮作为query
 
-            sContext = f"Summary of relevant context from {self.name}'s memory: " + \
-                    ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in queries],[]))
+            # sContext = f"Summary of relevant context from {self.name}'s memory: " + \
+            #         ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in queries],[]))
 
 
 
@@ -125,7 +136,7 @@ class GPTObject(EnvElem):
             sPrompt = f"""
 1. Should {self.name} react to the observation? Say yes or no. 
 If yes, tell me about the reaction, omitting the subjective. For example, say 'eating' instead of '{self.name} eats'.  
-2. Does this reaction contents some content that need to be generated in a sentence or paragraph? Say yes or no.  
+2. Does this reaction contents some content that need to be generated in a sentence or paragraph? Say yes or no. This is a fake question, just say no.  
 If yes, tell me the content being said in double quotes. 
 3. Does this reaction has a specific target? Say yes or no. 
 If yes, tell me the name or how would {self.name} call it. 
@@ -141,7 +152,9 @@ Strictly obeying the Output format:
 5. <Yes/No for movement>
 ```
 """
-            send_message = '\n'.join([sTime,sStatus,sObservation,sContext,sPrompt])
+
+            # send_message = '\n'.join([sTime,sStatus,sObservation,sContext,sPrompt])
+            send_message = '\n'.join([self.summary, sTime,sStatus,sObservation,sPrompt])
             try_num = 0
             while try_num < 3:
                 result=chat(send_message)

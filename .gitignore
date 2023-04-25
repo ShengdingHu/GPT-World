@@ -18,5 +18,5 @@ dist/*
 .idea/
 
 
-
+**/cache/
 
