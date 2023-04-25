@@ -13,10 +13,10 @@ from gptworld.life_utils.agent_tool import as_tool, Tool
 from gptworld.utils.logging import get_logger
 import os
 from gptworld.models.openai import chat
-from gptworld.utils.envlog import envlog
 from gptworld.core.agent import EnvElem
 
 logger = get_logger(__file__)
+
 logger.debug = print
 logger.info = print
 
@@ -191,8 +191,9 @@ Strictly obeying the Output format:
                 if not have_target:
                     target=None
 
-                envlog(self.name, reaction_content)
+                
                 if self.environment is not None:
+                    self.environment.uilogging(self.name, reaction_content)
                     self.environment.parse_action(self, target, reaction_content)
                 if terminate:
                     self.status=reaction

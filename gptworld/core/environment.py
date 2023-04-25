@@ -7,7 +7,7 @@ from typing import Dict, List, Tuple
 # from gptworld.core.time_system impor, MOVEMENT_TICK
 import subprocess
 from gptworld.utils.logging import get_logger
-from gptworld.utils.UILogging import UILogging
+from gptworld.utils.uilogging import UILogging
 import os
 import datetime
 from gptworld.models.openai import chat
@@ -45,12 +45,13 @@ class GPTWorldEnv:
 
         self.env_json = env_json
         self.file_dir = file_dir
+        self.uilogging = UILogging(file_dir)
 
         self.agents, self.objects = {}, {}
 
         self.load_objects_and_agents()
 
-        self.uilogging = UILogging(file_dir)
+        
         
         logger.debug("Initialize Complete!")
         

@@ -83,7 +83,7 @@ class EnvElem:
 
         # memory
         # Long term memory is serialized/deserialized by orjson so only file name is provided here.
-        self.long_term_memory=ReflectionMemory(self.state_dict, os.path.dirname(agent_file))
+        self.long_term_memory=ReflectionMemory(self.state_dict, os.path.dirname(agent_file), self.environment.uilogging)
         # Short term memory is a queue of observations recording recent observations.
         self.short_term_memory=self.state_dict.get('short_term_memory',[])
 

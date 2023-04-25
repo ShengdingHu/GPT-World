@@ -12,7 +12,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import logging
 import bisect
 from gptworld.models.openai import get_embedding, chat
-from gptworld.utils.envlog import envlog
+
 EMBED_DIM = 1536
 SAVE_OPTIONS = orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_SERIALIZE_DATACLASS | orjson.OPT_INDENT_2
 
@@ -111,9 +111,10 @@ class ReflectionMemory():
 
     """
 
-    def __init__(self, state_dict, file_dir='./') -> None:
+    def __init__(self, state_dict, file_dir='./', uilogging=None) -> None:
         # the least importance threshold for reflection. It seems that setting it to 0 does not induce duplicate reflections
         self.name = state_dict['name']
+        self.uilogging = uilogging
         self.reflection_threshold = state_dict.get( 'reflection_threshold', 0)
         self.memory_id = state_dict.get('memory', state_dict['name']+'_LTM')
         self.filename = os.path.join(file_dir,f"{self.memory_id}.json")
@@ -258,7 +259,7 @@ class ReflectionMemory():
         questions = get_questions(mem_of_interest)
         statements = sum([self.query(q, 5, time) for q in questions], [])
         insights = get_insights(statements)
-        envlog(self.name, f"Insights: {insights}")
+        self.uilogging(self.name, f"Insights: {insights}")
         for insight in insights:
             self.add(insight, time, tag=['reflection'])
         return insights

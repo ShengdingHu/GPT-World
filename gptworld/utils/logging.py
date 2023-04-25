@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# BMTools copied from Huggingface Transformers
+# GPTWorld copied from Huggingface Transformers
 """ Logging utilities."""
 
 import logging
@@ -42,7 +42,7 @@ log_levels = {
     "critical": logging.CRITICAL,
 }
 
-_default_log_level = logging.INFO
+_default_log_level = logging.DEBUG
 
 
 def _get_default_logging_level():
