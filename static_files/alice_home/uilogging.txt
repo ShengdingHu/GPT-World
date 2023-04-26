@@ -128,3 +128,30 @@ Book Shelf|short-term memory: []
 Television|detecting
 apple tree|"Noticing the warmth of the sun and beginning to produce new growth."
 apple tree|growing
+apple tree|short-term memory: ['apple tree is .']
+Television|short-term memory: ['sofa is .']
+apple tree|short-term memory: ['apple tree is .']
+Book Shelf|short-term memory: []
+dining table|short-term memory: []
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Watching TV.']
+apple tree|sensing the environment.
+apple tree|"Growing new leaves and preparing for the upcoming spring season."
+Television|sensing
+Bob|Plan: [{"start_time": "2023-04-01 07:00:00", "end_time": "2023-04-01 07:10:00", "task": "Wake up and stretch"}, {"start_time": "2023-04-01 07:10:00", "end_time": "2023-04-01 07:20:00", "task": "Brush teeth and wash face"}, {"start_time": "2023-04-01 07:20:00", "end_time": "2023-04-01 07:30:00", "task": "Get dressed for the day"}, {"start_time": "2023-04-01 07:30:00", "end_time": "2023-04-01 07:45:00", "task": "Check emails and messages on phone"}, {"start_time": "2023-04-01 07:45:00", "end_time": "2023-04-01 08:00:00", "task": "Prepare breakfast for the family"}, {"start_time": "2023-04-01 08:00:00", "end_time": "2023-04-01 08:30:00", "task": "Eat breakfast with family and chat"}, {"start_time": "2023-04-01 08:30:00", "end_time": "2023-04-01 08:45:00", "task": "Help Alice with her homework"}, {"start_time": "2023-04-01 08:45:00", "end_time": "2023-04-01 09:00:00", "task": "Get ready to leave for work"}, {"start_time": "2023-04-01 09:00:00", "end_time": "2023-04-01 12:00:00", "task": "Work on restoring an old car in the garage"}]
+Bob|status: Wake up and stretch, duration: 600.0
+Bob|short-term memory: []
+Alice|Plan: [{"start_time": "2023-04-01 07:00:00", "end_time": "2023-04-01 07:10:00", "task": "Wake up and stretch"}, {"start_time": "2023-04-01 07:10:00", "end_time": "2023-04-01 07:20:00", "task": "Brush teeth and wash face"}, {"start_time": "2023-04-01 07:20:00", "end_time": "2023-04-01 07:30:00", "task": "Get dressed for the day"}, {"start_time": "2023-04-01 07:30:00", "end_time": "2023-04-01 07:40:00", "task": "Make bed and tidy room"}, {"start_time": "2023-04-01 07:40:00", "end_time": "2023-04-01 07:50:00", "task": "Eat breakfast (cereal and milk)"}, {"start_time": "2023-04-01 07:50:00", "end_time": "2023-04-01 08:00:00", "task": "Pack backpack and prepare for school"}, {"start_time": "2023-04-01 08:00:00", "end_time": "2023-04-01 08:10:00", "task": "Walk to bus stop"}, {"start_time": "2023-04-01 08:10:00", "end_time": "2023-04-01 08:30:00", "task": "Wait for and ride bus to school"}, {"start_time": "2023-04-01 08:30:00", "end_time": "2023-04-01 08:40:00", "task": "Arrive at school and head to locker"}, {"start_time": "2023-04-01 08:40:00", "end_time": "2023-04-01 09:00:00", "task": "Socialize with friends before class"}, {"start_time": "2023-04-01 09:00:00", "end_time": "2023-04-01 09:50:00", "task": "Attend first period class (math)"}, {"start_time": "2023-04-01 09:50:00", "end_time": "2023-04-01 10:00:00", "task": "Transition to next class"}, {"start_time": "2023-04-01 10:00:00", "end_time": "2023-04-01 10:50:00", "task": "Attend second period class (English)"}, {"start_time": "2023-04-01 10:50:00", "end_time": "2023-04-01 11:00:00", "task": "Take a break and socialize with friends"}, {"start_time": "2023-04-01 11:00:00", "end_time": "2023-04-01 11:50:00", "task": "Attend third period class (science)"}, {"start_time": "2023-04-01 11:50:00", "end_time": "2023-04-01 12:00:00", "task": "Transition to next class"}, {"start_time": "2023-04-01 12:00:00", "end_time": "2023-04-01 12:50:00", "task": "Attend fourth period class (history)"}, {"start_time": "2023-04-01 12:50:00", "end_time": "2023-04-01 13:00:00", "task": "Take a break and grab a snack"}, {"start_time": "2023-04-01 13:00:00", "end_time": "2023-04-01 13:50:00", "task": "Attend fifth period class (Spanish)"}, {"start_time": "2023-04-01 13:50:00", "end_time": "2023-04-01 14:00:00", "task": "Transition to next class"}]
+Alice|status: Wake up and stretch, duration: 600.0
+Alice|short-term memory: ['bed is .', 'Alarm Clock is .']
+Alice|Insights: ['Alice places a high value on personal achievement and social impact, which likely influences her future plans and goals', "The COVID-19 pandemic has had a significant impact on individuals' daily routines and education, which can have unforeseen effects on their future plans and trajectory", "Personal achievement is a key factor in Alice's identity, suggesting that she may prioritize individual success over other values", 'The COVID-19 pandemic has disrupted individual routines and education, which may have long-term consequences for their future trajectory', "Alice's education and family play integral parts in her pursuit of personal achievement and social impact, indicating that her upbringing and support system may have shaped her values and priorities"]
+Alice|Stretching
+Alice|status: Wake up and stretch, duration: 590.0
+Alice|short-term memory: ['bed is .', 'Alarm Clock is .']
+Bob|status: Wake up and stretch, duration: 590.0
+Television|short-term memory: ['sofa is .']
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Wake up and stretch.']
+Bob|short-term memory: []
+dining table|short-term memory: []
+Book Shelf|short-term memory: []

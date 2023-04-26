@@ -24,6 +24,8 @@ def get_logger(name: str, level: int = None, log_dir: str = None, file_name: str
     """Function to setup a logger for the gptworld package"""
     if log_dir is None:
         log_dir = os.path.join(os.path.abspath(__file__), "../../../logs") # use current working directory if log_dir not specified
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
 
     if file_name is None:
         now = datetime.now()
