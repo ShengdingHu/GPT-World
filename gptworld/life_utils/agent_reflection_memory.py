@@ -11,7 +11,9 @@ import re
 from sklearn.metrics.pairwise import cosine_similarity
 import logging
 import bisect
-from gptworld.models.openai import get_embedding, chat
+from gptworld.models.openai_api import get_embedding, chat
+import gptworld.utils.logging as logging
+logger = logging.get_logger(__name__)
 
 EMBED_DIM = 1536
 SAVE_OPTIONS = orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_SERIALIZE_DATACLASS | orjson.OPT_INDENT_2
@@ -44,7 +46,7 @@ def get_importance(text):
     try:
         score = int(re.findall(r'\s*(\d+)\s*', result)[0])
     except:
-        logging.log(logging.WARNING,
+        logger.warning(
                     'Abnormal result of importance rating \'{}\'. Setting default value'.format(result))
         score = 0
     return score
@@ -158,7 +160,7 @@ class ReflectionMemory():
 
         insert_point=len(self.data.texts)
         if len(self.data.createTime)>0 and time<self.data.createTime[-1]:
-            logging.log(logging.WARNING, 'Wrong memory order :{} {}'.format(time,text))
+            logger.warning('Wrong memory order :{} {}'.format(time,text))
             insert_point=bisect.bisect_left(self.data.createTime, time)
 
         self.data.texts.insert(insert_point,text)

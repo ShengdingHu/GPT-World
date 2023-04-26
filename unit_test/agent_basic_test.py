@@ -4,7 +4,7 @@ import openai
 import os
 import json
 import logging
-from gptworld.models.openai import chat as request
+from gptworld.models.openai_api import chat as request
 
 logging.basicConfig(level=logging.INFO)
 

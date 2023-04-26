@@ -10,15 +10,12 @@ from datetime import datetime as dt
 from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
 from gptworld.life_utils.agent_tool import as_tool, Tool
 # from gptworld.utils import request_GPT
-from gptworld.utils.logging import get_logger
 import os
-from gptworld.models.openai import chat
+from gptworld.models.openai_api import chat
 from gptworld.core.agent import EnvElem
 
-logger = get_logger(__file__)
-
-logger.debug = print
-logger.info = print
+import gptworld.utils.logging as logging
+logger = logging.get_logger(__name__)
 
 
 

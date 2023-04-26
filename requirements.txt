@@ -9,3 +9,4 @@ scikit-learn~=0.23.2
 setuptools~=50.3.1
 tqdm~=4.50.2
 flask_socketio
+colorlog

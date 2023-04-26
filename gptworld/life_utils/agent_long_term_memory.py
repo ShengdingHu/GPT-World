@@ -7,8 +7,10 @@ import orjson
 from typing import Any, List, Optional
 import numpy as np
 import os
-from gptworld.models.openai import get_embedding
+from gptworld.models.openai_api import get_embedding
 
+import gptworld.utils.logging as logging
+logger = logging.get_logger(__name__)
 
 # TODO: the long term memory module need to be integrated into the agent.
 
