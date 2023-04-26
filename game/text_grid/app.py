@@ -123,12 +123,13 @@ def uilogging(sid: str):
     last_position = None
 
     while sid in clients: # if the client is closed, this thread will terminate
-        print('read_new_lines invoked!')
+        # print('read_new_lines invoked!')
         new_lines = []
 
         new_lines, last_position = read_new_lines(file_path, last_position)
         for line in new_lines:
             print(line)
+            pass
         if new_lines != []: # only if there is new messages will socketio send messages to client
             socketio.emit('server_message', {"message": new_lines})
         
