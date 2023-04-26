@@ -1,9 +1,75 @@
 import './style.css';
 import { Scene, Game, WEBGL, GameObjects} from 'phaser';
+import { io, Socket } from "socket.io-client";
 
 
 const API_ROOT = "http://localhost:5001";
 
+
+///////////////// Implement UI Logging function /////////////////
+interface Message {
+  text: string;
+  sender: string;
+  time: Date;
+}
+
+const messagesElement = document.getElementById('messages')!;
+// const inputElement = document.getElementById('input') as HTMLInputElement;
+// const sendButton = document.getElementById('send')!;
+
+// socket connection to backend server
+const socket: Socket = io(API_ROOT);
+
+// on connect with backend server
+socket.on("connect", () => {
+  console.log("Connected to the server");
+});
+
+// an active test message form backend server
+socket.on("welcome", (event) => {
+  console.log(event.message);
+});
+
+// normal messages
+socket.on("server_message", (event) => {
+  console.log("Received message:", event);
+  
+  const data = event.message as string[];
+  data.forEach((messageData) => {
+    const [sender, text] = messageData.split('|');
+    const message = {
+      sender,
+      text,
+      time: new Date(),
+    };
+
+    const colors = ['red', 'green', 'blue', 'orange', 'purple'];
+    const randomIndex = Math.floor(Math.random() * colors.length);
+    const randomColor = colors[randomIndex];
+
+    const messageElement = document.createElement('div');
+    messageElement.innerHTML = `<span style="font-weight: bold; color: ${randomColor}">${message.sender}</span>: ${message.text}`;
+
+    messagesElement.appendChild(messageElement);
+  });
+
+
+});
+
+socket.on("disconnect", () => {
+  console.log("Disconnected from the server");
+});
+
+window.onbeforeunload = function() {
+  // on reload
+  return "Sure to reload?"
+};
+
+//////////////////////////////////////////////////////////////////
+
+
+
+////////////////// Implement Game Scene /////////////////////
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const ORIGIN_X = 100;
 const ORIGIN_Y = 100;
@@ -30,9 +96,7 @@ async function loadTile(name: string, scene: Scene) {
 }
 
 class GameScene extends Scene {
-  private readonly gridWidth = 100;
-  private readonly gridHeight = 100;
-  private readonly squareSize = 5;
+  private readonly squareSize = 4;
   private gridGraphics!: GameObjects.Graphics;
   private mydata: any;
   private lastTime: integer | undefined;
@@ -42,8 +106,8 @@ class GameScene extends Scene {
   }
 
   async load_file(){
-    const response = await fetch(API_ROOT+"/read_environment?file_path=alice_home/environment.json");
-    console.log(response);
+    const response = await fetch(API_ROOT+"/read_environment");
+    // console.log(response);
     const data = await response.json();
     this.mydata = data['message'];
     return Promise.resolve();
@@ -59,6 +123,7 @@ class GameScene extends Scene {
   }
 
   async preload() {
+    
   }
 
   async create_scene(){
@@ -67,7 +132,7 @@ class GameScene extends Scene {
     this.lastTime = 0;
     this.gridGraphics = this.add.graphics();
 
-    console.log(this.mydata.areas);
+    // console.log(this.mydata.areas);
 
     this.gridGraphics.lineStyle(4, 0xEEE8CD, 1.0);
     this.gridGraphics.strokeRect(
@@ -90,7 +155,7 @@ class GameScene extends Scene {
       // draw the border for the upcoming block
       const graphics = this.add.graphics();
       graphics.lineStyle(4, 0xEEE8CD, 1.0);
-      graphics.strokeRect(x-2, y-2, width+2, height+2);
+      graphics.strokeRect(x-1, y-1, width+2, height+2);
       
       // draw a block with background image
       const tileSprite = this.add.tileSprite(x, y, width, height, area.name);
@@ -105,7 +170,7 @@ class GameScene extends Scene {
           font: '15px Arial',
           fill: '#000000',
           backgroundColor: '#ffffff',
-          padding: 5
+          padding: 2
         }
       );
     }
@@ -123,7 +188,7 @@ class GameScene extends Scene {
       let obj_x = obj.location[0] + this.mydata.areas[obj.eid].location[0][0]
       let obj_y = obj.location[1] + this.mydata.areas[obj.eid].location[0][1]
 
-      console.log("obj_x, obj_y", obj_x, obj_y)
+      // console.log("obj_x, obj_y", obj_x, obj_y)
       // Check if the object already exists in the scene
       let existingObj = this.children.getByName(obj.id);
       if (existingObj) {
@@ -146,7 +211,7 @@ class GameScene extends Scene {
           obj.name
         );
 
-        newObj.setScale(this.squareSize / 60);
+        newObj.setScale(this.squareSize / 40);
         newObj.setName(object_key);
         // Change the color of the sprite to white
         newObj.setTint(0xffffff);
@@ -177,10 +242,11 @@ class GameScene extends Scene {
   }
 
   // Use the update() function to update the square's locationition every 1 second to the left
-  update(time, delta) {
+  update(time: integer) {
       // Set the scene's time event to update the square's locationition every 1 second to the left
-      if (time > this.lastTime + 1000) {
-        console.log("update!")
+      const lastTime = this.lastTime as integer;
+      if (time > lastTime + 1000) {
+        console.log("Update")
         this.place_objects()
         this.lastTime = time
       }
@@ -192,6 +258,7 @@ const config = {
   width: window.innerWidth,
   height: window.innerHeight,
   canvas,
+
   physics: {
     default: 'arcade',
     arcade: {
@@ -203,4 +270,11 @@ const config = {
   scene: [GameScene]
 };
 
-new Game(config);
+var game = new Game(config);
+
+// resize the game object as windows resize
+window.addEventListener('resize', function () {
+  game.scale.resize(window.innerWidth, window.innerHeight);
+});
+
+//////////////////////////////////
