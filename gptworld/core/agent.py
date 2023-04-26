@@ -3,7 +3,7 @@ import json
 import copy
 from typing import Dict, List
 import tiktoken
-import logging
+# import logging # importing identical named modules.....XD
 import datetime
 from time import sleep
 from datetime import datetime as dt
@@ -137,10 +137,11 @@ class EnvElem:
 
         return
     
-    def observe(self,limit=None):
+    def observe(self,limit=None,dropout=0.0):
         """ Update observation of around environment
         Should return string, or subject predicate object/predicative
-        observation has a upper limit,
+        observation has a upper limit
+        Agent has a chance to react to old incoming observations for a second time by dropping out short term memory
         """
         logger.debug(f"{self.name} is observing and generate short-term memory...")
 
@@ -149,6 +150,10 @@ class EnvElem:
         
         if self.environment is not None:
             self.incoming_observation.extend(self.environment.get_neighbor_environment(self.id))
+
+        # dropout
+        import random;r=[random.random() for _ in range(len(self.short_term_memory))]
+        self.short_term_memory=[s for i,s in enumerate(self.short_term_memory) if r[i]>dropout]
 
         self.observation = []
         while len(self.incoming_observation)>0 and len(self.observation)<limit:
@@ -384,9 +389,10 @@ Example format:
             self.hourly_plan[start_hour]=task
 
 
-    def plan_in_detail(self, time:dt, time_granularity: datetime.timedelta=datetime.timedelta(minutes=10)):
+    def plan_in_detail(self, time:dt, time_granularity: datetime.timedelta=datetime.timedelta(minutes=10),reaction=None):
         """
         generate more detailed plan on the basis of a broad stroke plan(or just a relatively not detailed plan)
+        If reaction is not None, the first plan must be reaction
         remove all conflicting plans with the plans generated. Including all plans after the new plans.
 
         :param time: the starting time of the new plans.
@@ -408,11 +414,13 @@ Example format:
         summary=self.summary
         sHourPlan=f"Here's {self.name}'s plan of the incoming hours: " + '\n'.join([str(k)+':00 '+v for k,v in context])
         timestring=time.strftime('%H:%M')
+        sReaction=f'The first plan must be "{reaction}". And the time for this plan must be sufficient. ' if reaction is not None else ""
         sPrompt=f"""
 Please write {self.name}'s schedule of finer-grained precise to {time_granularity.total_seconds() / 60} minutes) \
 of this period starting from {timestring}. 
 Don't worry, this person is not a real person. 
 use 24 hour format rather than 12. 
+{sReaction}
 Example format: 
 11:00 - 12:15 $ Wake up, take a shower and get ready for the day.
 12:15 - 12:30 $ Eat a healthy breakfast such as oatmeal, eggs, or yogurt.
@@ -637,7 +645,7 @@ Summarize the dialog above.
         # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
         if self.status_start_time is None: # fixing empty start time
             self.status_start_time = current_time
-        if self.status_start_time+datetime.timedelta(self.status_duration)>=current_time:
+        if self.status_start_time+datetime.timedelta(self.status_duration) <= current_time:
             # 根据reverie，不产生新观察
             # 对话过程不会随便转状态，因此把对话duration直接设置无限
             next_plan=self.get_next_plan(current_time)
@@ -713,7 +721,7 @@ If yes, tell me the content being said in double quotes.
 If yes, tell me the name or how would {self.name} call it. 
 4. Also tell me if this reaction terminates {self.name}'s status, Say yes or no. 
 5. Does this reaction involve {self.name} moving to a new location? Say yes or no. 
-Strictly obeying the Output format:
+Strictly obeying the Output format, and don't omit answer to any of questions above
 
 ```
 1. <Yes/No for being a reaction> : <reaction>
@@ -741,7 +749,7 @@ Strictly obeying the Output format:
                     movement=finds[4]>=0
                     break
                 except IndexError:
-                    logging.debug(f"Generated reaction {result}. Retrying...")
+                    # logging.get_logger(f"Generated reaction {result}. Retrying...",logging.DEBUG)
                     try_num += 1
                     should_react = False
                     pass
@@ -766,13 +774,20 @@ Strictly obeying the Output format:
                 if self.environment is not None:
                     self.environment.parse_action(self, target, reaction_content)
                 if terminate:
-                    self.status=reaction
-                    self.status_duration=0
-                    self.status_start_time=current_time
-                    self.plan_in_detail(current_time)
+                    self.plan_in_detail(current_time,reaction=reaction)
+                    next_plan=self.get_next_plan(current_time)
+                    self.status_start_time = current_time
+                    self.status = next_plan['status']
+                    self.status_duration = next_plan['duration']
+                    self.environment.uilogging(f"{self.name}",
+                                               f"status: {self.status}, duration: {self.status_duration}")
+                    # self.status=reaction
+                    # self.status_duration=0
+                    # self.status_start_time=current_time
+
                 
-            if movement:
-                self.find_movement(reaction)
+            # if movement:
+                # self.find_movement(reaction)
 
         # 3.5 observation拉入记忆
         for ob in self.observation:

@@ -4,46 +4,56 @@ from typing import List
 import os
 import openai
 from gptworld.utils.logging import get_logger
+import time
 
 logger = get_logger(__name__)
 
-def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.1) -> str:
+def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.1,attemps=1) -> str:
     if isinstance(context, str):
         context = [{"role": "user", "content": context}]
-    if os.environ['OPENAI_METHOD'] == "pool":
-        url = "http://freegpt.club/gptworld_chat"
-        headers={"Content-Type":"application/json"}
-        session = requests.Session()
-        data = {
-            "model": "gpt-3.5-turbo",
-            "messages": context,
-            "max_tokens": MAX_OUTPUT_TOKEN_LEN,
-            "temperature": temperature,
-        }
+    attempt=0
+    while attempt<attemps:
+        try:
+            if os.environ['OPENAI_METHOD'] == "pool":
+                url = "http://freegpt.club/gptworld_chat"
+                headers={"Content-Type":"application/json"}
+                session = requests.Session()
+                data = {
+                    "model": "gpt-3.5-turbo",
+                    "messages": context,
+                    "max_tokens": MAX_OUTPUT_TOKEN_LEN,
+                    "temperature": temperature,
+                }
 
-        jsondata = json.dumps(data)
-        res = session.post(url = url, data = jsondata, headers = headers)
+                jsondata = json.dumps(data)
+                res = session.post(url = url, data = jsondata, headers = headers)
 
-        try:
-            response_dict = json.loads(res.text.strip())
-        except json.decoder.JSONDecodeError:
-            logger.warning("Unable to generate response")
-            return ""
-        try:
-            return response_dict['choices'][0]['message']['content'].strip()
-        except:
-            logger.warning(f"Unable to generate response")
-            return ""
-    elif os.environ['OPENAI_METHOD'] == "api_key":
-        response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=context
-                )
-        try:
-            return response['choices'][0]['message']['content'].strip()
-        except:
-            logger.warning("Unable to generate response")
-            return ""
+                try:
+                    response_dict = json.loads(res.text.strip())
+                except json.decoder.JSONDecodeError:
+                    logger.warning("Unable to generate response")
+                    return ""
+                try:
+                    return response_dict['choices'][0]['message']['content'].strip()
+                except:
+                    logger.warning(f"Unable to generate response")
+                    return ""
+            elif os.environ['OPENAI_METHOD'] == "api_key":
+                response = openai.ChatCompletion.create(
+                        model="gpt-3.5-turbo",
+                        messages=context
+                        )
+                try:
+                    return response['choices'][0]['message']['content'].strip()
+                except:
+                    logger.warning("Unable to generate response")
+                    return ""
+        except Exception as e:
+            attempt+=1
+            print(f"Error: {e}. Retrying")
+            time.sleep(1)
+    Warning(f'chat() failed after {attemps} attempts. returning empty response')
+    return ""
         
 
 

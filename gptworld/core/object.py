@@ -82,13 +82,14 @@ class GPTObject(EnvElem):
         sumPrompt=f"""Give me rules and characteristics of a {self.name} \
 especially on what circumstances it can change or cannot change its status \
 and what kind of status changing can be done without human intervention. 
+The answer should be as concise and accurate as possible. 
 Output format:
 1. I grow very slowly.
 2. I cannot move
 3. I cannot shut down myself unless some one do so. 
 """
-        # self.summary=f'Pretend you are a {self.name}, obeying following rules:\n' + chat(sumPrompt)
-        self.summary = ""
+        self.summary=f'Pretend you are a {self.name}, obeying following rules:\n' + chat(sumPrompt)
+        # self.summary = ""
 
         self.blocking = False
         logger.info(f"Objects {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
