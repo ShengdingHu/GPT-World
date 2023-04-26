@@ -1894,3 +1894,254 @@ Television|short-term memory: ['sofa is .']
 Bob|short-term memory: ['Proceed.']
 Book Shelf|short-term memory: []
 Alice|short-term memory: ['Proceed.', ' The alarm clock is ringing.', 'bed is .', 'Alarm Clock is Ringing..']
+apple tree|short-term memory: ['apple tree is .']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Watching TV.']
+Book Shelf|short-term memory: []
+dining table|short-term memory: []
+Television|short-term memory: ['sofa is .']
+apple tree|growing
+Alarm Clock|ringing
+Television|turning on
+Alice|Plan: [{"start_time": "2023-04-01 07:00:00", "end_time": "2023-04-01 07:10:00", "task": "Log in to the virtual meeting with school's debate team."}, {"start_time": "2023-04-01 07:10:00", "end_time": "2023-04-01 07:30:00", "task": "Introduce herself and listen to other team members' updates."}, {"start_time": "2023-04-01 07:30:00", "end_time": "2023-04-01 08:00:00", "task": "Discuss strategies for the upcoming competition with the team."}, {"start_time": "2023-04-01 08:00:00", "end_time": "2023-04-01 08:10:00", "task": "Wrap up the virtual meeting and say goodbye to the team."}]
+Alice|status: Log in to the virtual meeting with school's debate team., duration: 600.0
+Alice|short-term memory: [' The alarm clock is ringing.', 'bed is .', 'Alarm Clock is .']
+Bob|Plan: [{"start_time": "2023-04-01 07:00:00", "end_time": "2023-04-01 07:10:00", "task": "Wake up and stretch"}, {"start_time": "2023-04-01 07:10:00", "end_time": "2023-04-01 07:20:00", "task": "Brush teeth and wash face"}, {"start_time": "2023-04-01 07:20:00", "end_time": "2023-04-01 07:30:00", "task": "Get dressed for the day"}, {"start_time": "2023-04-01 07:30:00", "end_time": "2023-04-01 07:45:00", "task": "Meditate and set intentions for the day"}, {"start_time": "2023-04-01 07:45:00", "end_time": "2023-04-01 08:00:00", "task": "Prepare breakfast for family"}, {"start_time": "2023-04-01 08:00:00", "end_time": "2023-04-01 08:10:00", "task": "Sit down for breakfast with family"}, {"start_time": "2023-04-01 08:10:00", "end_time": "2023-04-01 08:20:00", "task": "Help daughter get dressed for school"}, {"start_time": "2023-04-01 08:20:00", "end_time": "2023-04-01 08:30:00", "task": "Pack daughter's backpack and prepare for school"}, {"start_time": "2023-04-01 08:30:00", "end_time": "2023-04-01 08:40:00", "task": "Walk daughter to school"}, {"start_time": "2023-04-01 08:40:00", "end_time": "2023-04-01 08:50:00", "task": "Say goodbye to daughter and walk back home."}]
+Bob|status: Wake up and stretch, duration: 600.0
+Bob|short-term memory: []
+Alice|Insights: ["Pursuing education and personal interests is a crucial aspect of shaping one's identity and future trajectory", "The COVID-19 pandemic has had a significant impact on individuals' daily routines, education, and future plans", "Alice's pursuit of education and personal interests plays a vital role in determining her future path", "The COVID-19 pandemic has the potential to alter individuals' career paths and life goals", 'Pursuing education and personal interests can serve as a foundation for personal growth and development']
+Alice|Turning off the alarm clock.
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Bob|status: Wake up and stretch, duration: 590.0
+Television|short-term memory: ['sofa is .']
+Alice|status: Log in to the virtual meeting with school's debate team., duration: 590.0
+Alarm Clock|short-term memory: ['bed is .', "Alice is Log in to the virtual meeting with school's debate team.."]
+dining table|short-term memory: []
+Book Shelf|short-term memory: []
+Bob|short-term memory: ['P', 'r', 'o', 'c', 'e', 'd', '.']
+Alice|short-term memory: [' The alarm clock is ringing.', 'bed is .', 'Alarm Clock is .', 'P', 'r', 'o', 'c', 'e', 'd', '.']
+Alarm Clock|displaying the time and date.
+Bob|Insights: ['The company is experiencing a decline in sales and profits', 'The company is considering reducing its workforce to cut costs', 'The company is facing competition from other businesses in the same industry', "The company's management is concerned about the impact of cost-cutting measures on employee morale", 'The company is looking for ways to improve its products and services to attract more customers']
+Alice|Insights: ["Alice's pursuit of education and personal interests plays a significant role in shaping her identity and future trajectory.", "Alice's value system is influenced by both personal achievement and social impact, with her education and family playing important roles in shaping these values.", "The COVID-19 pandemic has had a significant impact on individuals' future plans and trajectory, potentially altering their career paths and life goals.", "The COVID-19 pandemic has disrupted individuals' daily routines and education, leading to unforeseen impacts on their future trajectory.", "Education and family are integral parts of Alice's pursuit of personal achievement and social impact, shaping her values and future goals."]
+Bob|stretching
+Alice|logging in
+Alice|status: Log in to the virtual meeting with school's debate team., duration: 580.0
+apple tree|short-term memory: ['apple tree is .']
+Television|short-term memory: ['sofa is .']
+apple tree|short-term memory: ['apple tree is .']
+Alice|short-term memory: ['bed is .', 'Alarm Clock is .', 'P', 'r', 'o', 'c', 'e', 'd', '.', ' The alarm clock is currently displaying the time and date.']
+dining table|short-term memory: []
+Alarm Clock|short-term memory: ['bed is .', "Alice is Log in to the virtual meeting with school's debate team.."]
+Bob|status: Wake up and stretch, duration: 580.0
+Book Shelf|short-term memory: []
+Bob|short-term memory: ['P', 'r', 'o', 'c', 'e', 'd', '.']
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Television|short-term memory: ['sofa is .']
+dining table|short-term memory: []
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Watching TV.']
+Book Shelf|short-term memory: []
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Television|short-term memory: ['sofa is .']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Watching TV.']
+dining table|short-term memory: []
+Book Shelf|short-term memory: []
+Alarm Clock|ringing
+apple tree|growing
+Television|turning on
+Bob|Plan: [{"start_time": "2023-04-01 07:00:00", "end_time": "2023-04-01 07:10:00", "task": "Wake up and stretch"}, {"start_time": "2023-04-01 07:10:00", "end_time": "2023-04-01 07:20:00", "task": "Brush teeth and wash face"}, {"start_time": "2023-04-01 07:20:00", "end_time": "2023-04-01 07:30:00", "task": "Get dressed for the day"}, {"start_time": "2023-04-01 07:30:00", "end_time": "2023-04-01 07:40:00", "task": "Make bed and tidy up room"}, {"start_time": "2023-04-01 07:40:00", "end_time": "2023-04-01 07:50:00", "task": "Check emails and messages"}, {"start_time": "2023-04-01 07:50:00", "end_time": "2023-04-01 08:00:00", "task": "Meditate or do some light exercise"}, {"start_time": "2023-04-01 08:00:00", "end_time": "2023-04-01 08:30:00", "task": "Have breakfast with family and catch up on their plans for the day"}, {"start_time": "2023-04-01 08:30:00", "end_time": "2023-04-01 08:40:00", "task": "Help daughter with packing her school bag"}, {"start_time": "2023-04-01 08:40:00", "end_time": "2023-04-01 08:50:00", "task": "Kiss family goodbye and leave for work."}]
+Bob|status: Wake up and stretch, duration: 600.0
+Bob|short-term memory: ['Proceed.']
+Alice|Plan: [{"start_time": "2023-04-01 07:00:00", "end_time": "2023-04-01 07:30:00", "task": "Have dinner with family"}, {"start_time": "2023-04-01 07:30:00", "end_time": "2023-04-01 07:40:00", "task": "Clear the table and wash dishes"}, {"start_time": "2023-04-01 07:40:00", "end_time": "2023-04-01 08:00:00", "task": "Spend time talking with family"}, {"start_time": "2023-04-01 08:00:00", "end_time": "2023-04-01 08:30:00", "task": "Work on personal interests and hobbies"}, {"start_time": "2023-04-01 08:30:00", "end_time": "2023-04-01 08:40:00", "task": "Take a short break and stretch"}, {"start_time": "2023-04-01 08:40:00", "end_time": "2023-04-01 09:10:00", "task": "Continue working on personal interests and hobbies"}, {"start_time": "2023-04-01 09:10:00", "end_time": "2023-04-01 09:20:00", "task": "Take a break and grab a snack"}, {"start_time": "2023-04-01 09:20:00", "end_time": "2023-04-01 09:50:00", "task": "Resume working on personal interests and hobbies"}, {"start_time": "2023-04-01 09:50:00", "end_time": "2023-04-01 10:00:00", "task": "Wrap up and clean up workspace."}]
+Alice|status: Have dinner with family, duration: 1800.0
+Alice|short-term memory: ['Proceed.', ' The alarm clock is ringing.', 'bed is .', 'Alarm Clock is .']
+Bob|Insights: ['The company is experiencing a decline in revenue and profitability, which has led to cost-cutting measures and layoffs.', 'The company is facing increased competition in its industry, which is contributing to its financial struggles.', 'The company has a significant amount of debt, which is impacting its ability to invest in growth opportunities.', "The company's management team is focused on improving efficiency and streamlining operations in order to reduce costs.", "The company's shareholders are likely to be concerned about the declining financial performance and may be pressuring management to take action to improve the situation."]
+Alice|Insights: ['Alice places a high value on education and personal growth, which shapes her identity and future trajectory', "The COVID-19 pandemic has had a significant impact on individuals' daily routines and education, potentially altering their future plans and career paths", "Family plays an important role in shaping Alice's values and pursuit of personal achievement and social impact", "The COVID-19 pandemic has disrupted individuals' future plans and trajectory, potentially leading to unforeseen consequences", "Alice's pursuit of education and personal interests is integral to her value system and future goals"]
+Bob|Stretching
+Alice|Getting out of bed.
+Alice|short-term memory: ['Proceed.', ' The alarm clock is ringing.', 'bed is .', 'Alarm Clock is .']
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Bob|status: Wake up and stretch, duration: 590.0
+Alice|status: Have dinner with family, duration: 1790.0
+Television|short-term memory: ['sofa is .']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Have dinner with family.']
+dining table|short-term memory: []
+Alice|short-term memory: ['Proceed.', ' The alarm clock is ringing.', 'bed is .', 'Alarm Clock is .']
+Book Shelf|short-term memory: []
+Bob|short-term memory: ['Proceed.']
+Alarm Clock|waiting
+apple tree|short-term memory: ['apple tree is .']
+Alice|status: Have dinner with family, duration: 1780.0
+Television|short-term memory: ['sofa is .']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Have dinner with family.']
+dining table|short-term memory: []
+Alice|short-term memory: ['Proceed.', 'bed is .', 'Alarm Clock is .', ' The alarm clock is currently waiting.']
+Book Shelf|short-term memory: []
+Bob|status: Wake up and stretch, duration: 580.0
+Bob|short-term memory: ['Proceed.']
+Alice|Insights: ["The COVID-19 pandemic has had a significant impact on individuals' future plans and trajectories, potentially altering their career paths and life goals.", "Education and personal interests are important factors that shape individuals' identity and future trajectory.", 'Personal achievement is a core value for some individuals and has a significant impact on their identity and future plans.', "Family and education play crucial roles in shaping individuals' values around personal achievement and social impact.", "The COVID-19 pandemic has disrupted individuals' daily routines and education, leading to unforeseen impacts on their future trajectory."]
+Alice|Checking the alarm clock.
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Television|short-term memory: ['sofa is .']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Have dinner with family.']
+Bob|status: Wake up and stretch, duration: 570.0
+dining table|short-term memory: []
+Alice|status: Have dinner with family, duration: 1770.0
+Book Shelf|short-term memory: []
+Bob|short-term memory: ['Proceed.']
+Alice|short-term memory: ['Proceed.', 'bed is .', 'Alarm Clock is .', ' The alarm clock is currently waiting.']
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Alice|status: Have dinner with family, duration: 1760.0
+Bob|status: Wake up and stretch, duration: 560.0
+Alice|short-term memory: ['Proceed.', 'bed is .', 'Alarm Clock is .', ' The alarm clock is currently waiting.']
+Television|short-term memory: ['sofa is .']
+Bob|short-term memory: ['Proceed.']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Have dinner with family.']
+dining table|short-term memory: []
+Book Shelf|short-term memory: []
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Watching TV.']
+Television|short-term memory: ['sofa is .']
+dining table|short-term memory: []
+Book Shelf|short-term memory: []
+apple tree|growing
+Television|displaying
+Alarm Clock|playing a soft melody.
+Alice|Plan: [{"start_time": "2023-04-01 07:00:00", "end_time": "2023-04-01 07:10:00", "task": "Wake up and stretch"}, {"start_time": "2023-04-01 07:10:00", "end_time": "2023-04-01 07:20:00", "task": "Brush teeth and wash face"}, {"start_time": "2023-04-01 07:20:00", "end_time": "2023-04-01 07:30:00", "task": "Get dressed for the day"}, {"start_time": "2023-04-01 07:30:00", "end_time": "2023-04-01 07:40:00", "task": "Make bed and tidy room"}, {"start_time": "2023-04-01 07:40:00", "end_time": "2023-04-01 07:50:00", "task": "Eat breakfast (cereal and fruit)"}, {"start_time": "2023-04-01 07:50:00", "end_time": "2023-04-01 08:00:00", "task": "Prepare materials for math class"}, {"start_time": "2023-04-01 08:00:00", "end_time": "2023-04-01 09:30:00", "task": "Attend online math class and take notes"}]
+Alice|status: Wake up and stretch, duration: 600.0
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', 'Alarm Clock is .']
+Bob|Plan: [{"start_time": "2023-04-01 07:00:00", "end_time": "2023-04-01 07:10:00", "task": "Wake up and stretch."}, {"start_time": "2023-04-01 07:10:00", "end_time": "2023-04-01 07:20:00", "task": "Brush teeth and wash face."}, {"start_time": "2023-04-01 07:20:00", "end_time": "2023-04-01 07:30:00", "task": "Get dressed for the day."}, {"start_time": "2023-04-01 07:30:00", "end_time": "2023-04-01 07:45:00", "task": "Prepare breakfast for himself."}, {"start_time": "2023-04-01 07:45:00", "end_time": "2023-04-01 08:00:00", "task": "Eat breakfast and check emails."}, {"start_time": "2023-04-01 08:00:00", "end_time": "2023-04-01 08:10:00", "task": "Wake up his daughter."}, {"start_time": "2023-04-01 08:10:00", "end_time": "2023-04-01 08:20:00", "task": "Help his daughter get dressed."}, {"start_time": "2023-04-01 08:20:00", "end_time": "2023-04-01 08:30:00", "task": "Prepare breakfast for his daughter."}, {"start_time": "2023-04-01 08:30:00", "end_time": "2023-04-01 08:45:00", "task": "Eat breakfast with his daughter and discuss plans for the day."}, {"start_time": "2023-04-01 08:45:00", "end_time": "2023-04-01 09:00:00", "task": "Clean up the kitchen and pack lunch for his daughter."}, {"start_time": "2023-04-01 09:00:00", "end_time": "2023-04-01 09:10:00", "task": "Drive his daughter to school."}, {"start_time": "2023-04-01 09:10:00", "end_time": "2023-04-01 09:20:00", "task": "Drop off his daughter at school and say goodbye."}, {"start_time": "2023-04-01 09:20:00", "end_time": "2023-04-01 09:30:00", "task": "Drive back home."}, {"start_time": "2023-04-01 09:30:00", "end_time": "2023-04-01 09:45:00", "task": "Check work emails and review schedule for the day."}, {"start_time": "2023-04-01 09:45:00", "end_time": "2023-04-01 10:00:00", "task": "Start working on a project for work."}, {"start_time": "2023-04-01 10:00:00", "end_time": "2023-04-01 10:15:00", "task": "Take a short break and stretch."}, {"start_time": "2023-04-01 10:15:00", "end_time": "2023-04-01 11:00:00", "task": "Continue working on the project."}, {"start_time": "2023-04-01 11:00:00", "end_time": "2023-04-01 11:15:00", "task": "Take a break and grab a snack."}, {"start_time": "2023-04-01 11:15:00", "end_time": "2023-04-01 12:00:00", "task": "Attend a virtual meeting with his team."}, {"start_time": "2023-04-01 12:00:00", "end_time": "2023-04-01 12:15:00", "task": "Take a break and check in with his family."}, {"start_time": "2023-04-01 12:15:00", "end_time": "2023-04-01 12:30:00", "task": "Eat lunch while reviewing notes for an upcoming presentation."}, {"start_time": "2023-04-01 12:30:00", "end_time": "2023-04-01 13:30:00", "task": "Work on the presentation."}, {"start_time": "2023-04-01 13:30:00", "end_time": "2023-04-01 13:45:00", "task": "Take a break and go for a short walk."}, {"start_time": "2023-04-01 13:45:00", "end_time": "2023-04-01 14:30:00", "task": "Continue working on the presentation."}, {"start_time": "2023-04-01 14:30:00", "end_time": "2023-04-01 14:45:00", "task": "Take a break and stretch."}, {"start_time": "2023-04-01 14:45:00", "end_time": "2023-04-01 15:30:00", "task": "Finish up the presentation and send it to his boss for review."}]
+Bob|status: Wake up and stretch., duration: 600.0
+Bob|short-term memory: ['Proceed123.\n']
+Alice|Insights: ["The COVID-19 pandemic has had a significant impact on individuals' future plans and trajectory, potentially altering their career paths and life goals.", "Education and personal interests are key aspects of individuals' lives that shape their identity and future trajectory.", "The COVID-19 pandemic has disrupted individuals' daily routines and education, leading to unforeseen impacts on their future trajectory.", 'Personal achievement is a core value for some individuals and has a significant impact on their identity and future plans.', "The COVID-19 pandemic has brought about an unprecedented situation that has impacted individuals' lives in various ways, including their future plans and trajectory."]
+Bob|Insights: ['The company is experiencing significant growth in terms of revenue and number of customers', "The company's focus is on providing high-quality products and services to its customers", 'The company has a strong brand reputation and customer loyalty', 'The company is investing in technology to improve its operations and customer experience', "The company's leadership team is committed to sustainability and ethical business practices"]
+Alice|Stretching.
+Bob|Stretching
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', 'Alarm Clock is .']
+apple tree|short-term memory: ['apple tree is .']
+Bob|status: Wake up and stretch., duration: 590.0
+Television|short-term memory: ['sofa is .']
+apple tree|short-term memory: ['apple tree is .']
+Alice|status: Wake up and stretch, duration: 590.0
+Bob|short-term memory: ['Proceed123.\n']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Wake up and stretch.']
+dining table|short-term memory: []
+Book Shelf|short-term memory: []
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', 'Alarm Clock is .']
+Alarm Clock|Display current time and turn off the alarm.
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Wake up and stretch.']
+Television|short-term memory: ['sofa is .']
+Alice|status: Wake up and stretch, duration: 580.0
+Bob|status: Wake up and stretch., duration: 580.0
+dining table|short-term memory: []
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', ' The alarm clock has displayed the current time and turned off the alarm.', 'Alarm Clock is Display current time and turn off the alarm..']
+Book Shelf|short-term memory: []
+Bob|short-term memory: ['Proceed123.\n']
+Alice|Insights: ["The COVID-19 pandemic has had a significant impact on individuals' future plans and trajectory, potentially altering their career paths and life goals.", "The disruption of daily routines and education due to the pandemic has led to unforeseen impacts on individuals' future trajectory.", "Pursuit of education and personal interests is a key aspect of individuals' lives that shapes their identity and future trajectory.", "The COVID-19 pandemic has brought about an unprecedented situation that has impacted individuals' lives in various ways, including their future plans and trajectory.", "The COVID-19 pandemic has disrupted individuals' future plans and trajectory, potentially altering their career paths and life goals."]
+Alice|Stretching
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', ' The alarm clock has displayed the current time and turned off the alarm.', 'Alarm Clock is Display current time and turn off the alarm..']
+Bob|status: Wake up and stretch., duration: 570.0
+apple tree|short-term memory: ['apple tree is .']
+Television|short-term memory: ['sofa is .']
+Bob|short-term memory: ['Proceed123.\n', 'Proceed123.']
+dining table|short-term memory: []
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Wake up and stretch.']
+Alice|status: Wake up and stretch, duration: 570.0
+apple tree|short-term memory: ['apple tree is .']
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', ' The alarm clock has displayed the current time and turned off the alarm.', 'Alarm Clock is Display current time and turn off the alarm..', 'Proceed123.']
+Book Shelf|short-term memory: []
+Bob|Insights: ['The company is experiencing rapid growth, as evidenced by the increasing number of employees and expanding office space.', 'The company values diversity and inclusion, as indicated by their efforts to recruit a diverse workforce and create a welcoming environment for all employees.', 'The company is committed to innovation and staying ahead of industry trends, as demonstrated by their investment in cutting-edge technology and partnerships with leading companies.', 'The company places a strong emphasis on employee satisfaction and work-life balance, as evidenced by their flexible work arrangements and focus on wellness programs.', 'The company is dedicated to making a positive impact on society, as indicated by their commitment to sustainability and community involvement.']
+Alice|Insights: ["The COVID-19 pandemic has had a significant impact on individuals' future plans and trajectory, potentially altering their career paths and life goals.", "Education and personal interests are key aspects of individuals' lives that shape their identity and future trajectory.", "The COVID-19 pandemic has disrupted individuals' daily routines and education, leading to unforeseen impacts on their future trajectory.", "The COVID-19 pandemic has brought about an unprecedented situation that has impacted individuals' lives in various ways.", "The COVID-19 pandemic has the potential to alter the course of individuals' lives in significant ways."]
+Bob|Stretching
+apple tree|short-term memory: ['apple tree is .']
+Alice|status: Wake up and stretch, duration: 560.0
+Television|short-term memory: ['sofa is .']
+Bob|status: Wake up and stretch., duration: 560.0
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', ' The alarm clock has displayed the current time and turned off the alarm.', 'Alarm Clock is Display current time and turn off the alarm..', 'Proceed123.']
+apple tree|short-term memory: ['apple tree is .']
+dining table|short-term memory: []
+Book Shelf|short-term memory: []
+Bob|short-term memory: ['Proceed123.\n', 'Proceed123.']
+Bob|status: Wake up and stretch., duration: 550.0
+apple tree|short-term memory: ['apple tree is .']
+Alice|status: Wake up and stretch, duration: 550.0
+Television|short-term memory: ['sofa is .']
+apple tree|short-term memory: ['apple tree is .']
+Bob|short-term memory: ['Proceed123.\n', 'Proceed123.']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Wake up and stretch.']
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', ' The alarm clock has displayed the current time and turned off the alarm.', 'Alarm Clock is Display current time and turn off the alarm..', 'Proceed123.']
+dining table|short-term memory: []
+Book Shelf|short-term memory: []
+Alice|status: Wake up and stretch, duration: 540.0
+ob|short-term memory: ['Proceed123.\n', 'Proceed123.']
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', ' The alarm clock has displayed the current time and turned off the alarm.', 'Alarm Clock is Display current time and turn off the alarm..', 'Proceed123.']
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Television|short-term memory: ['sofa is .']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Wake up and stretch.']
+dining table|short-term memory: []
+Book Shelf|short-term memory: []
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Bob|status: Wake up and stretch., duration: 530.0
+Alice|status: Wake up and stretch, duration: 530.0
+Television|short-term memory: ['sofa is .']
+dining table|short-term memory: []
+Book Shelf|short-term memory: []
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Wake up and stretch.']
+Bob|short-term memory: ['Proceed123.\n', 'Proceed123.']
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', ' The alarm clock has displayed the current time and turned off the alarm.', 'Alarm Clock is Display current time and turn off the alarm..', 'Proceed123.']
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Alice|status: Wake up and stretch, duration: 520.0
+Television|short-term memory: ['sofa is .']
+Bob|status: Wake up and stretch., duration: 520.0
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Wake up and stretch.']
+dining table|short-term memory: []
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', ' The alarm clock has displayed the current time and turned off the alarm.', 'Alarm Clock is Display current time and turn off the alarm..', 'Proceed123.']
+Bob|short-term memory: ['Proceed123.\n', 'Proceed123.']
+Book Shelf|short-term memory: []
+Alice|status: Wake up and stretch, duration: 510.0
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Bob|status: Wake up and stretch., duration: 510.0
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', ' The alarm clock has displayed the current time and turned off the alarm.', 'Alarm Clock is Display current time and turn off the alarm..', 'Proceed123.']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Wake up and stretch.']
+dining table|short-term memory: []
+Bob|short-term memory: ['Proceed123.\n', 'Proceed123.']
+Book Shelf|short-term memory: []
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Television|short-term memory: ['sofa is .']
+Bob|status: Wake up and stretch., duration: 500.0
+dining table|short-term memory: []
+Alice|status: Wake up and stretch, duration: 500.0
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Wake up and stretch.']
+Book Shelf|short-term memory: []
+Bob|short-term memory: ['Proceed123.\n', 'Proceed123.']
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', ' The alarm clock has displayed the current time and turned off the alarm.', 'Alarm Clock is Display current time and turn off the alarm..', 'Proceed123.']
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Television|short-term memory: ['sofa is .']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Wake up and stretch.']
+Alice|status: Wake up and stretch, duration: 490.0
+Bob|status: Wake up and stretch., duration: 490.0
+Book Shelf|short-term memory: []
+dining table|short-term memory: []
+Alice|short-term memory: ['Proceed123.\n', ' The alarm clock is playing a soft melody.', 'bed is .', ' The alarm clock has displayed the current time and turned off the alarm.', 'Alarm Clock is Display current time and turn off the alarm..', 'Proceed123.']
+Bob|short-term memory: ['Proceed123.\n', 'Proceed123.']
+apple tree|short-term memory: ['apple tree is .']
+apple tree|short-term memory: ['apple tree is .']
+Television|short-term memory: ['sofa is .']
+Alarm Clock|short-term memory: ['bed is .', 'Alice is Watching TV.']
+dining table|short-term memory: []
+Book Shelf|short-term memory: []
+Alarm Clock|ringing
+Television|turning on

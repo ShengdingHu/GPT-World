@@ -9,7 +9,6 @@ from backend.text_to_image import TextToImage
 
 
 PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
-INVOICE_PATH = f"{PARENT_DIR}/../../static_files/" + "invoice.txt"
 
 app = Flask(__name__)
 CORS(app)
@@ -44,7 +43,6 @@ def text_to_tile_route():
 @app.route('/read_environment', methods=['GET'])
 def read_environment():
     file_path = request.args.get('file_path')
-    # print(f"{PARENT_DIR}/../../static_files/{file_path}")
     with open(f"{PARENT_DIR}/../../static_files/{file_path}", 'r') as f:
         content = json.load(f)
     
@@ -61,14 +59,22 @@ def read_environment():
     return jsonify(data)
 
 
-def drop_invoice(invoice: str):
+def drop_invoice(invoice):
     """
     drop invoice to a file for the agent to be notified.
     TODO: later connect with the HTML <text>
     """
+    file_path = request.args.get('file_path')  # with /environment.json at the end of the file_path
+    file_dir = '/'.join(file_path.split('/')[:-1])  # eliminate the environment.json to get the directory
+                                                    # maybe other better methods
+    INVOICE_PATH = os.path.join(f"{PARENT_DIR}/../../static_files/{file_dir}", "invoice.txt")
+    # import logging
+    # logging.critical(file_path)
+    # logging.critical(INVOICE_PATH)
 
     with open(INVOICE_PATH, 'w') as fp:
-        print(str, fp)
+        print(invoice, file=fp, end='')
+        # logging.critical(invoice)
 
 
 # @socketio.on('tunnel')

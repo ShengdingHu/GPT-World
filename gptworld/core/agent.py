@@ -21,8 +21,6 @@ logger = get_logger(__file__)
 logger.debug = print
 logger.info = print
 
-INVOICE_PATH = "./static_files/" + "invoice.txt"
-# print(os.path.exists(INVOICE_PATH))
 
 """
 Agent class implements the static, mind, inner, and cognitive process
@@ -618,6 +616,10 @@ Summarize the dialog above.
 
         # 0. If incoming_invoice is available, process it with the highest priority
 
+        INVOICE_PATH = self.environment.file_dir + "invoice.txt"
+        # logger.critical(INVOICE_PATH)
+        # logger.critical(os.path.exists(INVOICE_PATH))
+
         if os.path.exists(INVOICE_PATH):
             logger.info("FOUND INVOICE")
             with open(INVOICE_PATH, 'r') as fp:
@@ -625,11 +627,13 @@ Summarize the dialog above.
                 if self.incoming_invoice:
                     # have incoming invoice
                     # do with the top priority
-                    self.incoming_observation.extend(self.incoming_invoice)
+                    self.incoming_observation.append(self.incoming_invoice)
                     logger.debug(self.incoming_invoice)
                     self.incoming_invoice = ""
                 else:
                     logger.debug("EMPTY INVOICE FILE")
+            # with open(INVOICE_PATH, 'w') as fp:
+            #     pass  # clear the INVOICE FILE
         else:
             logger.debug("NO INVOICE FILE")
         # 1. 如果当前正在向openai请求，调过这一步
