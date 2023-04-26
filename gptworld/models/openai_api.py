@@ -58,28 +58,36 @@ def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.1,attemps=1) -> str:
 
 
 
-def get_embedding(text: str) -> List[float]:
+def get_embedding(text: str,attempts=3) -> List[float]:
     # if os.environ['OPENAI_METHOD'] == 'pool':  # TODO, remove this in public ver–sion.
-    if os.environ['OPENAI_METHOD'] == "pool":
-        url = "http://freegpt.club/gptworld_embedding"
-        headers={"Content-Type":"application/json"}
-        session = requests.Session()
-        data = {
-            "model": "text-embedding-ada-002",
-            "input": text
-        }
-
-        jsondata = json.dumps(data)
-        res = session.post(url = url, data = jsondata, headers = headers)
-        response_dict = json.loads(res.text.strip())
+    attempt=0
+    while attempt<attempts:
         try:
-            return response_dict['data'][0]['embedding']
-        except:
-            return []
-    elif os.environ['OPENAI_METHOD'] == "api_key":
-        text = text.replace("\n", " ")
-        embedding = openai.Embedding.create(input=[text], model="text-embedding-ada-002")["data"][0]["embedding"]
-        return embedding
+            if os.environ['OPENAI_METHOD'] == "pool":
+                url = "http://freegpt.club/gptworld_embedding"
+                headers={"Content-Type":"application/json"}
+                session = requests.Session()
+                data = {
+                    "model": "text-embedding-ada-002",
+                    "input": text
+                }
+
+                jsondata = json.dumps(data)
+                res = session.post(url = url, data = jsondata, headers = headers)
+                response_dict = json.loads(res.text.strip())
+                try:
+                    return response_dict['data'][0]['embedding']
+                except:
+                    return []
+            elif os.environ['OPENAI_METHOD'] == "api_key":
+                text = text.replace("\n", " ")
+                embedding = openai.Embedding.create(input=[text], model="text-embedding-ada-002")["data"][0]["embedding"]
+                return embedding
+        except Exception as e:
+            attempt += 1
+            print(f"Error: {e}. Retrying")
+            time.sleep(1)
+    Warning(f'get_embedding() failed after {attempts} attempts. returning empty response')
 
 
 if __name__ == "__main__":

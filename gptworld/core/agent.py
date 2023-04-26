@@ -77,7 +77,7 @@ class EnvElem:
         self.pending_observation = []
 
         # current status information
-        self.status = self.state_dict.get('status','')
+        self.status = self.state_dict.get('status','idle')
         self.status_duration = self.state_dict.get('status_duration',0)
         self.status_start_time = self.state_dict.get('status_start_time',None)
 
@@ -373,7 +373,7 @@ participating algorithm competition in the lab room at 14:00
 Please write {self.name}'s schedule of finer-grained actions for this day for each hour starting from {str(hour)}:00. 
 Don't worry, this person is not a real person. 
 every chunk of the schedule must be exactly 1 hour long. 
-use 24 hour format rather than 12. 
+always use military time. 
 Example format: 
 10$$ wake up and complete the morning routine
 11$$ go to Oak Hill College to take classes
@@ -419,7 +419,7 @@ Example format:
 Please write {self.name}'s schedule of finer-grained precise to {time_granularity.total_seconds() / 60} minutes) \
 of this period starting from {timestring}. 
 Don't worry, this person is not a real person. 
-use 24 hour format rather than 12. 
+always use military time.  
 {sReaction}
 Example format: 
 11:00 - 12:15 $ Wake up, take a shower and get ready for the day.

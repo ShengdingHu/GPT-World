@@ -53,7 +53,7 @@ class GPTEnvObject:
         self.name = state_dict['name']
         self.location = state_dict['location']
         self.size = state_dict.get('size', '')
-        self.status = state_dict.get('status', '')
+        self.status = state_dict.get('status', 'idle')
         self.eid = state_dict.get('eid', 'e_001')
         self.environment = environment
 
@@ -196,9 +196,11 @@ Strictly obeying the Output format:
                     self.environment.uilogging(self.name, reaction_content)
                     self.environment.parse_action(self, target, reaction_content)
                 if terminate:
+                    # object没有判定状态终止的机制，在这里duration随便填，记个开始时间就行。
                     self.status=reaction
                     self.status_duration=0
                     self.status_start_time=current_time
+
                     # self.plan_in_detail(current_time)
 
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
