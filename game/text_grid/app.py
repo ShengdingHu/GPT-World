@@ -10,7 +10,7 @@ from flask_socketio import SocketIO, emit, send
 
 from io import BytesIO
 from PIL import Image
-from backend.text_to_image import TextToImage
+from text_to_image import TextToImage
 
 import threading
 
@@ -21,17 +21,22 @@ socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=5, ping_interval
 CORS(app)
 
 
+# Project root directory
 PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
-ASSETS_DIR = os.path.join(PARENT_DIR, "assets")
-UI_LOGGING_PATH = os.path.join(f"{PARENT_DIR}/../../static_files/", 'alice_home', 'uilogging.txt')
-ENV_FILE_PATH = os.path.join(f"{PARENT_DIR}/../../static_files/", 'alice_home', 'environment.json')
-print(UI_LOGGING_PATH)
 
+# Include assets including icons, tiles
+ASSETS_DIR = os.path.join(PARENT_DIR, "assets")
+
+# Environment path
+ENV_PATH = os.path.join(f"{PARENT_DIR}/../../static_files/", 'alice_home')
+
+# TODO
 INVOICE_PATH = f"{PARENT_DIR}/../../static_files/" + "invoice.txt"
 
 
-################ Implement Text to Image ###############
 
+
+#-------------------------------- Implement Text to Image -------------------------------
 text_to_icon = TextToImage(ASSETS_DIR, "icon")
 text_to_tile = TextToImage(ASSETS_DIR, "tile")
 
@@ -57,26 +62,25 @@ def text_to_tile_route():
     img_io.seek(0)
     return send_file(img_io, mimetype='image/png')
 
-def add_existing_entity():
-    with open(ENV_FILE_PATH, 'r') as f:
+def add_object_embedding():
+    embedding_path = os.path.join(ENV_PATH, 'embeddings.json')
+    with open(embedding_path, 'r') as f:
         content = json.load(f)
     
     # Update the TextToImage module
-    for item in content["areas"].values():
-        text_to_tile.add_existing_object(item["name"], item["embedding"])
-        item["embedding"] = None
-    
-    for item in content["objects"].values():
-        text_to_icon.add_existing_object(item["name"], item["embedding"])
-        item["embedding"] = None
+    for name in content.keys():
+        embedding = content[name]
+        text_to_icon.add_existing_object(name, embedding)
+        text_to_tile.add_existing_object(name, embedding)
 
-add_existing_entity()
-
-########################################################
+add_object_embedding()
+# -----------------------------------------------------------------------------------------
 
 
 
-################# Implement Realtime UI Logging ###################
+
+
+# ----------------------------- Implement Realtime UI Logging ------------------------------------
 clients = []
 
 @socketio.on('connect')
@@ -115,7 +119,7 @@ def read_new_lines(file_path, last_position):
 def uilogging(sid: str):
     """ This function will act as a thread to send latest UI logs to client of given session id 'sid'
     """
-    file_path = UI_LOGGING_PATH
+    file_path = os.path.join(ENV_PATH, 'uilogging.txt')
     last_position = None
 
     while sid in clients: # if the client is closed, this thread will terminate
@@ -132,24 +136,15 @@ def uilogging(sid: str):
     
     return
 
-#########################################################
+# ----------------------------------------------------------------------------------------
 
 
 
 @app.route('/read_environment', methods=['GET'])
 def read_environment():
-    with open(ENV_FILE_PATH, 'r') as f:
+    environment_main_path = os.path.join(ENV_PATH, 'environment.json')
+    with open(environment_main_path, 'r') as f:
         content = json.load(f)
-    
-    # Update the TextToImage module
-    for item in content["areas"].values():
-        text_to_tile.add_existing_object(item["name"], item["embedding"])
-        item["embedding"] = None
-    
-    for item in content["objects"].values():
-        text_to_icon.add_existing_object(item["name"], item["embedding"])
-        item["embedding"] = None
-
     data = {'message': content}
     return jsonify(data)
 
@@ -165,9 +160,6 @@ def drop_invoice(invoice: str):
 
 
 if __name__ == '__main__':
-    uilogging_thread = threading.Thread(target=uilogging)
-    # uilogging_thread.start()
     socketio.run(app, host='0.0.0.0', port=5001, debug=True)
-
     # app.run(host='0.0.0.0', port=5001, debug=True)
     
