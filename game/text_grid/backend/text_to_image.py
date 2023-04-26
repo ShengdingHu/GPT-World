@@ -34,7 +34,6 @@ def find_most_similar_list(query: List[float], n: int, database: Dict[str, List[
     most_similar_lists = [list_id for list_id, similarity in sorted_similarities[:n]]
     return most_similar_lists
 
-
 class TextToImage:
     def __init__(self, assets_dir: str, category: str):
         self.assets_dir = assets_dir
@@ -49,9 +48,9 @@ class TextToImage:
                 path = item["path"]
                 embedding = item["embedding"]
                 self.image_path_to_embedding[path] = embedding
-            print(f"loaded {self.category} embeddings")
+            print(f"Loaded {self.category} embeddings")
         except:
-            print(f"failed to load {self.category} embeddings")
+            print(f"Failed to load {self.category} embeddings")
 
         return
 
@@ -67,8 +66,8 @@ class TextToImage:
         # First get the embedding of query word
         query_vector = self.existing_object_name_to_embedding.get(name, None)
         if query_vector is None:
-            print("error")
-            return None
+            # print("error")
+            return []
         
         # After getting the query embedding, find the top icon names
         top_icon_paths = find_most_similar_list(query_vector, n, self.image_path_to_embedding)
