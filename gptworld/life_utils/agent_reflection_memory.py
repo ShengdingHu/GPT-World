@@ -72,7 +72,7 @@ def get_insights(statements):
         prompt += (str(i + 1) + '. ' + st + '\n')
     prompt += INSIGHT_PROMPT
     result = chat(prompt)
-    insights = result.split('\n')[:5]
+    insights = [isg for isg in result.split('\n') if len(isg.strip())>0][:5]
     insights = ['.'.join(i.split('.')[1:]) for i in insights]
     # remove insight pointers for now
     insights = [i.split('(')[0].strip() for i in insights]
