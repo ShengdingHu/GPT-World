@@ -20,6 +20,8 @@ logger = logging.get_logger(__name__)
 
 
 
+# print(os.path.exists(INVOICE_PATH))
+
 """
 Agent class implements the static, mind, inner, and cognitive process
 """
@@ -64,7 +66,7 @@ class EnvElem:
         # interaction
         self.incoming_interactions = [{"sender": "A", "message": "XXX"}]
         self.incomming_objection = []
-        self.incomming_invoice = []
+        self.incoming_invoice = []  # empty str represents no invoice, later can be changed to list
 
         # 记录当前对话历史，不止包括别人说的，也包括自己说的
         # 直接根据len判断自己是否在对话中
@@ -170,10 +172,22 @@ class EnvElem:
     def add_observation(self, observation):
         self.pending_observation.append(observation)
 
-    def _move_pending_observation(self):
+    def _move_pending_observation_or_invoice(self):
+        
+        if len(self.incoming_invoice) > 0:
+            self.incoming_observation.append(self.incoming_invoice[0])
+            self.incoming_invoice.pop(0)
+            return 
         if len(self.pending_observation) > 0:
             self.incoming_observation.extend(self.pending_observation)
             self.pending_observation = []
+        logger.debug(f"{self.name} now has incomming observation: {self.incoming_observation}")
+        
+    def set_invoice(self, message):
+        self.incoming_invoice.append(message)
+        
+
+    
     
 
         
@@ -488,6 +502,7 @@ Example format:
         """If the agent has no long_term_memory initially, we add the description about 
         the agent as the long_term_memory. Also we generate summary and whole day plan if it's empty.
         """
+        
         if len(self.long_term_memory.data.texts)==0:
 
             # logging.info(self.whole_day_plan)
@@ -589,6 +604,8 @@ Summarize the dialog above.
                 break
         
         self.unreachable_signal(target)
+    
+
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
@@ -610,8 +627,13 @@ Summarize the dialog above.
 
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
 
+
+
+        # 0. If incoming_invoice is available, process it with the highest priority
+    
         # 1. 如果当前正在向openai请求，调过这一步
-        self._move_pending_observation()
+        # if not self.incoming_invoice:  # Only move the pending observation without any incoming invoice
+        self._move_pending_observation_or_invoice()
         # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
         if self.status_start_time is None: # fixing empty start time
             self.status_start_time = current_time
@@ -709,7 +731,7 @@ Strictly obeying the Output format:
                 try:
                     lines=result.split('\n')
                     if len(lines)<5:
-                        logging.warning('abnormal reaction:'+result)
+                        logger.warning('abnormal reaction:'+result)
                     # line_split=[line.strip().split('$$') for line in lines]
                     finds=[line.find('Yes') for line in lines]
                     should_react,reaction=finds[0]>=0,lines[0][finds[0]+4:].strip().strip(':').strip()
@@ -768,6 +790,6 @@ Strictly obeying the Output format:
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
         # from IPython import embed; embed(header="833")
-            
+
         return
 

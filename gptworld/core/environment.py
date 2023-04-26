@@ -267,6 +267,37 @@ class GPTWorldEnv:
             receiver_agent.incoming_interactions.append({"sender": sender, "content": content})
         return
 
+    def get_invoice(self, ):
+        INVOICE_PATH = os.path.join(self.file_dir, "invoice.txt")
+        if os.path.exists(INVOICE_PATH):
+            with open(INVOICE_PATH, 'r') as fp:
+                incoming_invoice = fp.read()
+                logger.critical("find invoice: {}".format(incoming_invoice))
+                if incoming_invoice:
+                    self.broadcast_invoice(incoming_invoice)
+        else:
+            logger.warning("No invoice files")
+    
+    def broadcast_invoice(self, incoming_invoice):
+        objectlist = [(aid, self.agents[aid].name) for aid in self.agents] + [(oid, self.objects[oid].name) for oid in self.objects]  
+        prompt = f"You are now simulating an environment, in which there are several agents and objects. {objectlist}. Here is a comming message that comes from the system: {incoming_invoice} You need to broadcast the message to the direct target(s) of this message. You should broadcast in a list of tuple: [('id', 'message'),]. Do not broadcast to agent or object that is not the target of this message."
+
+        return_value = chat(prompt)
+        try:
+            broadcast_list = eval(return_value)
+        except:
+            logger.warning("Cannot parse broadcast_list: {}".format(return_value))
+            return
+
+        invoice_prompt = "Here is a system message that is of higheset priority. Who observe it should strict follows the message until it is completed: "
+        for item in broadcast_list:
+            item_id, message = item
+            if item_id.startswith('a'):
+                self.agents[item_id].set_invoice(invoice_prompt + message)
+            elif item_id.startswith('o'):
+                self.objects[item_id].set_invoice(invoice_prompt + message)
+
+
     def step(self, debug=False):
         """ For each time frame, call step method for agents
         """
@@ -276,6 +307,7 @@ class GPTWorldEnv:
    
 
         thread_pool = []
+        self.get_invoice()
 
         for agent_id in self.agents:
             agent = self.agents[agent_id]
