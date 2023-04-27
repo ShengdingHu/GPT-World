@@ -16,6 +16,7 @@ import os
 from gptworld.models.openai_api import chat
 
 import gptworld.utils.logging as logging
+import gptworld.utils.map_editor as map_editor
 logger = logging.get_logger(__name__)
 
 
@@ -60,6 +61,7 @@ class EnvElem:
 
         # geography
         self.location = state_dict.get('location',None)
+        self.target_id = self.id
         self.eid = state_dict.get('eid',None)
         self.movement = self.state_dict.get("movement", "static")
         self.max_velocity = self.state_dict.get("max_velocity", 1)
@@ -560,39 +562,49 @@ Summarize the dialog above.
 
 
     def initialize_map_status(self):
-        map = {}
-        for id, info in self.environment.env_json['areas']:
-            for i in range(info['pos'][0][0], info['pos'][1][0] + 1):
-                for j in range(info['pos'][0][1], info['pos'][1][1] + 1):
-                    map[[i, j]] = info['border']
+        N = self.environment.env_json['size'][0]
+        M = self.environment.env_json['size'][1]
+        map = [[0 for j in range(M + 1)] for i in range(N + 1)]
+
+        for id, info in self.environment.env_json['areas'].items():
+            for i in range(info['location'][0][0], info['location'][1][0] + 1):
+                for j in range(info['location'][0][1], info['location'][1][1] + 1):
+                    map[i][j] = info['border']
         return map
                 
     def unreachable_signal(self, target):
         self.observe()  # TODO: 为什么这里要 observe
         print('Target {} is unreacable.'.format(target))
 
-    def find_movement(self, target_description):
-
-        # def filter(env_json):
-            
-
-
+    def analysis_movement_target(self, target_description):
         prompt = """
         This map is like: {}.
-        I am now trying to get to the target location: {},
-        and my current location is {} in current layer.
-        Which location should I go to in order to reach my target location within the same layer.
-        Show me the target object's id. If you can't find it, print ERROR.
-        """.format(json.dumps(self.environment.env_json), target_description, '[{}, {}]'.format(self.location[0], self.location[1]))
+        I am now trying to get to the target with description: {}.
+        Which is target's id in the list above.
+        Show me the target object's id without anything else. If you can't find it, print ERROR.
+        Example:
+        Q: Where is the sofa?
+        A: o_002
+        """.format(json.dumps(self.environment.env_json), target_description)
+        self.target_id = chat(prompt)
+#        self.environment.uilogging(self.name, "target prompt: {}".format(target_description))
 
-        target_id = chat(prompt)
+    def find_movement(self):
+        def abs_location(pos, eid):
+            area_delta = self.environment.env_json['areas'][eid]['location'][0]
+            target = [pos[0] + area_delta[0] - 1, pos[1] + area_delta[1] - 1]
+            return target
+
+        target_id = self.target_id
         target = None
         for id, info in self.environment.env_json['objects'].items():
+#            self.environment.uilogging(self.name, "compare id: {}, target_id: {}".format(id, target_id))
             if id == target_id:
-                area_delta = self.environment.env_json['areas'][info['eid']]['location']
-                relative_pos = info['location'][0]
-                target = [relative_pos[0] + area_delta[0], relative_pos[1] + area_delta[1]]
+                target = abs_location(info['location'], info['eid'])
                 break
+
+#        self.environment.uilogging(self.name, "target_id: {}".format(target_id))
+#        self.environment.uilogging(self.name, "target_pos: {}".format(target))
 
         if target_id == "ERROR" or target == None:
             self.unreachable_signal("[N/A]")
@@ -603,15 +615,20 @@ Summarize the dialog above.
 
         def reachable(pos):
             if not (1 <= pos[0] <= size[0] and 1 <= pos[1] <= size[1]): return False
-            return pos not in map or map[pos] != 3
+            return map[pos[0]][pos[1]] != 3
 
         from queue import Queue
         directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]
 
-        d = {target : 0}
+        INF = int(1e9)
+        N = self.environment.env_json['size'][0]
+        M = self.environment.env_json['size'][1]
+        d = [[INF for j in range(M + 1)] for i in range(N + 1)]
+
+        d[target[0]][target[1]] = 0
 
         Q = Queue(maxsize=0)
-        Q.push(target)
+        Q.put(target)
         while not Q.empty():
             u = Q.get()
             for x, y in directions:
@@ -620,18 +637,20 @@ Summarize the dialog above.
                     d[v] = d[u] + 1
                     Q.put(v)
 
-        self.movement = self.location
 
-        u = self.location
+        next_step = u = abs_location(self.location, self.eid)
+        if next_step == target: return next_step
+
+        reached = False
         for x, y in directions:
             v = [u[0] + x, u[1] + y]
-            if reachable(v) and d[u] == d[v] + 1:
-                self.movement = v
+            if reachable(v) and v in d and d[u] == d[v] + 1:
+                self.location = v
+                reached = True
                 break
         
-        self.unreachable_signal(target)
-    
-
+        if not reached: self.unreachable_signal(target)
+        return next_step
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
@@ -764,7 +783,8 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
                     should_oral,oral=finds[1]>=0,lines[1][finds[1]+4:].strip().strip(':').strip()
                     have_target,target=finds[2]>=0,lines[2][finds[2]+4:].strip().strip(':').strip()
                     terminate=finds[3]>=0
-                    movement=finds[4]>=0
+#                    movement=finds[4]>=0
+                    movement=1
                     break
                 except IndexError:
                     logger.debug(f"Generated reaction {result}. Retrying...",)
@@ -804,8 +824,8 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
                     # self.status_start_time=current_time
 
                 
-            # if movement:
-            #     self.find_movement(reaction)
+            if movement:
+                self.analysis_movement_target(reaction)
 
         # 3.5 observation拉入记忆
         for ob in self.observation:
@@ -822,7 +842,11 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
 
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
-        # from IPython import embed; embed(header="833")
+
+        next_step = self.find_movement()
+#        print(self.name, "MOVING!!! position {}, next_step: {}".format(self.location, next_step))
+
+#        self.location = map_editor.move_agent(self, next_step)
 
         return
 
