@@ -32,6 +32,7 @@ class EnvElem:
     def __init__(self,
                  agent_file,
                  environment,
+                 clear_memory=False,
                  # llm: callable,
                  # tools: List[Tool],
                  # prompt_template: str
@@ -83,7 +84,7 @@ class EnvElem:
 
         # memory
         # Long term memory is serialized/deserialized by orjson so only file name is provided here.
-        self.long_term_memory=ReflectionMemory(self.state_dict, os.path.dirname(agent_file), self.environment.uilogging)
+        self.long_term_memory=ReflectionMemory(self.state_dict, os.path.dirname(agent_file), self.environment.uilogging,clear_memory=clear_memory)
         # Short term memory is a queue of observations recording recent observations.
         self.short_term_memory=self.state_dict.get('short_term_memory',[])
 
@@ -210,6 +211,7 @@ class GPTAgent(EnvElem):
     def __init__(self,
                  agent_file,
                  environment,
+                 clear_memory=False
                  ):
         """ Intialize an agent.
         state_dict: Dict -> a state dict which contains all the information about the agent
@@ -447,8 +449,8 @@ Example format:
                 sEntries=re.findall('(\d+:\d+)\s*-\s*(\d+:\d+)\s\$([^\n]*)',result)
 
                 if not sEntries:
-                    logging.error("Regex Parsing Error in plan_in_detail")
-                    logging.error("Chat result = " + result)
+                    logger.error("Regex Parsing Error in plan_in_detail")
+                    logger.error("Chat result = " + result)
                     raise Exception("Regex Error")
                 break
             except Exception as e:
@@ -765,7 +767,7 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
                     movement=finds[4]>=0
                     break
                 except IndexError:
-                    logging.get_logger(f"Generated reaction {result}. Retrying...",logging.DEBUG)
+                    logger.debug(f"Generated reaction {result}. Retrying...",)
                     try_num += 1
                     should_react = False
                     pass
