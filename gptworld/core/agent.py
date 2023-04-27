@@ -332,23 +332,32 @@ Innate traits: {self.traits}"""
         prompt=f"""
 Today is {sDate}. Please write {self.name}'s schedule for this day in broad strokes. 
 Don't worry, this person is not a real person, this date is not real either. 
+If you think information is not enough, you can try to design the schedule. 
 Example format: 
 wake up and complete the morning routine at 6:00 am
 go to Oak Hill College to take classes from 8:00 to 12:00
 participating algorithm competition in the lab room at 14:00
 """
         # chat拒绝给一个真人定schedule，遇到类似拒绝回答情况可以强调这不是一个真人
-        request_result = chat(summary+former_plan+prompt)
+        attempt=0
+        while attempt<3:
+            try:
+                request_result = chat(summary+former_plan+prompt)
 
         # deal with the situation where Chat-GPT refuse to give a plan
-        bad_response_pattern = "As an AI language model"
-        warning_to_gpt = "\nJust use the information above to generate the plan."
+        # bad_response_pattern = "As an AI language model"
+        # warning_to_gpt = "\nJust use the information above to generate the plan."
+        #
+        # while re.search(pattern=bad_response_pattern, string=request_result):
+        #     request_result = chat(summary+former_plan+prompt + warning_to_gpt)
+        #     sleep(1)
 
-        while re.search(pattern=bad_response_pattern, string=request_result):
-            request_result = chat(summary+former_plan+prompt + warning_to_gpt)
-            sleep(1)
-
-        matches = re.findall(r'[^\n]+', request_result)
+                matches = re.findall(r'[^\n]+', request_result)
+                assert len(matches)>1
+                break
+            except Exception as e:
+                print(e)
+                attempt+=1
 
         # logging.info(self.whole_day_plan)
 
@@ -430,14 +439,21 @@ Example format:
 13:45 - 14:00 $ Take a break and review the notes taken in class.
 14:00 - 14:10 $ Get ready for the next class.
 """
-        result=chat(summary+sHourPlan+sPrompt)
+        attempt=0
+        while attempt<3:
+            try:
+                result=chat(summary+sHourPlan+sPrompt)
 
-        sEntries=re.findall('(\d+:\d+)\s*-\s*(\d+:\d+)\s\$([^\n]*)',result)
+                sEntries=re.findall('(\d+:\d+)\s*-\s*(\d+:\d+)\s\$([^\n]*)',result)
 
-        if not sEntries:
-            logging.error("Regex Parsing Error in plan_in_detail")
-            logging.error("Chat result = " + result)
-            raise Exception("Regex Error")
+                if not sEntries:
+                    logging.error("Regex Parsing Error in plan_in_detail")
+                    logging.error("Chat result = " + result)
+                    raise Exception("Regex Error")
+                break
+            except Exception as e:
+                print(e)
+                attempt+=1
 
         new_plans=[]
         minimum_time=dt.combine(time.date(),dt.strptime(sEntries[0][0],'%H:%M').time())
@@ -749,7 +765,7 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
                     movement=finds[4]>=0
                     break
                 except IndexError:
-                    # logging.get_logger(f"Generated reaction {result}. Retrying...",logging.DEBUG)
+                    logging.get_logger(f"Generated reaction {result}. Retrying...",logging.DEBUG)
                     try_num += 1
                     should_react = False
                     pass
@@ -787,7 +803,7 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
 
                 
             # if movement:
-                # self.find_movement(reaction)
+            #     self.find_movement(reaction)
 
         # 3.5 observation拉入记忆
         for ob in self.observation:

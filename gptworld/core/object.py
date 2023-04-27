@@ -172,6 +172,7 @@ Strictly obeying the Output format:
                     break
                 except IndexError:
                     logging.debug(f"Generated reaction {result}. Retrying...")
+                    try_num+=1
                     pass
 
             logger.debug(f"Prompt of {self.name}'s reaction: "+send_message+"Return message is "+result)
