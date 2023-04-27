@@ -20,3 +20,4 @@ dist/*
 
 **/cache/
 
+**/*LTM.json
