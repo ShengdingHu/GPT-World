@@ -70,6 +70,7 @@ window.onbeforeunload = function() {
 
 
 ////////////////// Implement Game Scene /////////////////////
+
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const ORIGIN_X = 100;
 const ORIGIN_Y = 100;
@@ -222,7 +223,7 @@ class GameScene extends Scene {
           obj.name,
           {
             font: '15px Arial',
-            fill: '#000000',
+            color: '#000000',
             backgroundColor: '#ffffff',
             padding: 2
           }
@@ -234,11 +235,17 @@ class GameScene extends Scene {
   }
 
   async create() {
+    const width = Math.max(window.innerWidth * 0.7, 800);
+    const height = Math.max(window.innerHeight * 0.7, 600);
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+    
     await this.load_file();
     await this.load_tile();
     this.lastTime = 0.0;
     this.create_scene();
     this.place_objects();
+
   }
 
   // Use the update() function to update the square's locationition every 1 second to the left
@@ -255,8 +262,8 @@ class GameScene extends Scene {
 
 const config = {
   type: WEBGL,
-  width: window.innerWidth,
-  height: window.innerHeight,
+  // width: window.innerWidth,
+  // height: window.innerHeight,
   canvas,
 
   physics: {
@@ -274,7 +281,10 @@ var game = new Game(config);
 
 // resize the game object as windows resize
 window.addEventListener('resize', function () {
-  game.scale.resize(window.innerWidth, window.innerHeight);
+  const width = Math.max(window.innerWidth * 0.7, 800);
+  const height = Math.max(window.innerHeight * 0.7, 600);
+  canvas.style.width = width + 'px';
+  canvas.style.height = height + 'px';
 });
 
 //////////////////////////////////
