@@ -236,10 +236,10 @@ class GameScene extends Scene {
 
   async create() {
     const width = Math.max(window.innerWidth * 0.7, 800);
-    const height = Math.max(window.innerHeight * 0.7, 600);
+    const height = Math.max(window.innerWidth * 0.75 * 0.7, 600);
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
-    
+
     await this.load_file();
     await this.load_tile();
     this.lastTime = 0.0;
@@ -282,7 +282,7 @@ var game = new Game(config);
 // resize the game object as windows resize
 window.addEventListener('resize', function () {
   const width = Math.max(window.innerWidth * 0.7, 800);
-  const height = Math.max(window.innerHeight * 0.7, 600);
+  const height = Math.max(window.innerWidth * 0.75 * 0.7, 600);
   canvas.style.width = width + 'px';
   canvas.style.height = height + 'px';
 });
