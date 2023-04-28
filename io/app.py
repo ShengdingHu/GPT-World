@@ -35,7 +35,7 @@ PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
 ASSETS_DIR = os.path.join(PARENT_DIR, "assets")
 
 # Environment path
-ENV_PATH = os.path.join(f"{PARENT_DIR}/../../static_files/", args.world_instance)
+ENV_PATH = os.path.join(f"{PARENT_DIR}/../static_files/", args.world_instance)
 
 # TODO
 INVOICE_PATH = os.path.join(ENV_PATH, "invoice.txt")
