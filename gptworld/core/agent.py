@@ -577,19 +577,23 @@ Summarize the dialog above.
         print('Target {} is unreacable.'.format(target))
 
     def analysis_movement_target(self, target_description):
-        prompt = """
-        This map is like: {}.
-        I am now trying to get to the target with description: {}.
-        Which is target's id in the list above.
-        Show me the target object's id without anything else. If you can't find it, print ERROR.
-        Example:
-        Q: Where is the sofa?
-        A: o_002
-        """.format(json.dumps(self.environment.env_json), target_description)
+        target_candidate = []
+        for obj in self.environment.objects:
+            target_candidate.append({'name':self.environment.objects[obj].name, 'id':self.environment.objects[obj].id})
+        for agt in self.environment.agents:
+            target_candidate.append({'name':self.environment.agents[agt].name, 'id':self.environment.agents[agt].id})
+        prompt = f"""Now you want to perform a movement action. I will give you a list of 
+        objects and agents that you might be your target. 
+        List: {target_candidate}
+        You target movement is : {target_description}
+        Give me the id of the movement target (with out `id` prefix).
+        """
         self.target_id = chat(prompt)
+
 #        self.environment.uilogging(self.name, "target prompt: {}".format(target_description))
 
     def find_movement(self):
+        logger.debug("walk to {}".format())
         def abs_location(pos, eid):
             area_delta = self.environment.env_json['areas'][eid]['location'][0]
             target = [pos[0] + area_delta[0] - 1, pos[1] + area_delta[1] - 1]
@@ -825,6 +829,7 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
 
                 
             if movement:
+                from IPython  import  embed; embed(header="True")
                 self.analysis_movement_target(reaction)
 
         # 3.5 observation拉入记忆
