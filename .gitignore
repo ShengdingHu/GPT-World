@@ -12,8 +12,8 @@ build/
 _build/
 **/build/
 
-# dist/
-# dist/*
+dist/
+dist/*
 
 .idea/
 
