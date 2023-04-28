@@ -108,6 +108,8 @@ def on_disconnect():
 
 def read_new_lines(file_path, last_position):
     new_lines = []
+    if not os.path.exists(file_path):
+        return [], None
     with open(file_path, 'r', encoding='utf-8') as file:
         if last_position is None:
             file.seek(0, os.SEEK_END)  # move file pointer to last position
@@ -130,7 +132,7 @@ def uilogging(sid: str):
     last_position = None
 
     while sid in clients: # if the client is closed, this thread will terminate
-        # print('read_new_lines invoked!')
+        print('read_new_lines invoked!')
         new_lines = []
 
         new_lines, last_position = read_new_lines(file_path, last_position)

@@ -1,21 +1,13 @@
 import './style.css';
 import { Scene, Game, WEBGL, GameObjects} from 'phaser';
+import Phaser from 'phaser';
 import { io, Socket } from "socket.io-client";
 
 
 const API_ROOT = "http://localhost:5001";
 
 
-///////////////// Implement UI Logging function /////////////////
-interface Message {
-  text: string;
-  sender: string;
-  time: Date;
-}
-
 const messagesElement = document.getElementById('messages')!;
-// const inputElement = document.getElementById('input') as HTMLInputElement;
-// const sendButton = document.getElementById('send')!;
 
 // socket connection to backend server
 const socket: Socket = io(API_ROOT);
@@ -46,10 +38,8 @@ socket.on("server_message", (event) => {
     const colors = ['red', 'green', 'blue', 'orange', 'purple'];
     const randomIndex = Math.floor(Math.random() * colors.length);
     const randomColor = colors[randomIndex];
-
     const messageElement = document.createElement('div');
     messageElement.innerHTML = `<span style="font-weight: bold; color: ${randomColor}">${message.sender}</span>: ${message.text}`;
-
     messagesElement.appendChild(messageElement);
   });
 
@@ -65,15 +55,53 @@ window.onbeforeunload = function() {
   return "Sure to reload?"
 };
 
-//////////////////////////////////////////////////////////////////
 
 
+class ObjectSprite extends Phaser.GameObjects.Sprite {
+  tooltip?: Phaser.GameObjects.Text;
+  display_name?: string;
 
-////////////////// Implement Game Scene /////////////////////
+  constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
+    super(scene, x, y, texture);
+  }
+}
+
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const ORIGIN_X = 100;
 const ORIGIN_Y = 100;
+
+function showTooltip(sprite: ObjectSprite) {
+  if (sprite.tooltip) {
+    // tooltip exists, nothing to do
+  } else {
+    let text = sprite.scene.add.text(
+      sprite.x,
+      sprite.y,
+      sprite.display_name as string,
+        {
+          font: '15px Arial',
+          color: '#000000',
+          backgroundColor: '#ffffff',
+          padding: 4 as Phaser.Types.GameObjects.Text.TextPadding,
+        }
+      );
+    sprite.tooltip = text;
+  }
+
+
+}
+
+function hideTooltip(sprite: ObjectSprite) {
+  if (sprite.tooltip) {
+    let text = sprite.tooltip;
+    text.destroy();
+    sprite.tooltip = undefined;
+  } else {
+    // do nothing
+  }
+}
+
 
 function loadIcon(name: string, scene: Scene) {
   let url = API_ROOT+"/text_to_icon?name="+name;
@@ -135,7 +163,7 @@ class GameScene extends Scene {
 
     // console.log(this.mydata.areas);
 
-    this.gridGraphics.lineStyle(4, 0xEEE8CD, 1.0);
+    this.gridGraphics.lineStyle(5, 0xEEE8CD, 1.0);
     this.gridGraphics.strokeRect(
       ORIGIN_X - this.squareSize / 2 - 4,
       ORIGIN_Y - this.squareSize / 2 - 4,
@@ -169,9 +197,9 @@ class GameScene extends Scene {
         area.name,
         {
           font: '15px Arial',
-          fill: '#000000',
+          color: '#000000',
           backgroundColor: '#ffffff',
-          padding: 2
+          padding: 2 as Phaser.Types.GameObjects.Text.TextPadding,
         }
       );
     }
@@ -193,14 +221,12 @@ class GameScene extends Scene {
       // Check if the object already exists in the scene
       let existingObj = this.children.getByName(obj.id);
       if (existingObj) {
-        
+        let existingObjSprite = existingObj as ObjectSprite;
         // If the object already exists, update its location
-        existingObj.x = ORIGIN_X + obj_x * this.squareSize - this.squareSize / 2;
-        existingObj.y = ORIGIN_Y + obj_y * this.squareSize - this.squareSize / 2;
-        let existingObj_title = this.children.getByName(obj.id+"_title");
-        existingObj_title.x = existingObj.x;
-        existingObj_title.y = existingObj.y;
-        existingObj.setTexture(obj.name);
+        existingObjSprite.x = ORIGIN_X + obj_x * this.squareSize - this.squareSize / 2;
+        existingObjSprite.y = ORIGIN_Y + obj_y * this.squareSize - this.squareSize / 2;
+
+        existingObjSprite.setTexture(obj.name);
 
       } else {
 
@@ -210,33 +236,29 @@ class GameScene extends Scene {
           ORIGIN_X + obj_x * this.squareSize  - this.squareSize / 2,
           ORIGIN_Y + obj_y * this.squareSize  - this.squareSize / 2,
           obj.name
-        );
+        ) as ObjectSprite;
 
         newObj.setScale(this.squareSize / 40);
         newObj.setName(object_key);
-        // Change the color of the sprite to white
-        newObj.setTint(0xffffff);
-        // Add text to the sprite with the value of obj.name
-        let obj_title = this.add.text(
-          newObj.x,
-          newObj.y,
-          obj.name,
-          {
-            font: '15px Arial',
-            color: '#000000',
-            backgroundColor: '#ffffff',
-            padding: 2
-          }
-        );
-        obj_title.setName(object_key+"_title");
+        newObj.display_name = obj.name;
+
+        // tooltip listener
+        newObj.setInteractive();
+        newObj.on('pointerover', function () {
+          showTooltip(newObj);
+        });
+        newObj.on('pointerout', function () {
+          hideTooltip(newObj);
+        });
+
 
       }
     }
   }
 
   async create() {
-    const width = Math.max(window.innerWidth * 0.7, 800);
-    const height = Math.max(window.innerWidth * 0.75 * 0.7, 600);
+    const width = Math.max(window.innerWidth * 0.7);
+    const height = Math.max(window.innerWidth * 0.75 * 0.7);
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
 
@@ -262,15 +284,13 @@ class GameScene extends Scene {
 
 const config = {
   type: WEBGL,
-  // width: window.innerWidth,
-  // height: window.innerHeight,
+  zoom:Phaser.AUTO,
   canvas,
 
   physics: {
     default: 'arcade',
     arcade: {
       gravity: { y: 0 },
-      // debug: true
     }
   },
   backgroundColor: '#ffffff',
@@ -281,10 +301,9 @@ var game = new Game(config);
 
 // resize the game object as windows resize
 window.addEventListener('resize', function () {
-  const width = Math.max(window.innerWidth * 0.7, 800);
-  const height = Math.max(window.innerWidth * 0.75 * 0.7, 600);
+  const width = Math.max(window.innerWidth * 0.7);
+  const height = Math.max(window.innerWidth * 0.75 * 0.7);
   canvas.style.width = width + 'px';
   canvas.style.height = height + 'px';
 });
 
-//////////////////////////////////
