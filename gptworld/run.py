@@ -1,4 +1,6 @@
-# A main file that activate the environent and the agent and let the game goes automatically. 
+import argparse
+from gptworld.core.environment import GPTWorldEnv
+from gptworld.core.agent import GPTAgent
 
 # Import necessary modules
 
@@ -19,19 +21,6 @@ if __name__ == "__main__":
     if not args.no_web:
         env.initialize_web() # this start a new subprocess to start a webpage.
 
-
-    # Create an instance of the agent
-    # agent1 = GPTAgent.from_file("static_files/test_env0", "a_001.json")
-    # agent2 = GPTAgent.from_file("static_files/test_env0", "a_002.json")
-
-    environment_text = env.get_neighbor_environment(agent_id='a_001')
-
-    print(environment_text)
-
-
-    # env.mount_agent(agent1)
-    # env.mount_agent(agent2)
-
-    env.run(debug=args.debug)
+    env.run(debug=args.debug, start_time=[2023, 4, 28, 9, 0, 0])
 
 
