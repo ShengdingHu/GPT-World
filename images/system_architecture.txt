@@ -1,0 +1,31 @@
+```mermaid
+graph TD
+subgraph WorldGPT
+
+  B[Backend <br> on host] -- Simulation Result  -->  A[Many User Clients] 
+
+  B -- Write User Input --> C[File Storage <br> on host]
+
+  D[Core Simulator <br> on host] -- Write Simulation Results --> C
+
+  E[Environment <br> Generating Tool]
+  
+  C -- Read User Input --> D
+
+  A -- User Input --> B
+  
+  C -- Read Simulation Result --> B
+  
+end
+
+  style A fill:#FFF,stroke:#333,stroke-width:2px
+
+  style B fill:#DDD,stroke:#333,stroke-width:2px
+
+  style C fill:#EEE,stroke:#333,stroke-width:2px
+
+  style D fill:#FA8072,stroke:#333,stroke-width:2px
+  
+  style WorldGPT fill:#E6E6FA, stroke:#999, stroke-width:2px, padding:20px
+
+```
