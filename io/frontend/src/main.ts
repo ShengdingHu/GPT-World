@@ -4,7 +4,11 @@ import Phaser from 'phaser';
 import { io, Socket } from "socket.io-client";
 
 
+// for development
 const API_ROOT = "http://localhost:5001";
+
+// for deployment
+// const API_ROOT = "";
 
 // the ratio betweem game height and width
 const HEIGHT_WIDTH_RATIO = 3 / 4;
