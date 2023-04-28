@@ -19,7 +19,7 @@ npm install phaser
 1. Open a terminal
 ```bash
 cd game/text_grid
-python app.py
+python app.py --world_instance alice_home
 ```
 
 2. open another termial
@@ -34,7 +34,6 @@ npm run dev
 ## FYI
 
 1. If you have any question, refer to [this blog](https://saricden.com/how-to-setup-a-phaser-3-project-with-vite)
-
 
 2. Phaser 3 API doc refer to [this doc](https://photonstorm.github.io/phaser3-docs/)
 
