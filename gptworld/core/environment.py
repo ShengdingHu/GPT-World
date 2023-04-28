@@ -37,6 +37,7 @@ class GPTWorldEnv:
     def __init__(self, 
         env_json,
         file_dir,
+        clear_memory=False
         # name,
         # id,
         # size,
@@ -51,6 +52,8 @@ class GPTWorldEnv:
         self.uilogging = UILogging(file_dir)
 
         self.agents, self.objects = {}, {}
+
+        self.clear_memory=clear_memory
 
         self.load_objects_and_agents()
 
@@ -128,11 +131,11 @@ class GPTWorldEnv:
 
 
     @classmethod
-    def from_file(cls, file_dir, file_name ="environment.json"):
+    def from_file(cls, file_dir, file_name ="environment.json",clear_memory=False):
         logger.debug(file_dir)
         with open(os.path.join(file_dir, file_name), 'r') as f:
             data = json.load(f)
-        return cls(**{"env_json": data, "file_dir": file_dir})
+        return cls(**{"env_json": data, "file_dir": file_dir,"clear_memory":clear_memory})
         
       
     def initialize_web(self, ):
@@ -229,7 +232,7 @@ class GPTWorldEnv:
         # create_agent
         for obj_id, obj in self.env_json['objects'].items():
             if obj_id.startswith('a'):
-                self.agents[obj_id] = GPTAgent(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
+                self.agents[obj_id] = GPTAgent(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self,clear_memory=self.clear_memory)
             elif obj['id'].startswith('o') and obj['engine'] == 'object':
                 self.objects[obj_id] = GPTObject(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
             elif obj['id'].startswith('o') and obj['engine'] == 'environment':
@@ -289,7 +292,7 @@ class GPTWorldEnv:
             logger.warning("Cannot parse broadcast_list: {}".format(return_value))
             return
 
-        invoice_prompt = "Here is a system message that is of higheset priority. Who observe it should strict follows the message until it is completed: "
+        invoice_prompt = "Here is a system message that is of highest priority. Who observe it should strict follows the message until it is completed: "
         for item in broadcast_list:
             item_id, message = item
             if item_id.startswith('a'):

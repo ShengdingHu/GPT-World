@@ -13,6 +13,13 @@ from PIL import Image
 from text_to_image import TextToImage
 
 import threading
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--world_instance',"-W", type=str, default='', help='The path of the world instance (in world_instances/)')
+
+args = parser.parse_args()
+
 
 
 app = Flask(__name__)
@@ -28,10 +35,10 @@ PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
 ASSETS_DIR = os.path.join(PARENT_DIR, "assets")
 
 # Environment path
-ENV_PATH = os.path.join(f"{PARENT_DIR}/../../static_files/", 'alice_home')
+ENV_PATH = os.path.join(f"{PARENT_DIR}/../../static_files/", args.world_instance)
 
 # TODO
-INVOICE_PATH = f"{PARENT_DIR}/../../static_files/" + "invoice.txt"
+INVOICE_PATH = os.path.join(ENV_PATH, "invoice.txt")
 
 
 
