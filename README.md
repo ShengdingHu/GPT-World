@@ -35,8 +35,8 @@ This project is for academic and experimental purposes only. We currently suspec
 
 |Module Name|Directory|
 |--|--|
-|User Client|`./game/text_grid/frontend/`|
-|Backend|`./game/text_grid/`|
+|User Client|`./io/frontend/`|
+|Backend|`./io/`|
 |File Storage|`./static_files/`|
 |Core Simulator|`./gptworld/core/`|
 |Environment Generating Tool|`./environment_creation_tool/`|
