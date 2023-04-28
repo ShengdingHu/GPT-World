@@ -20,4 +20,4 @@ dist/*
 
 **/cache/
 
-/uilogging.txt
+**/uilogging.txt
