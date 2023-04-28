@@ -171,7 +171,8 @@ Strictly obeying the Output format:
                     movement=finds[4]>=0
                     break
                 except IndexError:
-                    logging.debug(f"Generated reaction {result}. Retrying...")
+                    logger.debug(f"Generated reaction {result}. Retrying...")
+                    try_num+=1
                     pass
 
             logger.debug(f"Prompt of {self.name}'s reaction: "+send_message+"Return message is "+result)
