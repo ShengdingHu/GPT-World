@@ -593,7 +593,6 @@ Summarize the dialog above.
 #        self.environment.uilogging(self.name, "target prompt: {}".format(target_description))
 
     def find_movement(self):
-        logger.debug("walk to {}".format())
         def abs_location(pos, eid):
             area_delta = self.environment.env_json['areas'][eid]['location'][0]
             target = [pos[0] + area_delta[0] - 1, pos[1] + area_delta[1] - 1]
@@ -829,7 +828,6 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
 
                 
             if movement:
-                from IPython  import  embed; embed(header="True")
                 self.analysis_movement_target(reaction)
 
         # 3.5 observation拉入记忆
@@ -849,9 +847,10 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
 
         next_step = self.find_movement()
-#        print(self.name, "MOVING!!! position {}, next_step: {}".format(self.location, next_step))
+        from IPython import embed; embed(header="True")
+        logger.debug(self.name+"MOVING!!! position {}, next_step: {}".format(self.location, next_step))
 
-#        self.location = map_editor.move_agent(self, next_step)
+        self.location = map_editor.move_agent(self, next_step)
 
         return
 

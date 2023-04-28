@@ -292,7 +292,7 @@ class GPTWorldEnv:
             logger.warning("Cannot parse broadcast_list: {}".format(return_value))
             return
 
-        invoice_prompt = "Here is a system message that is of higheset priority. Who observe it should strict follows the message until it is completed: "
+        invoice_prompt = "Here is a system message that is of highest priority. Who observe it should strict follows the message until it is completed: "
         for item in broadcast_list:
             item_id, message = item
             if item_id.startswith('a'):
