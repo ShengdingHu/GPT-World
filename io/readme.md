@@ -1,35 +1,58 @@
 # Visualization Your GPTWorld in Browser!
 
-## Setup
+## Normal User Setup
 
-essentially, in your command line
+Install requirements.txt in the parent directory:
 
 ```bash
-pip install Flask
-pip install Flask_CORS
-cd text_grid
+cd ..
+pip install -r requirements.txt
+```
+
+Run backend server (with pre-compiled frontend inside):
+
+```bash
+python app.py --world_instance alice_home
+```
+
+View in your browser:
+
+Go to `http://localhost:5001` to view your world, others could use `http://{Your IP address}:5001` to access.
+
+---
+
+## Developer Setup
+
+Install requirements.txt in the parent directory
+
+```bash
+cd ..
+pip install -r requirements.txt
+```
+
+Install frontend development environment
+
+```bash
+cd frontend
 npm install
 npm install phaser
 ```
 
-## Run demo independently
+Run backend server
 
- (without the main loop of the GPTWorld)
-
-1. Open a terminal
 ```bash
-cd game/text_grid
 python app.py --world_instance alice_home
 ```
 
-2. open another termial
+Run frontend develop server: open another termial
 ```bash
-cd game/text_grid/frontend
+cd frontend
 npm run dev
 ```
 
-3. view demo in your browser.
+View demo in your browser at `http://localhost:5173`
 
+---
 
 ## FYI
 
