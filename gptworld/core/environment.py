@@ -346,11 +346,13 @@ class GPTWorldEnv:
 
         return
     
-    def run(self, start_time=[2023, 4, 1, 7, 0, 0], debug=False):
+    def run(self, debug=False):
         """The main loop 
         """
         realworld_time_delta = 8
         env_time_delta = 10
+
+        start_time = datetime.datetime.strptime(self.env_json['current_time'], "%Y-%m-%dT%H:%M:%S")
         
         self.current_time = datetime.datetime(*start_time)
         while True:
@@ -358,10 +360,3 @@ class GPTWorldEnv:
             self.step(debug=debug)
             self.current_time += datetime.timedelta(seconds = env_time_delta)
     
-
-if __name__ == "__main__":
-    # TODO: add some arguments
-    env = Environment()
-    dirname = 'test_env0'
-    env.load_from_file(f"static_files/{dirname}/environment.json")
-    env.run()

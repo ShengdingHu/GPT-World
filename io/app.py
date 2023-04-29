@@ -34,7 +34,13 @@ PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
 ASSETS_DIR = os.path.join(PARENT_DIR, "assets")
 
 # Environment path
-ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", args.world_instance)
+ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", f".{args.world_instance}.running")
+
+if not os.path.exists(ENV_PATH):
+    if os.path.exists(os.path.join(f"{PARENT_DIR}/../world_instances/", args.world_instance)):
+        raise RuntimeError(f"Found static files of world: {args.world_instance}, but it has been copied into the running folder. Please start the engine by running `python gptworld/run.py -W {args.world_instance}` first.")
+    else:
+        raise RuntimeError(f"No world instance named {args.world_instance} has been found.")
 
 
 #-------------------------------- Implement Text to Image -------------------------------

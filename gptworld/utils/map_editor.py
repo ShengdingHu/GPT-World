@@ -13,31 +13,27 @@ def find_area(pos, areas):
 
     assert False
 
-def move_agent(agent, pos):
-    env_file = agent.file_dir + 'environment.json'
+def move_agent(agent, location, eid):
+    env_file = agent.environment.file_dir + 'environment.json'
     agent_file = agent.agent_file
-
-    print(env_file)
-    print(agent_file)
-    assert 0
 
     env_json = json.loads(open(env_file, 'r').read())
     agent_json = json.loads(open(agent_file, 'r').read())
     id = agent.id
 
-    areas = env_json['areas']
-    new_eid, new_pos = find_area(pos, areas)
+    env_json['objects'][id]['location'] = location
+    env_json['objects'][id]['eid'] = eid
 
-    env_json['object'][id]['eid'] = new_eid
-    env_json['object'][id]['location'] = new_pos
-
-    agent_json['eid'] = new_eid
-    agent_json['location'] = new_pos
+    agent_json['location'] = location
+    agent_json['eid'] = eid
 
     with open(env_file, 'w') as output:
-        output.write(env_json.dumps())
+        output.write(json.dumps(env_json))
         output.close()
 
     with open(agent_file, 'w') as output:
-        output.write(agent_json.dumps())
+        output.write(json.dumps(agent_json))
         output.close()
+
+    agent.location = location
+    agent.eid = eid

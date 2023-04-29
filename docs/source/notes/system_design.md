@@ -1,9 +1,11 @@
+(systemdesign)=
 
 
 # System Design
 
 
-<img src="./images/mermaid-diagram-2023-04-29-031656.svg" style="width:50%;">
+
+<img src="../images/mermaid-diagram-2023-04-29-031656.svg" style="width:50%;">
 
 |Module Name|Directory|
 |--|--|

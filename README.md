@@ -25,25 +25,26 @@ This project is for academic and experimental purposes only. We currently suspec
 
 
 <br/>
-<br/>
-
 
 ## Usage
+
+### Run examples
 We currently provide some example sandboxes in  `world_instances/`, choose one that you want to launch.
 Take `alice_home` as an example.
 
-1. start the web server
-```
-python io/app.py --world_instance alice_home
-```
-now open the 5001 port of your localhost, you will be able to see a simple environment.
-
-2. start the world engine
+1. start the world engine
 ```
 python gptworld/app.py -W alice_home
 ```
 
-3. (🧪Experimental) If you want to create your world_instance
+2. start the web server
+```
+python io/app.py --world_instance alice_home
+```
+now open the 5001 port of your localhost, and you will be able to see a simple environment.
+
+### (🧪Experimental) Create your own
+1. If you want to create your world instance,
 modify the requirement in `gptworld/create_world.py` and run
 ```
 python gptworld/create_world.py 

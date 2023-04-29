@@ -566,22 +566,49 @@ Summarize the dialog above.
         M = self.environment.env_json['size'][1]
         map = [[0 for j in range(M + 1)] for i in range(N + 1)]
 
-        for id, info in self.environment.env_json['areas'].items():
-            for i in range(info['location'][0][0], info['location'][1][0] + 1):
-                for j in range(info['location'][0][1], info['location'][1][1] + 1):
-                    map[i][j] = info['border']
+        for eid, info in self.environment.env_json['areas'].items():
+            if info['border'] == -1:
+                x0 = info['location'][0][0]
+                y0 = info['location'][0][1]
+                x1 = info['location'][1][0]
+                y1 = info['location'][1][1]
+
+                for i in range(x0, x1 + 1): map[i][y0] = map[i][y1] = 3
+                for i in range(y0, y1 + 1): map[x0][i] = map[x1][i] = 3
+
         return map
+
+    def get_area_location(self, abs_location):
+        x, y = abs_location[0], abs_location[1]
+        size = self.environment.env_json['size']
+        current_size = size[0] * size[1]
+        ret_location, ret_eid = None, None
+        for eid, info in self.environment.env_json['areas'].items():
+            x0 = info['location'][0][0]
+            y0 = info['location'][0][1]
+            x1 = info['location'][1][0]
+            y1 = info['location'][1][1]
+            area_size = (x1 - x0 + 1) * (y1 - y0 + 1)
+            if x0 <= x <= x1 and y0 <= y <= y1 and area_size < current_size:
+                current_size = area_size
+                ret_location, ret_eid = [x - x0 + 1, y - y0 + 1], eid
+
+        return ret_location, ret_eid
                 
     def unreachable_signal(self, target):
-        self.observe()  # TODO: 为什么这里要 observe
-        print('Target {} is unreacable.'.format(target))
+#        self.observe()  # TODO: 为什么这里要 observe
+        self.environment.uilogging(self.name, "Target {} is unreacable.".format(target))
 
-    def analysis_movement_target(self, target_description):
+    def fetch_movement_target(self):
         target_candidate = []
         for obj in self.environment.objects:
             target_candidate.append({'name':self.environment.objects[obj].name, 'id':self.environment.objects[obj].id})
         for agt in self.environment.agents:
             target_candidate.append({'name':self.environment.agents[agt].name, 'id':self.environment.agents[agt].id})
+        return target_candidate
+
+    def analysis_movement_target(self, target_description):
+        target_candidate = self.fetch_movement_target()
         prompt = f"""Now you want to perform a movement action. I will give you a list of 
         objects and agents that you might be your target. 
         List: {target_candidate}
@@ -590,7 +617,7 @@ Summarize the dialog above.
         """
         self.target_id = chat(prompt)
 
-#        self.environment.uilogging(self.name, "target prompt: {}".format(target_description))
+        logger.debug(self.name + "target prompt: {}, target_id: {}".format(target_description, self.target_id))
 
     def find_movement(self):
         def abs_location(pos, eid):
@@ -606,12 +633,12 @@ Summarize the dialog above.
                 target = abs_location(info['location'], info['eid'])
                 break
 
-#        self.environment.uilogging(self.name, "target_id: {}".format(target_id))
-#        self.environment.uilogging(self.name, "target_pos: {}".format(target))
+        self.environment.uilogging(self.name, ">>> find_movement target_id: {}".format(target_id))
+        self.environment.uilogging(self.name, ">>> find_movement target_pos: {}".format(target))
 
         if target_id == "ERROR" or target == None:
             self.unreachable_signal("[N/A]")
-            return
+            return None, None
 
         size = self.environment.env_json['size']
         map = self.initialize_map_status()
@@ -623,12 +650,18 @@ Summarize the dialog above.
         from queue import Queue
         directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]
 
-        INF = int(1e9)
         N = self.environment.env_json['size'][0]
         M = self.environment.env_json['size'][1]
-        d = [[INF for j in range(M + 1)] for i in range(N + 1)]
+        d = [[-1 for j in range(M + 1)] for i in range(N + 1)]
 
         d[target[0]][target[1]] = 0
+
+        current_pos = abs_location(self.location, self.eid)
+        next_step = current_pos
+        if next_step == target: return None, None
+
+        self.environment.uilogging(self.name, ">>> find_movement cur_pos: {}, {}".format(self.location, self.eid))
+        self.environment.uilogging(self.name, ">>> find_movement current_pos: {}".format(next_step))
 
         Q = Queue(maxsize=0)
         Q.put(target)
@@ -636,25 +669,26 @@ Summarize the dialog above.
             u = Q.get()
             for x, y in directions:
                 v = [u[0] + x, u[1] + y]
-                if reachable(v) and (v not in d):
-                    d[v] = d[u] + 1
+                if reachable(v) and d[v[0]][v[1]] == -1:
+                    d[v[0]][v[1]] = d[u[0]][u[1]] + 1
                     Q.put(v)
 
 
-        next_step = u = abs_location(self.location, self.eid)
-        if next_step == target: return next_step
-
+        u = current_pos
         reached = False
         for x, y in directions:
             v = [u[0] + x, u[1] + y]
-            if reachable(v) and v in d and d[u] == d[v] + 1:
-                self.location = v
+            if reachable(v) and d[u[0]][u[1]] == d[v[0]][v[1]] + 1:
+                next_step = v
                 reached = True
                 break
         
         if not reached: self.unreachable_signal(target)
-        return next_step
-    
+        logger.debug(self.name + ">>> find next step!!! : {}".format(next_step))
+        logger.debug(self.name + ">>> cur pos!!!: {}".format(self.get_area_location(current_pos)))
+        logger.debug(self.name + ">>> std next step!!!: {}".format(self.get_area_location(next_step)))
+
+        return self.get_area_location(next_step)
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
@@ -847,11 +881,9 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
 
-        next_step = self.find_movement()
-        # from IPython import embed; embed(header="True")
-        logger.debug(self.name+"MOVING!!! position {}, next_step: {}".format(self.location, next_step))
-
-        # self.location = map_editor.move_agent(self, next_step)
+        next_step, next_area = self.find_movement()
+        print(self.name, "MOVING!!! position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
+        if next_step != None: map_editor.move_agent(self, next_step, next_area)
 
         return
 

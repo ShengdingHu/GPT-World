@@ -11,6 +11,8 @@ Welcome to GPTWorld!
    :caption: Getting Started
 
    notes/installation.md
+   notes/system_design.md
+   notes/web_demo.md
 
 .. toctree::
    :maxdepth: 2

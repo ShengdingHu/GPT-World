@@ -20,4 +20,5 @@ _build/
 
 **/cache/
 
-**/*LTM.json
+
+world_instances/.*.running/
