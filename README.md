@@ -20,7 +20,7 @@
 
 🙏**Acknowledgements:** This project was greatly inspired by [*Generative Agents: Interactive Simulacra of Human Behavior*](https://arxiv.org/abs/2304.03442)  during development, where the mechanism of agents' behavior takes the reflection-summary-plan framework.
 
-🧪 **Disclaimer:**
+🚨 **Disclaimer:**
 This project is for academic and experimental purposes only. We currently suspect that it is far from a usable game product.
 
 
@@ -28,16 +28,29 @@ This project is for academic and experimental purposes only. We currently suspec
 <br/>
 <br/>
 
-# System Design
 
+## Usage
+We currently provide some example sandboxes in  `world_instances/`, choose one that you want to launch.
+Take `alice_home` as the example.
 
-<img src="./images/mermaid-diagram-2023-04-29-031656.svg" style="width:50%;">
+1. start the web server
+```
+python io/app.py --world_instance alice_home
+```
+now open the 5001 port of your localhost, you will be able to see a simple environment.
 
-|Module Name|Directory|
-|--|--|
-|User Client|`./io/frontend/`|
-|Backend|`./io/`|
-|File Storage|`./static_files/`|
-|Core Simulator|`./gptworld/core/`|
-|Environment Generating Tool|`./environment_creation_tool/`|
+2. start the world engine
+```
+python gptworld/app.py -W alice_home
+```
 
+3. (🧪Experimental) If you want to create your world_instance
+modify the requirement in `gptworld/create_world.py` and run
+```
+python gptworld/create_world.py 
+```
+
+## Global Configs
+```bash
+export GPTWORLD_LOG_LEVEL=XXX # (XXX can be debug, info, warning ...) to set the logging level
+```

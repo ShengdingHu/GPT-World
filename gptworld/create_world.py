@@ -1,5 +1,5 @@
 
-from gptworld.core.create import EnvironmentCreator
+from gptworld.create.environment_create import EnvironmentCreator
 
 if __name__ == "__main__":
     env_creator = EnvironmentCreator()

@@ -16,8 +16,9 @@ import argparse
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--world_instance',"-W", type=str, default='', help='The path of the world instance (in world_instances/)')
+parser.add_argument('--world_instance',"-W", type=str, required=True, help='The path of the world instance (in world_instances/)')
 args = parser.parse_args()
+
 
 
 app = Flask(__name__, static_url_path='', static_folder='./frontend/dist') # create app with static folder
@@ -33,7 +34,7 @@ PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
 ASSETS_DIR = os.path.join(PARENT_DIR, "assets")
 
 # Environment path
-ENV_PATH = os.path.join(f"{PARENT_DIR}/../static_files/", args.world_instance)
+ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", args.world_instance)
 
 
 #-------------------------------- Implement Text to Image -------------------------------

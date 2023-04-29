@@ -139,6 +139,7 @@ class GPTWorldEnv:
         
       
     def initialize_web(self, ):
+        return RuntimeError("Disabled")
         import multiprocessing
     
         process_backend = multiprocessing.Process(target=run_backend)
