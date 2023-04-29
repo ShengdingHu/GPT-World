@@ -22,10 +22,10 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def run_backend():
-    subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../../game/text_grid', capture_output=True, shell=True)
+    subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../io', capture_output=True, shell=True)
 
 def run_frontend():
-    subprocess.run(['npm run --silent dev'], cwd=f'{CURRENT_DIR}/../../game/text_grid/frontend', capture_output=True, shell=True)
+    subprocess.run(['npm run --silent dev'], cwd=f'{CURRENT_DIR}/../io/frontend', capture_output=True, shell=True)
 
 
 
@@ -140,8 +140,6 @@ class GPTWorldEnv:
       
     def initialize_web(self, ):
         import multiprocessing
-
-        
     
         process_backend = multiprocessing.Process(target=run_backend)
         process_frontend = multiprocessing.Process(target=run_frontend)

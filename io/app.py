@@ -3,7 +3,7 @@ import time
 import json
 import logging
 
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, send_from_directory
 from flask import jsonify
 from flask_cors import CORS
 from flask_socketio import SocketIO, emit, send
@@ -12,19 +12,17 @@ from io import BytesIO
 from PIL import Image
 from text_to_image import TextToImage
 
-import threading
 import argparse
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--world_instance',"-W", type=str, default='', help='The path of the world instance (in world_instances/)')
-
 args = parser.parse_args()
 
 
-
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='', static_folder='./frontend/dist') # create app with static folder
 app.logger.setLevel(logging.INFO)
-socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=5, ping_interval=5)
+socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=5, ping_interval=5) # create socket io
 CORS(app)
 
 
@@ -35,12 +33,7 @@ PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
 ASSETS_DIR = os.path.join(PARENT_DIR, "assets")
 
 # Environment path
-ENV_PATH = os.path.join(f"{PARENT_DIR}/../../static_files/", args.world_instance)
-
-# TODO
-INVOICE_PATH = os.path.join(ENV_PATH, "invoice.txt")
-
-
+ENV_PATH = os.path.join(f"{PARENT_DIR}/../static_files/", args.world_instance)
 
 
 #-------------------------------- Implement Text to Image -------------------------------
@@ -84,9 +77,6 @@ add_object_embedding()
 # -----------------------------------------------------------------------------------------
 
 
-
-
-
 # ----------------------------- Implement Realtime UI Logging ------------------------------------
 clients = []
 
@@ -108,6 +98,8 @@ def on_disconnect():
 
 def read_new_lines(file_path, last_position):
     new_lines = []
+    if not os.path.exists(file_path):
+        return [], None
     with open(file_path, 'r', encoding='utf-8') as file:
         if last_position is None:
             file.seek(0, os.SEEK_END)  # move file pointer to last position
@@ -143,9 +135,18 @@ def uilogging(sid: str):
         time.sleep(1)
     
     return
-
 # ----------------------------------------------------------------------------------------
 
+
+# ----------------------------- Static Files (Frontend dist) --------------------------------
+@app.route('/')
+def index():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def static_file(path):
+    return send_from_directory(app.static_folder, path)
+# -------------------------------------------------------------------------------------------
 
 
 @app.route('/read_environment', methods=['GET'])
@@ -156,13 +157,12 @@ def read_environment():
     data = {'message': content}
     return jsonify(data)
 
-
 def drop_invoice(invoice: str):
     """
     drop invoice to a file for the agent to be notified.
     TODO: later connect with the HTML <text>
     """
-
+    INVOICE_PATH = os.path.join(ENV_PATH, "invoice.txt")
     with open(INVOICE_PATH, 'w') as fp:
         print(str, fp)
 
