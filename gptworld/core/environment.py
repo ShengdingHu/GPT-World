@@ -21,11 +21,11 @@ logger = logging.get_logger(__name__)
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def run_backend():
-    subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../../io', capture_output=True, shell=True)
+# def run_backend():
+#     subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../../io', capture_output=True, shell=True)
 
-def run_frontend():
-    subprocess.run(['npm run --silent dev'], cwd=f'{CURRENT_DIR}/../../io/frontend', capture_output=True, shell=True)
+# def run_frontend():
+#     subprocess.run(['npm run --silent dev'], cwd=f'{CURRENT_DIR}/../../io/frontend', capture_output=True, shell=True)
 
 
 
@@ -56,8 +56,6 @@ class GPTWorldEnv:
         self.clear_memory=clear_memory
 
         self.load_objects_and_agents()
-
-        
         
         logger.debug("Initialize Complete!")
         
@@ -70,8 +68,6 @@ class GPTWorldEnv:
         # TODO: control mode mapping from agent id to mode (either 'auto' or 'human')
         # self.control_mode: Dict[str, str] = {}
 
-        # control if operational
-        # self.operational = True
         pass
 
     def get_area_name(self, eid):
@@ -139,15 +135,16 @@ class GPTWorldEnv:
         
       
     def initialize_web(self, ):
-        import multiprocessing
+        # import multiprocessing
     
-        process_backend = multiprocessing.Process(target=run_backend)
+        # process_backend = multiprocessing.Process(target=run_backend)
         # process_frontend = multiprocessing.Process(target=run_frontend)
-        process_backend.start()
+        # process_backend.start()
         # process_frontend.start()
 
-        logger.critical("\n\033[1m\033[93m"+"-"*20 + "\nView your little world at http://localhost:5001\n" + "-"*20)
+        # logger.critical("\n\033[1m\033[93m"+"-"*20 + "\nView your little world at http://localhost:5001\n" + "-"*20)
 
+        return
 
     def get_neighbor_environment(self, agent_id :str = None, critical_distance = 50):
         '''Provide the local environment of the location.
