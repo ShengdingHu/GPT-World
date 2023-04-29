@@ -41,16 +41,6 @@ As a host, you can deploy core simulator on your host, then launch a backend.
 
 All people could view the simulation results in an interactive way, and even give commands to characters in your world, upload their own characters, etc. 
 
-As a developer, if you would like to modify GPT-World to fit your need, you could read the scripts in the corresponding directory.
-
-
-|Module Name|Script Directory|
-|--|--|
-|User Client|`./io/frontend/`|
-|Backend|`./io/`|
-|File Storage|`./static_files/`|
-|Core Simulator|`./gptworld/core/`|
-|Environment Generating Tool|`./environment_creation_tool/`|
 
 <br/>
 <br/>
@@ -96,3 +86,18 @@ python app.py --world_instance alice_home
 
 Open your browser, go to `http://localhost:5001`
 
+<br/>
+<br/>
+
+# For Developers
+
+As a developer, if you would like to modify GPT-World to fit your need, you could read the scripts in the corresponding directory.
+
+
+|Module Name|Script Directory|
+|--|--|
+|User Client|`./io/frontend/`|
+|Backend|`./io/`|
+|File Storage|`./static_files/`|
+|Core Simulator|`./gptworld/core/`|
+|Environment Generating Tool|`./environment_creation_tool/`|
