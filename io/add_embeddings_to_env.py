@@ -54,9 +54,17 @@ def gen_env_logo_embeddings(file_path):
         embedding_map[name] = embedding
         # break
 
-
-    with open(file_path+".embeddings.json", "w") as f:
+    file_dir = os.path.dirname(file_path)
+    with open(os.path.join(file_dir,"embeddings.json"), "w") as f:
         json.dump(embedding_map, f)
 
 if __name__ == "__main__":
-    gen_env_logo_embeddings("static_files/debating_room/environment.json")
+    # Project root directory
+    import argparse
+    import os
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--world_instance',"-W", type=str, required=True, help='The path of the world instance (in world_instances/)')
+    args = parser.parse_args()
+    PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
+    gen_env_logo_embeddings(os.path.join(PARENT_DIR, f"../world_instances/{args.world_instance}/environment.json"))

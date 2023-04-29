@@ -354,7 +354,7 @@ class GPTWorldEnv:
 
         start_time = datetime.datetime.strptime(self.env_json['current_time'], "%Y-%m-%dT%H:%M:%S")
         
-        self.current_time = datetime.datetime(*start_time)
+        self.current_time = start_time
         while True:
             time.sleep(realworld_time_delta)
             self.step(debug=debug)
