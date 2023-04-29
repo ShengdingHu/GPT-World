@@ -26,12 +26,11 @@ This project is for academic and experimental purposes only. We currently suspec
 
 <br/>
 <br/>
-<br/>
 
 
 ## Usage
 We currently provide some example sandboxes in  `world_instances/`, choose one that you want to launch.
-Take `alice_home` as the example.
+Take `alice_home` as an example.
 
 1. start the web server
 ```

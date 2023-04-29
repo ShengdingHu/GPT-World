@@ -29,7 +29,7 @@ with open('README.md', 'r') as f:
         license="Apache",
         url="",
         keywords = ['Agent', 'WestWord'],
-        python_requires=">=3.6.0",
+        python_requires="~=3.8",
         install_requires=get_requirements(),
         package_dir={'gptworld':'gptworld'},
         package_data= {
@@ -39,7 +39,6 @@ with open('README.md', 'r') as f:
         classifiers=[
             "Programming Language :: Python :: 3",
             "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: 3.9",
             "Intended Audience :: Developers",
             "Intended Audience :: Education",
             "Intended Audience :: Science/Research",
