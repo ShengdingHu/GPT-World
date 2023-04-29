@@ -26,18 +26,73 @@ This project is for academic and experimental purposes only. We currently suspec
 
 <br/>
 <br/>
-<br/>
 
 # System Design
 
+Here is the architecture of GPT-World.
 
 <img src="./images/mermaid-diagram-2023-04-29-031656.svg" style="width:50%;">
 
-|Module Name|Directory|
+As a host, you can deploy core simulator on your host, then launch a backend. 
+
+- For yourself, you could go to `http://localhost:5001` to view your world. 
+
+- Others could use `http://{Your IP Address}:5001` to access your world remotely. 
+
+All people could view the simulation results in an interactive way, and even give commands to characters in your world, upload their own characters, etc. 
+
+As a developer, if you would like to modify GPT-World to fit your need, you could read the scripts in the corresponding directory.
+
+
+|Module Name|Script Directory|
 |--|--|
 |User Client|`./io/frontend/`|
 |Backend|`./io/`|
 |File Storage|`./static_files/`|
 |Core Simulator|`./gptworld/core/`|
 |Environment Generating Tool|`./environment_creation_tool/`|
+
+<br/>
+<br/>
+
+# Normal User Setup
+
+If you would like to get started as a host, just do the following steps:
+
+Apply an OpenAI API key, then export it to environment
+
+```bash
+export OPENAI_API_KEY='sk-'
+```
+
+Then install python and dependencies. It is recommended to use `python==3.8`.
+
+```bash
+# Create a virtual environment with python==3.8
+conda create -n gptworld python=3.8
+
+# Activate the environment
+conda activate gptworld
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Install gptworld on the spot
+pip install -e .
+```
+
+Run GPT-World Core Simulator
+
+```bash
+python gptworld/run.py --world_instance alice_home
+```
+
+Launch a backend server
+
+```bash
+cd io
+python app.py --world_instance alice_home
+```
+
+Open your browser, go to `http://localhost:5001`
 
