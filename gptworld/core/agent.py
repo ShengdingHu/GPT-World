@@ -654,6 +654,7 @@ Summarize the dialog above.
         
         if not reached: self.unreachable_signal(target)
         return next_step
+    
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
@@ -847,10 +848,10 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
 
         next_step = self.find_movement()
-        from IPython import embed; embed(header="True")
+        # from IPython import embed; embed(header="True")
         logger.debug(self.name+"MOVING!!! position {}, next_step: {}".format(self.location, next_step))
 
-        self.location = map_editor.move_agent(self, next_step)
+        # self.location = map_editor.move_agent(self, next_step)
 
         return
 

@@ -1,0 +1,104 @@
+{
+    "name": "Alice's Home",
+    "size": [
+        50,
+        50
+    ],
+    "areas": {
+        "e_001": {
+            "location": [
+                [
+                    1,
+                    1
+                ],
+                [
+                    50,
+                    50
+                ]
+            ],
+            "name": "debating room",
+            "id": "e_001",
+            "border": 1,
+            "color": "0x228B22"
+        }
+    },
+    "objects": {
+        "o_001": {
+            "id": "o_001",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [10, 10],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "o_002": {
+            "id": "o_002",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [10, 30],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "o_003": {
+            "id": "o_003",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [10, 50],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "o_004": {
+            "id": "o_004",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [60, 10],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "o_005": {
+            "id": "o_005",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [60, 30],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "o_006": {
+            "id": "o_006",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [60, 50],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "o_007": {
+            "id": "o_007",
+            "name": "Desk for host",
+            "eid": "e_001",
+            "location": [35, 70],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "o_008": {
+            "id": "o_008",
+            "name": "Chair for judges",
+            "eid": "e_001",
+            "location": [10, 80],
+            "engine": "environment"
+        },
+        "o_009": {
+            "id": "o_009",
+            "name": "Chair for judges",
+            "eid": "e_001",
+            "location": [35, 80],
+            "engine": "environment"
+        },
+        "o_010": {
+            "id": "o_010",
+            "name": "Chair for judges",
+            "eid": "e_001",
+            "location": [60, 80],
+            "engine": "environment"
+        }
+    }
+}
