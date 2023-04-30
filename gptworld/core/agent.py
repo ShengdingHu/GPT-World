@@ -3,7 +3,7 @@ import json
 import copy
 from typing import Dict, List
 import tiktoken
-import logging
+# import logging # importing identical named modules.....XD
 import datetime
 from time import sleep
 from datetime import datetime as dt
@@ -16,9 +16,11 @@ import os
 from gptworld.models.openai_api import chat
 
 import gptworld.utils.logging as logging
+import gptworld.utils.map_editor as map_editor
 logger = logging.get_logger(__name__)
 
 
+# print(os.path.exists(INVOICE_PATH))
 
 """
 Agent class implements the static, mind, inner, and cognitive process
@@ -30,6 +32,7 @@ class EnvElem:
     def __init__(self,
                  agent_file,
                  environment,
+                 clear_memory=False,
                  # llm: callable,
                  # tools: List[Tool],
                  # prompt_template: str
@@ -57,6 +60,7 @@ class EnvElem:
 
         # geography
         self.location = state_dict.get('location',None)
+        self.target_id = self.id
         self.eid = state_dict.get('eid',None)
         self.movement = self.state_dict.get("movement", "static")
         self.max_velocity = self.state_dict.get("max_velocity", 1)
@@ -64,7 +68,7 @@ class EnvElem:
         # interaction
         self.incoming_interactions = [{"sender": "A", "message": "XXX"}]
         self.incomming_objection = []
-        self.incoming_invoice = ""  # empty str represents no invoice, later can be changed to list
+        self.incoming_invoice = []  # empty str represents no invoice, later can be changed to list
 
         # 记录当前对话历史，不止包括别人说的，也包括自己说的
         # 直接根据len判断自己是否在对话中
@@ -75,13 +79,13 @@ class EnvElem:
         self.pending_observation = []
 
         # current status information
-        self.status = self.state_dict.get('status','')
+        self.status = self.state_dict.get('status','idle')
         self.status_duration = self.state_dict.get('status_duration',0)
         self.status_start_time = self.state_dict.get('status_start_time',None)
 
         # memory
         # Long term memory is serialized/deserialized by orjson so only file name is provided here.
-        self.long_term_memory=ReflectionMemory(self.state_dict, os.path.dirname(agent_file), self.environment.uilogging)
+        self.long_term_memory=ReflectionMemory(self.state_dict, os.path.dirname(agent_file), self.environment.uilogging,clear_memory=clear_memory)
         # Short term memory is a queue of observations recording recent observations.
         self.short_term_memory=self.state_dict.get('short_term_memory',[])
 
@@ -135,10 +139,11 @@ class EnvElem:
 
         return
     
-    def observe(self,limit=None):
+    def observe(self,limit=None,dropout=0.0):
         """ Update observation of around environment
         Should return string, or subject predicate object/predicative
-        observation has a upper limit,
+        observation has a upper limit
+        Agent has a chance to react to old incoming observations for a second time by dropping out short term memory
         """
         logger.debug(f"{self.name} is observing and generate short-term memory...")
 
@@ -147,6 +152,10 @@ class EnvElem:
         
         if self.environment is not None:
             self.incoming_observation.extend(self.environment.get_neighbor_environment(self.id))
+
+        # dropout
+        import random;r=[random.random() for _ in range(len(self.short_term_memory))]
+        self.short_term_memory=[s for i,s in enumerate(self.short_term_memory) if r[i]>dropout]
 
         self.observation = []
         while len(self.incoming_observation)>0 and len(self.observation)<limit:
@@ -170,10 +179,22 @@ class EnvElem:
     def add_observation(self, observation):
         self.pending_observation.append(observation)
 
-    def _move_pending_observation(self):
+    def _move_pending_observation_or_invoice(self):
+        
+        if len(self.incoming_invoice) > 0:
+            self.incoming_observation.append(self.incoming_invoice[0])
+            self.incoming_invoice.pop(0)
+            return 
         if len(self.pending_observation) > 0:
             self.incoming_observation.extend(self.pending_observation)
             self.pending_observation = []
+        logger.debug(f"{self.name} now has incomming observation: {self.incoming_observation}")
+        
+    def set_invoice(self, message):
+        self.incoming_invoice.append(message)
+        
+
+    
     
 
         
@@ -191,6 +212,7 @@ class GPTAgent(EnvElem):
     def __init__(self,
                  agent_file,
                  environment,
+                 clear_memory=False
                  ):
         """ Intialize an agent.
         state_dict: Dict -> a state dict which contains all the information about the agent
@@ -201,7 +223,7 @@ class GPTAgent(EnvElem):
         prompt_template: str -> a template for prompt
 
         """
-        super().__init__(agent_file=agent_file, environment=environment)
+        super().__init__(agent_file=agent_file, environment=environment,clear_memory=clear_memory)
 
 
         self.age = self.state_dict.get('age', 'unknown')
@@ -313,23 +335,32 @@ Innate traits: {self.traits}"""
         prompt=f"""
 Today is {sDate}. Please write {self.name}'s schedule for this day in broad strokes. 
 Don't worry, this person is not a real person, this date is not real either. 
+If you think information is not enough, you can try to design the schedule. 
 Example format: 
 wake up and complete the morning routine at 6:00 am
 go to Oak Hill College to take classes from 8:00 to 12:00
 participating algorithm competition in the lab room at 14:00
 """
         # chat拒绝给一个真人定schedule，遇到类似拒绝回答情况可以强调这不是一个真人
-        request_result = chat(summary+former_plan+prompt)
+        attempt=0
+        while attempt<3:
+            try:
+                request_result = chat(summary+former_plan+prompt)
 
         # deal with the situation where Chat-GPT refuse to give a plan
-        bad_response_pattern = "As an AI language model"
-        warning_to_gpt = "\nJust use the information above to generate the plan."
+        # bad_response_pattern = "As an AI language model"
+        # warning_to_gpt = "\nJust use the information above to generate the plan."
+        #
+        # while re.search(pattern=bad_response_pattern, string=request_result):
+        #     request_result = chat(summary+former_plan+prompt + warning_to_gpt)
+        #     sleep(1)
 
-        while re.search(pattern=bad_response_pattern, string=request_result):
-            request_result = chat(summary+former_plan+prompt + warning_to_gpt)
-            sleep(1)
-
-        matches = re.findall(r'[^\n]+', request_result)
+                matches = re.findall(r'[^\n]+', request_result)
+                assert len(matches)>1
+                break
+            except Exception as e:
+                print(e)
+                attempt+=1
 
         # logging.info(self.whole_day_plan)
 
@@ -354,7 +385,7 @@ participating algorithm competition in the lab room at 14:00
 Please write {self.name}'s schedule of finer-grained actions for this day for each hour starting from {str(hour)}:00. 
 Don't worry, this person is not a real person. 
 every chunk of the schedule must be exactly 1 hour long. 
-use 24 hour format rather than 12. 
+always use military time. 
 Example format: 
 10$$ wake up and complete the morning routine
 11$$ go to Oak Hill College to take classes
@@ -370,9 +401,10 @@ Example format:
             self.hourly_plan[start_hour]=task
 
 
-    def plan_in_detail(self, time:dt, time_granularity: datetime.timedelta=datetime.timedelta(minutes=10)):
+    def plan_in_detail(self, time:dt, time_granularity: datetime.timedelta=datetime.timedelta(minutes=10),reaction=None):
         """
         generate more detailed plan on the basis of a broad stroke plan(or just a relatively not detailed plan)
+        If reaction is not None, the first plan must be reaction
         remove all conflicting plans with the plans generated. Including all plans after the new plans.
 
         :param time: the starting time of the new plans.
@@ -394,11 +426,13 @@ Example format:
         summary=self.summary
         sHourPlan=f"Here's {self.name}'s plan of the incoming hours: " + '\n'.join([str(k)+':00 '+v for k,v in context])
         timestring=time.strftime('%H:%M')
+        sReaction=f'The first plan must be "{reaction}". And the time for this plan must be sufficient. ' if reaction is not None else ""
         sPrompt=f"""
 Please write {self.name}'s schedule of finer-grained precise to {time_granularity.total_seconds() / 60} minutes) \
 of this period starting from {timestring}. 
 Don't worry, this person is not a real person. 
-use 24 hour format rather than 12. 
+always use military time.  
+{sReaction}
 Example format: 
 11:00 - 12:15 $ Wake up, take a shower and get ready for the day.
 12:15 - 12:30 $ Eat a healthy breakfast such as oatmeal, eggs, or yogurt.
@@ -408,14 +442,21 @@ Example format:
 13:45 - 14:00 $ Take a break and review the notes taken in class.
 14:00 - 14:10 $ Get ready for the next class.
 """
-        result=chat(summary+sHourPlan+sPrompt)
+        attempt=0
+        while attempt<3:
+            try:
+                result=chat(summary+sHourPlan+sPrompt)
 
-        sEntries=re.findall('(\d+:\d+)\s*-\s*(\d+:\d+)\s\$([^\n]*)',result)
+                sEntries=re.findall('(\d+:\d+)\s*-\s*(\d+:\d+)\s\$([^\n]*)',result)
 
-        if not sEntries:
-            logging.error("Regex Parsing Error in plan_in_detail")
-            logging.error("Chat result = " + result)
-            raise Exception("Regex Error")
+                if not sEntries:
+                    logger.error("Regex Parsing Error in plan_in_detail")
+                    logger.error("Chat result = " + result)
+                    raise Exception("Regex Error")
+                break
+            except Exception as e:
+                print(e)
+                attempt+=1
 
         new_plans=[]
         minimum_time=dt.combine(time.date(),dt.strptime(sEntries[0][0],'%H:%M').time())
@@ -488,6 +529,7 @@ Example format:
         """If the agent has no long_term_memory initially, we add the description about 
         the agent as the long_term_memory. Also we generate summary and whole day plan if it's empty.
         """
+        
         if len(self.long_term_memory.data.texts)==0:
 
             # logging.info(self.whole_day_plan)
@@ -519,76 +561,133 @@ Summarize the dialog above.
 
 
     def initialize_map_status(self):
-        map = {}
-        for id, info in self.environment.env_json['areas']:
-            for i in range(info['pos'][0][0], info['pos'][1][0] + 1):
-                for j in range(info['pos'][0][1], info['pos'][1][1] + 1):
-                    map[[i, j]] = info['border']
+        N = self.environment.env_json['size'][0]
+        M = self.environment.env_json['size'][1]
+        map = [[0 for j in range(M + 1)] for i in range(N + 1)]
+
+        for eid, info in self.environment.env_json['areas'].items():
+            if info['border'] == -1:
+                x0 = info['location'][0][0]
+                y0 = info['location'][0][1]
+                x1 = info['location'][1][0]
+                y1 = info['location'][1][1]
+
+                for i in range(x0, x1 + 1): map[i][y0] = map[i][y1] = 3
+                for i in range(y0, y1 + 1): map[x0][i] = map[x1][i] = 3
+
         return map
+
+    def get_area_location(self, abs_location):
+        x, y = abs_location[0], abs_location[1]
+        size = self.environment.env_json['size']
+        current_size = size[0] * size[1]
+        ret_location, ret_eid = None, None
+        for eid, info in self.environment.env_json['areas'].items():
+            x0 = info['location'][0][0]
+            y0 = info['location'][0][1]
+            x1 = info['location'][1][0]
+            y1 = info['location'][1][1]
+            area_size = (x1 - x0 + 1) * (y1 - y0 + 1)
+            if x0 <= x <= x1 and y0 <= y <= y1 and area_size < current_size:
+                current_size = area_size
+                ret_location, ret_eid = [x - x0 + 1, y - y0 + 1], eid
+
+        return ret_location, ret_eid
                 
     def unreachable_signal(self, target):
-        self.observe()  # TODO: 为什么这里要 observe
-        print('Target {} is unreacable.'.format(target))
+#        self.observe()  # TODO: 为什么这里要 observe
+        self.environment.uilogging(self.name, "Target {} is unreacable.".format(target))
 
-    def find_movement(self, target_description):
+    def fetch_movement_target(self):
+        target_candidate = []
+        for obj in self.environment.objects:
+            target_candidate.append({'name':self.environment.objects[obj].name, 'id':self.environment.objects[obj].id})
+        for agt in self.environment.agents:
+            target_candidate.append({'name':self.environment.agents[agt].name, 'id':self.environment.agents[agt].id})
+        return target_candidate
 
-        # def filter(env_json):
-            
+    def analysis_movement_target(self, target_description):
+        target_candidate = self.fetch_movement_target()
+        prompt = f"""Now you want to perform a movement action. I will give you a list of 
+        objects and agents that you might be your target. 
+        List: {target_candidate}
+        You target movement is : {target_description}
+        Give me the id of the movement target (with out `id` prefix).
+        """
+        self.target_id = chat(prompt)
 
+        logger.debug(self.name + "target prompt: {}, target_id: {}".format(target_description, self.target_id))
 
-        prompt = """
-        This map is like: {}.
-        I am now trying to get to the target location: {},
-        and my current location is {} in current layer.
-        Which location should I go to in order to reach my target location within the same layer.
-        Show me the target object's id. If you can't find it, print ERROR.
-        """.format(json.dumps(self.environment.env_json), target_description, '[{}, {}]'.format(self.location[0], self.location[1]))
+    def find_movement(self):
+        def abs_location(pos, eid):
+            area_delta = self.environment.env_json['areas'][eid]['location'][0]
+            target = [pos[0] + area_delta[0] - 1, pos[1] + area_delta[1] - 1]
+            return target
 
-        target_id = chat(prompt)
+        target_id = self.target_id
         target = None
         for id, info in self.environment.env_json['objects'].items():
+#            self.environment.uilogging(self.name, "compare id: {}, target_id: {}".format(id, target_id))
             if id == target_id:
-                area_delta = self.environment.env_json['areas'][info['eid']]['location']
-                relative_pos = info['location'][0]
-                target = [relative_pos[0] + area_delta[0], relative_pos[1] + area_delta[1]]
+                target = abs_location(info['location'], info['eid'])
                 break
+
+        self.environment.uilogging(self.name, ">>> find_movement target_id: {}".format(target_id))
+        self.environment.uilogging(self.name, ">>> find_movement target_pos: {}".format(target))
 
         if target_id == "ERROR" or target == None:
             self.unreachable_signal("[N/A]")
-            return
+            return None, None
 
         size = self.environment.env_json['size']
         map = self.initialize_map_status()
 
         def reachable(pos):
             if not (1 <= pos[0] <= size[0] and 1 <= pos[1] <= size[1]): return False
-            return pos not in map or map[pos] != 3
+            return map[pos[0]][pos[1]] != 3
 
         from queue import Queue
         directions = [[0, 1], [1, 0], [0, -1], [-1, 0]]
 
-        d = {target : 0}
+        N = self.environment.env_json['size'][0]
+        M = self.environment.env_json['size'][1]
+        d = [[-1 for j in range(M + 1)] for i in range(N + 1)]
+
+        d[target[0]][target[1]] = 0
+
+        current_pos = abs_location(self.location, self.eid)
+        next_step = current_pos
+        if next_step == target: return None, None
+
+        self.environment.uilogging(self.name, ">>> find_movement cur_pos: {}, {}".format(self.location, self.eid))
+        self.environment.uilogging(self.name, ">>> find_movement current_pos: {}".format(next_step))
 
         Q = Queue(maxsize=0)
-        Q.push(target)
+        Q.put(target)
         while not Q.empty():
             u = Q.get()
             for x, y in directions:
                 v = [u[0] + x, u[1] + y]
-                if reachable(v) and (v not in d):
-                    d[v] = d[u] + 1
+                if reachable(v) and d[v[0]][v[1]] == -1:
+                    d[v[0]][v[1]] = d[u[0]][u[1]] + 1
                     Q.put(v)
 
-        self.movement = self.location
 
-        u = self.location
+        u = current_pos
+        reached = False
         for x, y in directions:
             v = [u[0] + x, u[1] + y]
-            if reachable(v) and d[u] == d[v] + 1:
-                self.movement = v
+            if reachable(v) and d[u[0]][u[1]] == d[v[0]][v[1]] + 1:
+                next_step = v
+                reached = True
                 break
         
-        self.unreachable_signal(target)
+        if not reached: self.unreachable_signal(target)
+        logger.debug(self.name + ">>> find next step!!! : {}".format(next_step))
+        logger.debug(self.name + ">>> cur pos!!!: {}".format(self.get_area_location(current_pos)))
+        logger.debug(self.name + ">>> std next step!!!: {}".format(self.get_area_location(next_step)))
+
+        return self.get_area_location(next_step)
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
@@ -614,33 +713,13 @@ Summarize the dialog above.
 
         # 0. If incoming_invoice is available, process it with the highest priority
 
-        INVOICE_PATH = self.environment.file_dir + "invoice.txt"
-        # logger.critical(INVOICE_PATH)
-        # logger.critical(os.path.exists(INVOICE_PATH))
-
-        if os.path.exists(INVOICE_PATH):
-            logger.info("FOUND INVOICE")
-            with open(INVOICE_PATH, 'r') as fp:
-                self.incoming_invoice = fp.read()
-                if self.incoming_invoice:
-                    # have incoming invoice
-                    # do with the top priority
-                    self.incoming_observation.append(self.incoming_invoice)
-                    logger.debug(self.incoming_invoice)
-                    self.incoming_invoice = ""
-                else:
-                    logger.debug("EMPTY INVOICE FILE")
-            # with open(INVOICE_PATH, 'w') as fp:
-            #     pass  # clear the INVOICE FILE
-        else:
-            logger.debug("NO INVOICE FILE")
         # 1. 如果当前正在向openai请求，调过这一步
-        if not self.incoming_invoice:  # Only move the pending observation without any incoming invoice
-            self._move_pending_observation()
+        # if not self.incoming_invoice:  # Only move the pending observation without any incoming invoice
+        self._move_pending_observation_or_invoice()
         # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
         if self.status_start_time is None: # fixing empty start time
             self.status_start_time = current_time
-        if self.status_start_time+datetime.timedelta(self.status_duration)>=current_time:
+        if self.status_start_time+datetime.timedelta(self.status_duration) <= current_time:
             # 根据reverie，不产生新观察
             # 对话过程不会随便转状态，因此把对话duration直接设置无限
             next_plan=self.get_next_plan(current_time)
@@ -716,7 +795,7 @@ If yes, tell me the content being said in double quotes.
 If yes, tell me the name or how would {self.name} call it. 
 4. Also tell me if this reaction terminates {self.name}'s status, Say yes or no. 
 5. Does this reaction involve {self.name} moving to a new location? Say yes or no. 
-Strictly obeying the Output format:
+Strictly obeying the Output format, and don't omit answer to any of questions above
 
 ```
 1. <Yes/No for being a reaction> : <reaction>
@@ -734,17 +813,18 @@ Strictly obeying the Output format:
                 try:
                     lines=result.split('\n')
                     if len(lines)<5:
-                        logging.warning('abnormal reaction:'+result)
+                        logger.warning('abnormal reaction:'+result)
                     # line_split=[line.strip().split('$$') for line in lines]
                     finds=[line.find('Yes') for line in lines]
                     should_react,reaction=finds[0]>=0,lines[0][finds[0]+4:].strip().strip(':').strip()
                     should_oral,oral=finds[1]>=0,lines[1][finds[1]+4:].strip().strip(':').strip()
                     have_target,target=finds[2]>=0,lines[2][finds[2]+4:].strip().strip(':').strip()
                     terminate=finds[3]>=0
-                    movement=finds[4]>=0
+#                    movement=finds[4]>=0
+                    movement=1
                     break
                 except IndexError:
-                    logging.debug(f"Generated reaction {result}. Retrying...")
+                    logger.debug(f"Generated reaction {result}. Retrying...",)
                     try_num += 1
                     should_react = False
                     pass
@@ -769,13 +849,20 @@ Strictly obeying the Output format:
                 if self.environment is not None:
                     self.environment.parse_action(self, target, reaction_content)
                 if terminate:
-                    self.status=reaction
-                    self.status_duration=0
-                    self.status_start_time=current_time
-                    self.plan_in_detail(current_time)
+                    self.plan_in_detail(current_time,reaction=reaction)
+                    next_plan=self.get_next_plan(current_time)
+                    self.status_start_time = current_time
+                    self.status = next_plan['status']
+                    self.status_duration = next_plan['duration']
+                    self.environment.uilogging(f"{self.name}",
+                                               f"status: {self.status}, duration: {self.status_duration}")
+                    # self.status=reaction
+                    # self.status_duration=0
+                    # self.status_start_time=current_time
+
                 
             if movement:
-                self.find_movement(reaction)
+                self.analysis_movement_target(reaction)
 
         # 3.5 observation拉入记忆
         for ob in self.observation:
@@ -792,7 +879,10 @@ Strictly obeying the Output format:
 
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
-        # from IPython import embed; embed(header="833")
+
+        next_step, next_area = self.find_movement()
+        print(self.name, "MOVING!!! position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
+        if next_step != None: map_editor.move_agent(self, next_step, next_area)
 
         return
 

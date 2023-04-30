@@ -72,7 +72,7 @@ def get_insights(statements):
         prompt += (str(i + 1) + '. ' + st + '\n')
     prompt += INSIGHT_PROMPT
     result = chat(prompt)
-    insights = result.split('\n')[:5]
+    insights = [isg for isg in result.split('\n') if len(isg.strip())>0][:5]
     insights = ['.'.join(i.split('.')[1:]) for i in insights]
     # remove insight pointers for now
     insights = [i.split('(')[0].strip() for i in insights]
@@ -113,24 +113,28 @@ class ReflectionMemory():
 
     """
 
-    def __init__(self, state_dict, file_dir='./', uilogging=None) -> None:
+    def __init__(self, state_dict, file_dir='./', uilogging=None,clear_memory=False) -> None:
         # the least importance threshold for reflection. It seems that setting it to 0 does not induce duplicate reflections
         self.name = state_dict['name']
         self.uilogging = uilogging
         self.reflection_threshold = state_dict.get( 'reflection_threshold', 0)
+
+        # memory_ids
         self.memory_id = state_dict.get('memory', state_dict['name']+'_LTM')
+        self.base_id=state_dict.get('base',None)
+
+        # memory_file_names
         self.filename = os.path.join(file_dir,f"{self.memory_id}.json")
-        if os.path.exists(self.filename):
-            with open(self.filename, 'rb') as f:
-                loaded = orjson.loads(f.read())
-                self.data = CacheContent(**loaded)
-                # conversions induced by orjson
-                self.data.accessTime = [datetime.strptime(a, '%Y-%m-%dT%H:%M:%S') for a in self.data.accessTime]
-                self.data.createTime = [datetime.strptime(a, '%Y-%m-%dT%H:%M:%S') for a in self.data.createTime]
-                self.data.importance = np.array(self.data.importance).astype(np.int32)
-                self.data.embeddings = np.array(self.data.embeddings).astype(np.float32)
-        else:
-            self.data = CacheContent()
+        self.filename_base=os.path.join(file_dir,f"{self.base_id}.json") if self.base_id is not None else None
+
+        # if you are really using base file, notice base should be memory before current environment running time.
+
+        self.data=CacheContent()
+        if self.filename_base is not None and os.path.exists(self.filename_base):
+            self.append_from_orjson(self.filename_base)
+
+        if os.path.exists(self.filename) and not clear_memory:
+            self.append_from_orjson(self.filename)
 
         # members
         self.accumulated_importance = 0
@@ -141,6 +145,32 @@ class ReflectionMemory():
                     self.accumulated_importance += i
                 else:
                     break
+
+
+    def append_from_orjson(self,filename):
+        with open(filename, 'rb') as f:
+            loaded = orjson.loads(f.read())
+            jsondata = CacheContent(**loaded)
+            # conversions induced by orjson
+            self.data.accessTime.extend([datetime.strptime(a, '%Y-%m-%dT%H:%M:%S') for a in jsondata.accessTime])
+            self.data.createTime.extend([datetime.strptime(a, '%Y-%m-%dT%H:%M:%S') for a in jsondata.createTime])
+            self.data.importance = np.concatenate(
+                [
+                    self.data.importance,
+                    np.array(jsondata.importance).astype(np.int32)
+                ],
+                axis=0,
+            )
+
+            self.data.embeddings = np.concatenate(
+                [
+                    self.data.embeddings,
+                    np.array(jsondata.embeddings).astype(np.float32)
+                ],
+                axis=0,
+            )
+            self.data.texts.extend(jsondata.texts)
+            self.data.tags.extend(jsondata.tags)
 
     def add(self, text: str, time: datetime, tag: list = [], repeat_ok: bool = True):
         """

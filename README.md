@@ -1,30 +1,56 @@
-# GPT-World Server
-
-一个基于GPT搭建的世界，世界中的主观个体和客观物体均由GPT来支持其行动。
-世界由多个环境构成，使用者可以（1）轻松地创建自己的环境，以及其中的主体和客体并挂载到世界上，（2）创造自己的agent并让其能访问自己或其他的世界。
-
-Server 是开源的、分布式的，每个人都可以 host 自己的服务器和朋友们分享。
+# 🌎GPTWorld: an experimental multi-agent sandbox world.
 
 
-## How to run
+🌎GPTWorld is an experimental multi-agent sandbox world. 🔬 Unlike typical sandbox games, interactions in GPTWorld are not defined by pre-written scripts 📜, but rather **inferred by a world engine based on large models 🤖.** In this world, virtual agents and objects can act, react, interact, and communicate autonomously, all supported by AI 🤯.
 
-### 1. If you want to see the demo, please
-cd to the  `game/` folder, do as the `game/readme.md` suggest. If you can view the demo in the localhost, you are done. 
-If not, you might stuck at `npm install`, please install `npm`
+🛠️ To facilitate the creation of a more diverse range of sandboxes, we aim to allow players to create custom worlds through simple configuration files or even natural language 🤩, and look forward to building a rich sandbox world for intelligent agents to explore through community sharing 🤝.
+
+👨‍💻👩‍💻 Join us on this exciting journey of creating a groundbreaking sandbox world with limitless possibilities 🚀!
 
 
+**Currently, 🌍GPTWorld supports:**
 
-### 2. run the main loop of the world
-`cd` to the root directory of this project
-```bash
-python gptworld/run.py
+👨‍💻 Easily creating your environment and entities using JSON and mounting them onto your world
+🏃 Starting the environment's autonomous operation with just one command
+👀 Observing the behavior of the agent in your web browser
+
+🎉 **Coming soon:**
+🤝 Allowing players to build and share environments in a distributed way
+🗣️ Creating environments with natural languages
+
+🙏**Acknowledgements:** This project was greatly inspired by [*Generative Agents: Interactive Simulacra of Human Behavior*](https://arxiv.org/abs/2304.03442)  during development, where the mechanism of agents' behavior takes the reflection-summary-plan framework.
+
+🚨 **Disclaimer:**
+This project is for academic and experimental purposes only. We currently suspect that it is far from a usable game product.
+
+
+<br/>
+
+## Usage
+
+### Run examples
+We currently provide some example sandboxes in  `world_instances/`, choose one that you want to launch.
+Take `alice_home` as an example.
+
+1. start the world engine
+```
+python gptworld/app.py -W alice_home
 ```
 
-## Development Contract
+2. start the web server
+```
+python io/app.py --world_instance alice_home
+```
+now open the 5001 port of your localhost, and you will be able to see a simple environment.
 
-### Environment and Agent storage
-at static_files/YOUR_ENV_NAME/
+### (🧪Experimental) Create your own
+1. If you want to create your world instance,
+modify the requirement in `gptworld/create_world.py` and run
+```
+python gptworld/create_world.py 
+```
 
-
-
-
+## Global Configs
+```bash
+export GPTWORLD_LOG_LEVEL=XXX # (XXX can be debug, info, warning ...) to set the logging level
+```

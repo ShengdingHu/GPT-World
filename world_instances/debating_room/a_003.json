@@ -1,0 +1,26 @@
+{
+    "traits": "Outgoing",
+    "name": "Carot",
+    "age": 15,
+    "eid": "e_001",
+    "location": [10, 50],
+    "time": null,
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "",
+    "status_duration" : 0,
+    "status_start_time": null,
+    "plan": [],
+    "whole_day_plan": "This is Carot's plan for Thursday April 1st: He will participate in a debate in 9:00.",
+    "memory": "Carot_LTM",
+    "description":
+        [
+            "Carot is a 15-year-old student at Town High School.",
+            "Carot has a passion for debating",
+            "Carot always draw conclusions",
+            "Carot majors in social science."
+        ],
+    "incoming_observation":
+        [
+                ]
+}

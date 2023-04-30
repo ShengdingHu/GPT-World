@@ -21,11 +21,11 @@ logger = logging.get_logger(__name__)
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def run_backend():
-    subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../../game/text_grid', capture_output=True, shell=True)
+# def run_backend():
+#     subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../../io', capture_output=True, shell=True)
 
-def run_frontend():
-    subprocess.run(['npm run --silent dev'], cwd=f'{CURRENT_DIR}/../../game/text_grid/frontend', capture_output=True, shell=True)
+# def run_frontend():
+#     subprocess.run(['npm run --silent dev'], cwd=f'{CURRENT_DIR}/../../io/frontend', capture_output=True, shell=True)
 
 
 
@@ -37,6 +37,7 @@ class GPTWorldEnv:
     def __init__(self, 
         env_json,
         file_dir,
+        clear_memory=False
         # name,
         # id,
         # size,
@@ -52,9 +53,9 @@ class GPTWorldEnv:
 
         self.agents, self.objects = {}, {}
 
-        self.load_objects_and_agents()
+        self.clear_memory=clear_memory
 
-        
+        self.load_objects_and_agents()
         
         logger.debug("Initialize Complete!")
         
@@ -67,8 +68,6 @@ class GPTWorldEnv:
         # TODO: control mode mapping from agent id to mode (either 'auto' or 'human')
         # self.control_mode: Dict[str, str] = {}
 
-        # control if operational
-        # self.operational = True
         pass
 
     def get_area_name(self, eid):
@@ -128,25 +127,25 @@ class GPTWorldEnv:
 
 
     @classmethod
-    def from_file(cls, file_dir, file_name ="environment.json"):
+    def from_file(cls, file_dir, file_name ="environment.json",clear_memory=False):
         logger.debug(file_dir)
         with open(os.path.join(file_dir, file_name), 'r') as f:
             data = json.load(f)
-        return cls(**{"env_json": data, "file_dir": file_dir})
+        return cls(**{"env_json": data, "file_dir": file_dir,"clear_memory":clear_memory})
         
       
     def initialize_web(self, ):
+        return RuntimeError("Disabled")
         import multiprocessing
-
-        
     
-        process_backend = multiprocessing.Process(target=run_backend)
-        process_frontend = multiprocessing.Process(target=run_frontend)
-        process_backend.start()
-        process_frontend.start()
+        # process_backend = multiprocessing.Process(target=run_backend)
+        # process_frontend = multiprocessing.Process(target=run_frontend)
+        # process_backend.start()
+        # process_frontend.start()
 
-        logger.critical("\n\033[1m\033[93m"+"-"*20 + "\nView your little world at http://localhost:5173\n" + "-"*20)
+        # logger.critical("\n\033[1m\033[93m"+"-"*20 + "\nView your little world at http://localhost:5001\n" + "-"*20)
 
+        return
 
     def get_neighbor_environment(self, agent_id :str = None, critical_distance = 50):
         '''Provide the local environment of the location.
@@ -229,7 +228,7 @@ class GPTWorldEnv:
         # create_agent
         for obj_id, obj in self.env_json['objects'].items():
             if obj_id.startswith('a'):
-                self.agents[obj_id] = GPTAgent(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
+                self.agents[obj_id] = GPTAgent(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self,clear_memory=self.clear_memory)
             elif obj['id'].startswith('o') and obj['engine'] == 'object':
                 self.objects[obj_id] = GPTObject(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
             elif obj['id'].startswith('o') and obj['engine'] == 'environment':
@@ -267,6 +266,37 @@ class GPTWorldEnv:
             receiver_agent.incoming_interactions.append({"sender": sender, "content": content})
         return
 
+    def get_invoice(self, ):
+        INVOICE_PATH = os.path.join(self.file_dir, "invoice.txt")
+        if os.path.exists(INVOICE_PATH):
+            with open(INVOICE_PATH, 'r') as fp:
+                incoming_invoice = fp.read()
+                logger.critical("find invoice: {}".format(incoming_invoice))
+                if incoming_invoice:
+                    self.broadcast_invoice(incoming_invoice)
+        else:
+            logger.warning("No invoice files")
+    
+    def broadcast_invoice(self, incoming_invoice):
+        objectlist = [(aid, self.agents[aid].name) for aid in self.agents] + [(oid, self.objects[oid].name) for oid in self.objects]  
+        prompt = f"You are now simulating an environment, in which there are several agents and objects. {objectlist}. Here is a comming message that comes from the system: {incoming_invoice} You need to broadcast the message to the direct target(s) of this message. You should broadcast in a list of tuple: [('id', 'message'),]. Do not broadcast to agent or object that is not the target of this message."
+
+        return_value = chat(prompt)
+        try:
+            broadcast_list = eval(return_value)
+        except:
+            logger.warning("Cannot parse broadcast_list: {}".format(return_value))
+            return
+
+        invoice_prompt = "Here is a system message that is of highest priority. Who observe it should strict follows the message until it is completed: "
+        for item in broadcast_list:
+            item_id, message = item
+            if item_id.startswith('a'):
+                self.agents[item_id].set_invoice(invoice_prompt + message)
+            elif item_id.startswith('o'):
+                self.objects[item_id].set_invoice(invoice_prompt + message)
+
+
     def step(self, debug=False):
         """ For each time frame, call step method for agents
         """
@@ -276,6 +306,7 @@ class GPTWorldEnv:
    
 
         thread_pool = []
+        self.get_invoice()
 
         for agent_id in self.agents:
             agent = self.agents[agent_id]
@@ -315,22 +346,17 @@ class GPTWorldEnv:
 
         return
     
-    def run(self, start_time=[2023, 4, 1, 7, 0, 0], debug=False):
+    def run(self, debug=False):
         """The main loop 
         """
         realworld_time_delta = 8
         env_time_delta = 10
+
+        start_time = datetime.datetime.strptime(self.env_json['current_time'], "%Y-%m-%dT%H:%M:%S")
         
-        self.current_time = datetime.datetime(*start_time)
+        self.current_time = start_time
         while True:
             time.sleep(realworld_time_delta)
             self.step(debug=debug)
             self.current_time += datetime.timedelta(seconds = env_time_delta)
     
-
-if __name__ == "__main__":
-    # TODO: add some arguments
-    env = Environment()
-    dirname = 'test_env0'
-    env.load_from_file(f"static_files/{dirname}/environment.json")
-    env.run()

@@ -53,7 +53,7 @@ class GPTEnvObject:
         self.name = state_dict['name']
         self.location = state_dict['location']
         self.size = state_dict.get('size', '')
-        self.status = state_dict.get('status', '')
+        self.status = state_dict.get('status', 'idle')
         self.eid = state_dict.get('eid', 'e_001')
         self.environment = environment
 
@@ -82,13 +82,14 @@ class GPTObject(EnvElem):
         sumPrompt=f"""Give me rules and characteristics of a {self.name} \
 especially on what circumstances it can change or cannot change its status \
 and what kind of status changing can be done without human intervention. 
+The answer should be as concise and accurate as possible. 
 Output format:
 1. I grow very slowly.
 2. I cannot move
 3. I cannot shut down myself unless some one do so. 
 """
-        # self.summary=f'Pretend you are a {self.name}, obeying following rules:\n' + chat(sumPrompt)
-        self.summary = ""
+        self.summary=f'Pretend you are a {self.name}, obeying following rules:\n' + chat(sumPrompt)
+        # self.summary = ""
 
         self.blocking = False
         logger.info(f"Objects {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
@@ -105,6 +106,7 @@ Output format:
 
         logger.debug("Object {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
 
+        self._move_pending_observation_or_invoice()
         if self.status_start_time is None: # fixing empty start time
             self.status_start_time = current_time
 
@@ -159,7 +161,7 @@ Strictly obeying the Output format:
                 try:
                     lines=result.split('\n')
                     if len(lines)<5:
-                        logging.warning('abnormal reaction:'+result)
+                        logger.warning('abnormal reaction:'+result)
                     # line_split=[line.strip().split('$$') for line in lines]
                     finds=[line.find('Yes') for line in lines]
                     should_react,reaction=finds[0]>=0,lines[0][finds[0]+4:].strip().strip(':').strip()
@@ -169,7 +171,8 @@ Strictly obeying the Output format:
                     movement=finds[4]>=0
                     break
                 except IndexError:
-                    logging.debug(f"Generated reaction {result}. Retrying...")
+                    logger.debug(f"Generated reaction {result}. Retrying...")
+                    try_num+=1
                     pass
 
             logger.debug(f"Prompt of {self.name}'s reaction: "+send_message+"Return message is "+result)
@@ -194,9 +197,11 @@ Strictly obeying the Output format:
                     self.environment.uilogging(self.name, reaction_content)
                     self.environment.parse_action(self, target, reaction_content)
                 if terminate:
+                    # object没有判定状态终止的机制，在这里duration随便填，记个开始时间就行。
                     self.status=reaction
                     self.status_duration=0
                     self.status_start_time=current_time
+
                     # self.plan_in_detail(current_time)
 
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。

@@ -12,11 +12,13 @@ build/
 _build/
 **/build/
 
-dist/
-dist/*
+# dist/
+# dist/*
 
 .idea/
 
 
 **/cache/
 
+
+world_instances/.*.running/

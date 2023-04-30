@@ -1,0 +1,133 @@
+{
+    "name": "Debating Room",
+    "size": [
+        100,
+        100
+    ],
+    "current_time": "2023-04-01T10:00:00",
+    "areas": {
+        "e_001": {
+            "location": [
+                [
+                    1,
+                    1
+                ],
+                [
+                    100,
+                    100
+                ]
+            ],
+            "name": "debating room",
+            "id": "e_001",
+            "border": 1,
+            "color": "0x228B22"
+        }
+    },
+    "objects": {
+        "o_001": {
+            "id": "o_001",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [10, 10],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "a_001": {
+            "id": "a_001",
+            "name": "Debator 1",
+            "eid": "e_001",
+            "location": [10, 10]
+        },
+        "o_002": {
+            "id": "o_002",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [10, 30],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "a_002": {
+            "id": "a_002",
+            "name": "Debator 2",
+            "eid": "e_001",
+            "location": [10, 30]
+        },
+        "o_003": {
+            "id": "o_003",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [10, 50],
+            "size": [30, 10],
+            "engine": "environment"
+        },       
+        "a_003": {
+            "id": "a_003",
+            "name": "Debator 3",
+            "eid": "e_001",
+            "location": [10, 50]
+        },
+        "o_004": {
+            "id": "o_004",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [60, 10],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "a_004": {
+            "id": "a_004",
+            "name": "Debator 4",
+            "eid": "e_001",
+            "location": [60, 10]
+        },
+        "o_005": {
+            "id": "o_005",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [60, 30],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "a_005": {
+            "id": "a_005",
+            "name": "Debator 5",
+            "eid": "e_001",
+            "location": [60, 30]
+        },
+        "o_006": {
+            "id": "o_006",
+            "name": "Desk for debators",
+            "eid": "e_001",
+            "location": [60, 50],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "a_006": {
+            "id": "a_006",
+            "name": "Debator 6",
+            "eid": "e_001",
+            "location": [60, 50]
+        },
+        "o_007": {
+            "id": "o_007",
+            "name": "Desk for host",
+            "eid": "e_001",
+            "location": [35, 70],
+            "size": [30, 10],
+            "engine": "environment"
+        },
+        "a_007": {
+            "id": "a_007",
+            "name": "Host",
+            "eid": "e_001",
+            "location": [35, 67]
+        },
+        "o_008": {
+            "id": "o_008",
+            "name": "Chair",
+            "eid": "e_001",
+            "location": [10, 80],
+            "engine": "environment"
+        }
+    }
+}

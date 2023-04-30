@@ -2,7 +2,7 @@
 (installation)=
 
 
-## Installation
+# Installation
 
 ```bash
 python setup.py develop
@@ -50,7 +50,7 @@ This will give a port (default: http://localhost:5173), view it in your browser.
 
 
 
-# Config your json file
+## Config your json file
 
 convention list:
 
