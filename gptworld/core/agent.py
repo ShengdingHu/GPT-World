@@ -225,18 +225,17 @@ class GPTAgent(EnvElem):
         """
         super().__init__(agent_file=agent_file, environment=environment,clear_memory=clear_memory)
 
-
         self.age = self.state_dict.get('age', 'unknown')
-        self.plan = [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
-        
+
         # self summary of current state.
-        self.summary = self.state_dict.get( 'summary', None)
+        self.summary = self.state_dict.get('summary', None)
 
         # Broad Stroke Plan
         # format: {"%B %d %Y": ["... ", "... ", ...]} no strict format
-        self.whole_day_plan = self.state_dict.get('whole_day_plan',{})
-        if not isinstance(self.whole_day_plan,dict):
-            self.whole_day_plan={}
+        self.whole_day_plan = self.state_dict.get('whole_day_plan', {})
+        if not isinstance(self.whole_day_plan, dict):
+            logger.warning(f"{self.name}'s initial whole day plan is not a dict. Use empty dict to substitute.")
+            self.whole_day_plan = {}
 
         # format: {hour: ""}
         # 每次成功获得新whole day plan时都会清空
@@ -247,6 +246,7 @@ class GPTAgent(EnvElem):
         self.plan = self.state_dict.get('plan',[])
         if self.environment is not None:
             logger.info(f"Agent {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
+
 
 
 
@@ -750,7 +750,7 @@ Summarize the dialog above.
             # 一点小修改：加上对话的最后几轮作为query
 
             memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in queries],[])).strip()
-            if len(memory_string) > 0:
+            if not memory_string:
                 memory_string = "Empty"
             sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
 
@@ -807,9 +807,11 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
 """
             try_num = 0
             send_message = '\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt])
-            logger.debug(f"Prompt of {self.name}'s reaction: "+send_message)
+            # logger.debug(f"Prompt of {self.name}'s reaction: "+send_message)
+            logger.critical(f"Prompt of {self.name}'s reaction: "+send_message)
             while try_num < 3:
                 result=chat(send_message)
+                logger.critical(f"[Reaction]The {try_num}th trial result:\n{result}")
                 try:
                     lines=result.split('\n')
                     if len(lines)<5:

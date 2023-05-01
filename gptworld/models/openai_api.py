@@ -50,7 +50,8 @@ def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.1,attemps=1) -> str:
                     return ""
         except Exception as e:
             attempt+=1
-            print(f"Error: {e}. Retrying")
+            logger.exception("Error when requesting charGPT. Retrying")
+            # print(f"Error: {e}. Retrying")
             time.sleep(1)
     Warning(f'chat() failed after {attemps} attempts. returning empty response')
     return ""
@@ -85,7 +86,8 @@ def get_embedding(text: str,attempts=3) -> List[float]:
                 return embedding
         except Exception as e:
             attempt += 1
-            print(f"Error: {e}. Retrying")
+            logger.exception("Error when requesting charGPT. Retrying")
+            # print(f"Error: {e}. Retrying")
             time.sleep(1)
     Warning(f'get_embedding() failed after {attempts} attempts. returning empty response')
 
