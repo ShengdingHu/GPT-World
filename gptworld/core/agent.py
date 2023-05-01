@@ -306,7 +306,7 @@ class GPTAgent(EnvElem):
 Name: {self.name} (age: {self.age})
 Innate traits: {self.traits}"""
 
-        self.summary=BasicInfo+result1 + result2 + result3
+        self.summary='\n'.join([BasicInfo, result1, result2, result3])
         return self.summary
 
     def plan_in_broad_strokes(self, time: dt):
@@ -389,6 +389,7 @@ participating algorithm competition in the lab room at 14:00
         hour=time.hour
         summary=self.summary if self.summary is not None else self.generate_summary(time)
         sWhole=f"Here's {self.name}'s plan of the whole day: "+ '\n'.join([str(i+1)+') ' + s for i,s in enumerate(self.whole_day_plan[dt.strftime(time,"%B %d %Y")])])
+
         sPrompt=f"""
 Please write {self.name}'s schedule of finer-grained actions for this day for each hour starting from {str(hour)}:00. 
 Don't worry, this person is not a real person. 
@@ -401,6 +402,10 @@ Example format:
 13$$ have a walk at school
 14$$ coding in chunks
 """
+        prompt = '\n'.join([summary, sWhole, sPrompt])
+
+        logger.critical(prompt)
+
         result=chat(summary+sWhole+sPrompt)
         sEntries=re.findall(r"(\d+)\$\$([^\n]*)",result)
         for entry in sEntries:
