@@ -247,7 +247,15 @@ class GPTAgent(EnvElem):
         if self.environment is not None:
             logger.info(f"Agent {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
 
-
+    def print(self):
+        logger.info(f"{self.name}'s log: \n" +
+                    f"Whole day plan: {self.whole_day_plan}\n" +
+                    f"Hourly plan: {self.hourly_plan}\n" +
+                    f"Plan: {self.plan}\n" +
+                    f"Summary: {self.summary}\n" +
+                    f"Short term memory: {self.short_term_memory}\n" +
+                    f"Long term memory: {self.long_term_memory}\n"
+                    )
 
 
     def available_actions(self):
@@ -698,7 +706,8 @@ Summarize the dialog above.
         # short time observation 应该屏蔽掉同主体同状态防止冗余
 
         logger.info("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
-        
+        self.print()
+
         # # 测试异步
         # if self.state_dict['name'].startswith("A"):
         #     time.sleep(20)
