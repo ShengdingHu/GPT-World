@@ -20,6 +20,7 @@ import gptworld.utils.map_editor as map_editor
 logger = logging.get_logger(__name__)
 
 
+
 # print(os.path.exists(INVOICE_PATH))
 
 """
@@ -225,17 +226,18 @@ class GPTAgent(EnvElem):
         """
         super().__init__(agent_file=agent_file, environment=environment,clear_memory=clear_memory)
 
-        self.age = self.state_dict.get('age', 'unknown')
 
+        self.age = self.state_dict.get('age', 'unknown')
+        self.plan = [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
+        
         # self summary of current state.
-        self.summary = self.state_dict.get('summary', None)
+        self.summary = self.state_dict.get( 'summary', None)
 
         # Broad Stroke Plan
         # format: {"%B %d %Y": ["... ", "... ", ...]} no strict format
-        self.whole_day_plan = self.state_dict.get('whole_day_plan', {})
-        if not isinstance(self.whole_day_plan, dict):
-            logger.warning(f"{self.name}'s initial whole day plan is not a dict. Use empty dict to substitute.")
-            self.whole_day_plan = {}
+        self.whole_day_plan = self.state_dict.get('whole_day_plan',{})
+        if not isinstance(self.whole_day_plan,dict):
+            self.whole_day_plan={}
 
         # format: {hour: ""}
         # 每次成功获得新whole day plan时都会清空
@@ -247,15 +249,6 @@ class GPTAgent(EnvElem):
         if self.environment is not None:
             logger.info(f"Agent {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
 
-    def print(self):
-        logger.info(f"{self.name}'s log: \n" +
-                    f"Whole day plan: {self.whole_day_plan}\n" +
-                    f"Hourly plan: {self.hourly_plan}\n" +
-                    f"Plan: {self.plan}\n" +
-                    f"Summary: {self.summary}\n" +
-                    f"Short term memory: {self.short_term_memory}\n" +
-                    f"Long term memory: {self.long_term_memory}\n"
-                    )
 
 
     def available_actions(self):
@@ -706,8 +699,7 @@ Summarize the dialog above.
         # short time observation 应该屏蔽掉同主体同状态防止冗余
 
         logger.info("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
-        self.print()
-
+        
         # # 测试异步
         # if self.state_dict['name'].startswith("A"):
         #     time.sleep(20)
@@ -721,7 +713,7 @@ Summarize the dialog above.
 
 
         # 0. If incoming_invoice is available, process it with the highest priority
-
+    
         # 1. 如果当前正在向openai请求，调过这一步
         # if not self.incoming_invoice:  # Only move the pending observation without any incoming invoice
         self._move_pending_observation_or_invoice()
@@ -759,7 +751,7 @@ Summarize the dialog above.
             # 一点小修改：加上对话的最后几轮作为query
 
             memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in queries],[])).strip()
-            if not memory_string:
+            if len(memory_string) > 0:
                 memory_string = "Empty"
             sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
 
@@ -816,11 +808,9 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
 """
             try_num = 0
             send_message = '\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt])
-            # logger.debug(f"Prompt of {self.name}'s reaction: "+send_message)
-            logger.critical(f"Prompt of {self.name}'s reaction: "+send_message)
+            logger.debug(f"Prompt of {self.name}'s reaction: "+send_message)
             while try_num < 3:
                 result=chat(send_message)
-                logger.critical(f"[Reaction]The {try_num}th trial result:\n{result}")
                 try:
                     lines=result.split('\n')
                     if len(lines)<5:
