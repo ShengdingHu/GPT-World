@@ -1,18 +1,6 @@
 import os
 import json
 
-def find_area(pos, areas):
-    for eid, area in areas:
-        x0 = area['location'][0][0]
-        y0 = area['location'][0][1]
-        x1 = area['location'][1][0]
-        y1 = area['location'][1][1]
-
-        if x0 <= pos[0] <= x1 and y0 <= pos[1] <= y1:
-            return eid, pos[0] - x0 + 1, pos[1] - x1 + 1
-
-    assert False
-
 def move_agent(agent, location, eid):
     env_file = agent.environment.file_dir + 'environment.json'
     agent_file = agent.agent_file

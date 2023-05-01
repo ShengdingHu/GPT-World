@@ -20,6 +20,7 @@ import gptworld.utils.map_editor as map_editor
 logger = logging.get_logger(__name__)
 
 
+
 # print(os.path.exists(INVOICE_PATH))
 
 """
@@ -223,19 +224,20 @@ class GPTAgent(EnvElem):
         prompt_template: str -> a template for prompt
 
         """
-        super().__init__(agent_file=agent_file, environment=environment,clear_memory=clear_memory)
+        super().__init__(agent_file=agent_file, environment=environment)
+
 
         self.age = self.state_dict.get('age', 'unknown')
-
+        self.plan = [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
+        
         # self summary of current state.
-        self.summary = self.state_dict.get('summary', None)
+        self.summary = self.state_dict.get( 'summary', None)
 
         # Broad Stroke Plan
         # format: {"%B %d %Y": ["... ", "... ", ...]} no strict format
-        self.whole_day_plan = self.state_dict.get('whole_day_plan', {})
-        if not isinstance(self.whole_day_plan, dict):
-            logger.warning(f"{self.name}'s initial whole day plan is not a dict. Use empty dict to substitute.")
-            self.whole_day_plan = {}
+        self.whole_day_plan = self.state_dict.get('whole_day_plan',{})
+        if not isinstance(self.whole_day_plan,dict):
+            self.whole_day_plan={}
 
         # format: {hour: ""}
         # 每次成功获得新whole day plan时都会清空
@@ -247,15 +249,6 @@ class GPTAgent(EnvElem):
         if self.environment is not None:
             logger.info(f"Agent {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
 
-    def print(self):
-        logger.info(f"{self.name}'s log: \n" +
-                    f"Whole day plan: {self.whole_day_plan}\n" +
-                    f"Hourly plan: {self.hourly_plan}\n" +
-                    f"Plan: {self.plan}\n" +
-                    f"Summary: {self.summary}\n" +
-                    f"Short term memory: {self.short_term_memory}\n" +
-                    f"Long term memory: {self.long_term_memory}\n"
-                    )
 
 
     def available_actions(self):
@@ -598,7 +591,7 @@ Summarize the dialog above.
             area_size = (x1 - x0 + 1) * (y1 - y0 + 1)
             if x0 <= x <= x1 and y0 <= y <= y1 and area_size < current_size:
                 current_size = area_size
-                ret_location, ret_eid = [x - x0 + 1, y - y0 + 1], eid
+                ret_location, ret_eid = abs_location, eid
 
         return ret_location, ret_eid
                 
@@ -606,42 +599,39 @@ Summarize the dialog above.
 #        self.observe()  # TODO: 为什么这里要 observe
         self.environment.uilogging(self.name, "Target {} is unreacable.".format(target))
 
-    def fetch_movement_target(self):
-        target_candidate = []
-        for obj in self.environment.objects:
-            target_candidate.append({'name':self.environment.objects[obj].name, 'id':self.environment.objects[obj].id})
-        for agt in self.environment.agents:
-            target_candidate.append({'name':self.environment.agents[agt].name, 'id':self.environment.agents[agt].id})
-        return target_candidate
+    def fetch_objects(self):
+        objects = {}
+        for id, info in self.environment.env_json['objects'].items():
+            objects[id] = info['name']
+        return objects
 
     def analysis_movement_target(self, target_description):
-        target_candidate = self.fetch_movement_target()
-        prompt = f"""Now you want to perform a movement action. I will give you a list of 
-        objects and agents that you might be your target. 
-        List: {target_candidate}
-        You target movement is : {target_description}
-        Give me the id of the movement target (with out `id` prefix).
-        """
-        self.target_id = chat(prompt)
+        objects = self.fetch_objects()
+        prompt = """Now you want to perform a movement action. I will give you a list of 
+                objects and agents that you might be your target. 
+                List: {}
+                You target movement is : {}
+                Give me the id of the movement target (with out `id` prefix).
+                """.format(json.dumps(objects), target_description)
 
-        logger.debug(self.name + "target prompt: {}, target_id: {}".format(target_description, self.target_id))
+        self.target_id = None
+        while self.target_id != 'ERROR' and self.target_id not in objects:
+            self.target_id = chat(prompt)
+
+            self.environment.uilogging(self.name, ">>>>>>> target prompt: {}".format(target_description))
+            self.environment.uilogging(self.name, ">>>>>>> target id: {}".format(self.target_id))
 
     def find_movement(self):
-        def abs_location(pos, eid):
-            area_delta = self.environment.env_json['areas'][eid]['location'][0]
-            target = [pos[0] + area_delta[0] - 1, pos[1] + area_delta[1] - 1]
-            return target
-
         target_id = self.target_id
         target = None
         for id, info in self.environment.env_json['objects'].items():
 #            self.environment.uilogging(self.name, "compare id: {}, target_id: {}".format(id, target_id))
             if id == target_id:
-                target = abs_location(info['location'], info['eid'])
+                target = info['location']
                 break
 
-        self.environment.uilogging(self.name, ">>> find_movement target_id: {}".format(target_id))
-        self.environment.uilogging(self.name, ">>> find_movement target_pos: {}".format(target))
+#        self.environment.uilogging(self.name, ">>> find_movement target_id: {}".format(target_id))
+#        self.environment.uilogging(self.name, ">>> find_movement target_pos: {}".format(target))
 
         if target_id == "ERROR" or target == None:
             self.unreachable_signal("[N/A]")
@@ -663,12 +653,12 @@ Summarize the dialog above.
 
         d[target[0]][target[1]] = 0
 
-        current_pos = abs_location(self.location, self.eid)
+        current_pos = self.location
         next_step = current_pos
         if next_step == target: return None, None
 
-        self.environment.uilogging(self.name, ">>> find_movement cur_pos: {}, {}".format(self.location, self.eid))
-        self.environment.uilogging(self.name, ">>> find_movement current_pos: {}".format(next_step))
+#        self.environment.uilogging(self.name, ">>> find_movement cur_pos: {}, {}".format(self.location, self.eid))
+#        self.environment.uilogging(self.name, ">>> find_movement current_pos: {}".format(next_step))
 
         Q = Queue(maxsize=0)
         Q.put(target)
@@ -691,9 +681,9 @@ Summarize the dialog above.
                 break
         
         if not reached: self.unreachable_signal(target)
-        logger.debug(self.name + ">>> find next step!!! : {}".format(next_step))
-        logger.debug(self.name + ">>> cur pos!!!: {}".format(self.get_area_location(current_pos)))
-        logger.debug(self.name + ">>> std next step!!!: {}".format(self.get_area_location(next_step)))
+        self.environment.uilogging(self.name, ">>> find next step!!! : {}".format(next_step))
+#        self.environment.uilogging(self.name, ">>> cur pos!!!: {}".format(self.get_area_location(current_pos)))
+#        self.environment.uilogging(self.name, ">>> std next step!!!: {}".format(self.get_area_location(next_step)))
 
         return self.get_area_location(next_step)
 
@@ -706,8 +696,7 @@ Summarize the dialog above.
         # short time observation 应该屏蔽掉同主体同状态防止冗余
 
         logger.info("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
-        self.print()
-
+        
         # # 测试异步
         # if self.state_dict['name'].startswith("A"):
         #     time.sleep(20)
@@ -721,7 +710,7 @@ Summarize the dialog above.
 
 
         # 0. If incoming_invoice is available, process it with the highest priority
-
+    
         # 1. 如果当前正在向openai请求，调过这一步
         # if not self.incoming_invoice:  # Only move the pending observation without any incoming invoice
         self._move_pending_observation_or_invoice()
@@ -759,7 +748,7 @@ Summarize the dialog above.
             # 一点小修改：加上对话的最后几轮作为query
 
             memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in queries],[])).strip()
-            if not memory_string:
+            if len(memory_string) > 0:
                 memory_string = "Empty"
             sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
 
@@ -816,11 +805,9 @@ Strictly obeying the Output format, and don't omit answer to any of questions ab
 """
             try_num = 0
             send_message = '\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt])
-            # logger.debug(f"Prompt of {self.name}'s reaction: "+send_message)
-            logger.critical(f"Prompt of {self.name}'s reaction: "+send_message)
+            logger.debug(f"Prompt of {self.name}'s reaction: "+send_message)
             while try_num < 3:
                 result=chat(send_message)
-                logger.critical(f"[Reaction]The {try_num}th trial result:\n{result}")
                 try:
                     lines=result.split('\n')
                     if len(lines)<5:
