@@ -11,7 +11,7 @@
     "status_duration" : 0,
     "status_start_time": null,
     "plan": [],
-    "whole_day_plan": "This is Grace's plan for Thursday April 1st: He will host a debate in 9:00.",
+    "whole_day_plan": {"April 01 2023": ["She will participate in a debate at 9:00."]},
     "memory": "Fedo_LTM",
     "description":
         [

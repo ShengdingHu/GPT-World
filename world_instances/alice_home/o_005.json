@@ -1,1 +1,23 @@
-{"traits": "brandnew", "name": "Television", "vision_radius": 8, "attention_bandwidth": 8, "retention": 8, "time": null, "eid": "e_004", "location": [104, 104], "max_velocity": "0/s", "moving": "false", "status": "off", "memory": ["television has 10 channel.", "Channel 1: History Channel", "Channel 2: Entertainment Channel", "Channel 3: Science Chaneel"], "incoming_observation": []}
+{
+    "traits": "brandnew",
+    "name": "Television",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_004",
+    "location": [25, 5],
+    "max_velocity": "0/s",
+    "moving": "false",
+    "status": "off",
+    "memory":
+        [
+            "television has 10 channel.",
+            "Channel 1: History Channel",
+            "Channel 2: Entertainment Channel",
+            "Channel 3: Science Chaneel"
+        ],
+    "incoming_observation":
+        [
+        ]
+}

@@ -1,1 +1,14 @@
-{"IdentityPrompt": "I am a tree", "id": "o_002", "name": "apple tree", "eid": "e_002", "location": [20, 130], "engine": "object", "VelocityUpperBound": "0/s", "Moving": "false", "Schedule": {"timepoint1": "Growing"}, "Status": ["Flowering"]}
+{
+    "IdentityPrompt": "I am a tree",
+    "id": "o_002",
+    "name": "apple tree",
+    "eid": "e_002",
+    "location": [20, 130],
+    "engine": "object",
+    "VelocityUpperBound": "0/s",
+    "Moving": "false",
+    "Schedule": {
+        "timepoint1": "Growing"
+    },
+    "Status": ["Flowering"]
+}

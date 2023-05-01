@@ -236,9 +236,10 @@ class GPTAgent(EnvElem):
 
         # Broad Stroke Plan
         # format: {"%B %d %Y": ["... ", "... ", ...]} no strict format
-        self.whole_day_plan = self.state_dict.get('whole_day_plan',{})
-        if not isinstance(self.whole_day_plan,dict):
-            self.whole_day_plan={}
+        self.whole_day_plan = self.state_dict.get('whole_day_plan', {})
+        if not isinstance(self.whole_day_plan, dict):
+            logger.warning(f"{self.name}'s initial whole day plan is not a dict. Use empty dict to substitute.")
+            self.whole_day_plan = {}
 
         # format: {hour: ""}
         # 每次成功获得新whole day plan时都会清空
@@ -250,6 +251,15 @@ class GPTAgent(EnvElem):
         if self.environment is not None:
             logger.info(f"Agent {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
 
+    def print(self):
+        logger.info(f"{self.name}'s log: \n" +
+                    f"Whole day plan: {self.whole_day_plan}\n" +
+                    f"Hourly plan: {self.hourly_plan}\n" +
+                    f"Plan: {self.plan}\n" +
+                    f"Summary: {self.summary}\n" +
+                    f"Short term memory: {self.short_term_memory}\n" +
+                    f"Long term memory: {self.long_term_memory}\n"
+                    )
 
 
     def available_actions(self):
@@ -300,7 +310,7 @@ class GPTAgent(EnvElem):
 Name: {self.name} (age: {self.age})
 Innate traits: {self.traits}"""
 
-        self.summary=BasicInfo+result1 + result2 + result3
+        self.summary='\n'.join([BasicInfo, result1, result2, result3])
         return self.summary
 
     def plan_in_broad_strokes(self, time: dt):
@@ -749,7 +759,7 @@ Summarize the dialog above.
             # 一点小修改：加上对话的最后几轮作为query
 
             memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in queries],[])).strip()
-            if len(memory_string) > 0:
+            if not memory_string:
                 memory_string = "Empty"
             sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
 
