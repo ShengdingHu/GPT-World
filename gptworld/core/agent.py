@@ -21,6 +21,7 @@ logger = logging.get_logger(__name__)
 
 
 
+
 # print(os.path.exists(INVOICE_PATH))
 
 """
@@ -224,7 +225,7 @@ class GPTAgent(EnvElem):
         prompt_template: str -> a template for prompt
 
         """
-        super().__init__(agent_file=agent_file, environment=environment)
+        super().__init__(agent_file=agent_file, environment=environment,clear_memory=clear_memory)
 
 
         self.age = self.state_dict.get('age', 'unknown')
