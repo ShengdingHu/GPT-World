@@ -1,0 +1,20 @@
+{
+    "traits": "brandnew",
+    "name": "blackboard",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_101",
+    "location": [25, 5],
+    "max_velocity": "0/s",
+    "moving": "false",
+    "status": "off",
+    "memory":
+        [
+            "The Schrodinger Eqation is written on the blackboard, as long as a illustration picture"
+        ],
+    "incoming_observation":
+        [
+        ]
+}
