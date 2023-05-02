@@ -53,7 +53,7 @@ class GPTEnvObject:
         self.name = state_dict['name']
         self.location = state_dict['location']
         self.size = state_dict.get('size', '')
-        self.status = state_dict.get('status', 'idle')
+        self.status = state_dict.get('status', 'here')
         self.eid = state_dict.get('eid', 'e_001')
         self.environment = environment
 

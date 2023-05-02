@@ -851,13 +851,14 @@ Summarize the dialog above.
 
             # Now we are going to detect the reaction details step by step.
             # reaction
-            sPromptReaction=f"How should {self.name} react to the observation(s) answer in one sentence without subjective"
+            sPromptReaction=f"How should {self.name} react to the observation(s) answer in one sentence. "
             sPromptHelper=f"(The reaction maybe initialize dialogues, or move to somewhere)"
             reaction_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReaction, sPromptHelper]))
+            # reaction_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReaction]))
             reaction=reaction_result.split('\n')[0]
             # speech
             sPromptReactionResult=f"The reaction of {self.name} based on information above is {reaction}. "
-            sPromptSpeech=f"Does the content above include the intention of saying something? If yes, directly output what should be said in double quotes. if no, just output 'No'."
+            sPromptSpeech=f"Does this reaction include the intention of saying something? If yes, directly output what should be said in double quotes. if no, just output 'No'."
             speech_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReactionResult, sPromptSpeech]))
             findno=speech_result.find('No'); should_oral=(findno<0 or findno>5)
             oral=speech_result.strip(' "')
