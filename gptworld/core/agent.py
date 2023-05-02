@@ -14,7 +14,7 @@ from gptworld.life_utils.agent_tool import as_tool, Tool
 
 import os
 from gptworld.models.openai_api import chat
-
+from itertools import chain
 import gptworld.utils.logging as logging
 import gptworld.utils.map_editor as map_editor
 logger = logging.get_logger(__name__)
@@ -49,6 +49,7 @@ class EnvElem:
 
         """
         # base system 
+        self.observation = []
         self.agent_file = agent_file
         self.id = os.path.splitext(os.path.basename(self.agent_file))[0]
         new_state_dict = self.load_from_file(agent_file)
@@ -81,7 +82,9 @@ class EnvElem:
         self.pending_observation = []
 
         # current status information
-        self.status = self.state_dict.get('status','idle')
+        self.status = self.state_dict.get('status','here')
+        if len(self.status.strip(''))==0:
+            self.status='here'
         self.status_duration = self.state_dict.get('status_duration',0)
         self.status_start_time = self.state_dict.get('status_start_time',None)
 
@@ -146,6 +149,9 @@ class EnvElem:
         Should return string, or subject predicate object/predicative
         observation has a upper limit
         Agent has a chance to react to old incoming observations for a second time by dropping out short term memory
+
+
+        Observations : list[dict], each item of list is a dict of {observed_entity: "doing something"}
         """
         logger.debug(f"{self.name} is observing and generate short-term memory...")
 
@@ -700,6 +706,7 @@ Summarize the dialog above.
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
+        目前尽量塞主step函数简化变量调用，TODO:后期切成几个子函数方便维护
         """
 
         # 产生observation的条件： following reverie, 所有observation都是主体或客体的状态，所以这一步暂时直接交给环境处理。
@@ -750,15 +757,18 @@ Summarize the dialog above.
             sTime = current_time.strftime("It is %B %d, %Y, %I:%M %p.")
             sStatus= f"{self.name}'s status: {self.status}."
             sObservation = "Observation: " + '\n'.join(self.observation)
-            queries=self.observation
-            if len(self.incoming_interactions)>0:
-                for i,interaction in reversed(self.incoming_interactions):
-                    if i>=2:
-                        break
-                    queries.append(interaction['sender']+':' +interaction['content'])
-            # 一点小修改：加上对话的最后几轮作为query
+            subjects=[ob.split(' is')[0] for ob in self.observation]
 
-            memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in queries],[])).strip()
+            queries_ob=self.observation.copy()
+            queries_sub=[f"What is the {self.name}'s relationship with {sub}?" for sub in subjects]
+            # if len(self.incoming_interactions)>0:
+            #     for i,interaction in reversed(self.incoming_interactions):
+            #         if i>=2:
+            #             break
+            #         queries.append(interaction['sender']+':' +interaction['content'])
+            # # 一点小修改：加上对话的最后几轮作为query
+
+            memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in chain(queries_ob,queries_sub)],[])).strip()
             if not memory_string:
                 memory_string = "Empty"
             sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
@@ -793,83 +803,103 @@ Summarize the dialog above.
 #                         logging.warning(logging.WARNING,'abnormal reaction response: '+result)
 #                     self.end_interaction(current_time)
 
-        if len(self.observation)>0:
-            #
-            sPrompt = f"""
-1. Should {self.name} react to the observation? Say yes or no. 
-If yes, tell me about the reaction, omitting the subjective. For example, say 'eating' instead of '{self.name} eats'.  
-2. Is this reaction about saying something? Say yes or no.  
-If yes, tell me the content being said in double quotes. 
-3. Does this reaction has a specific target? Say yes or no. 
-If yes, tell me the name or how would {self.name} call it. 
-4. Also tell me if this reaction terminates {self.name}'s status, Say yes or no. 
-5. Does this reaction involve {self.name} moving to a new location? Say yes or no. 
-Strictly obeying the Output format, and don't omit answer to any of questions above
-
-```
-1. <Yes/No for being a reaction> : <reaction>
-2. <Yes/No for saying something> : <content being said>
-3. <Yes/No for targeting> : <target name>
-4. <Yes/No for terminating self status> 
-5. <Yes/No for movement>
-```
-"""
-            try_num = 0
-            send_message = '\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt])
-            logger.debug(f"Prompt of {self.name}'s reaction: "+send_message)
-            while try_num < 3:
-                result=chat(send_message)
-                try:
-                    lines=result.split('\n')
-                    if len(lines)<5:
-                        logger.warning('abnormal reaction:'+result)
-                    # line_split=[line.strip().split('$$') for line in lines]
-                    finds=[line.find('Yes') for line in lines]
-                    should_react,reaction=finds[0]>=0,lines[0][finds[0]+4:].strip().strip(':').strip()
-                    should_oral,oral=finds[1]>=0,lines[1][finds[1]+4:].strip().strip(':').strip()
-                    have_target,target=finds[2]>=0,lines[2][finds[2]+4:].strip().strip(':').strip()
-                    terminate=finds[3]>=0
-#                    movement=finds[4]>=0
-                    movement=1
-                    break
-                except IndexError:
-                    logger.debug(f"Generated reaction {result}. Retrying...",)
-                    try_num += 1
-                    should_react = False
-                    pass
-            
-                
+#         if len(self.observation)>0:
+#             #
+#             sPrompt = f"""
+# 1. Should {self.name} react to the observation? Say yes or no.
+# If yes, tell me about the reaction, omitting the subjective. For example, say 'eating' instead of '{self.name} eats'.
+# 2. Is this reaction about saying something? Say yes or no.
+# If yes, tell me the content being said in double quotes.
+# 3. Does this reaction has a specific target? Say yes or no.
+# If yes, tell me the name or how would {self.name} call it.
+# 4. Also tell me if this reaction terminates {self.name}'s status, Say yes or no.
+# 5. Does this reaction involve {self.name} moving to a new location? Say yes or no.
+# Strictly obeying the Output format, and don't omit answer to any of questions above
+#
+# ```
+# 1. <Yes/No for being a reaction> : <reaction>
+# 2. <Yes/No for saying something> : <content being said>
+# 3. <Yes/No for targeting> : <target name>
+# 4. <Yes/No for terminating self status>
+# 5. <Yes/No for movement>
+# ```
+# """
+#             try_num = 0
+#             send_message = '\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt])
+#             logger.debug(f"Prompt of {self.name}'s reaction: "+send_message)
+#             while try_num < 3:
+#                 result=chat(send_message)
+#                 try:
+#                     lines=result.split('\n')
+#                     if len(lines)<5:
+#                         logger.warning('abnormal reaction:'+result)
+#                     # line_split=[line.strip().split('$$') for line in lines]
+#                     finds=[line.find('Yes') for line in lines]
+#                     should_react,reaction=finds[0]>=0,lines[0][finds[0]+4:].strip().strip(':').strip()
+#                     should_oral,oral=finds[1]>=0,lines[1][finds[1]+4:].strip().strip(':').strip()
+#                     have_target,target=finds[2]>=0,lines[2][finds[2]+4:].strip().strip(':').strip()
+#                     terminate=finds[3]>=0
+# #                    movement=finds[4]>=0
+#                     movement=1
+#                     break
+#                 except IndexError:
+#                     logger.debug(f"Generated reaction {result}. Retrying...",)
+#                     try_num += 1
+#                     should_react = False
+#                     pass
 
 
-            # should_react, reaction=line_split[0][1], line_split[0][2].strip(':').strip()
-            # should_oral,oral=line_split[1][1], line_split[1][2].strip(':').strip()
-            # have_target,target=line_split[2][1], line_split[2][2].strip(':').strip()
-            # terminate =line_split[3][1]
+            # Now we are going to detect the reaction details step by step.
+            # reaction
+            sPromptReaction=f"How should {self.name} react to the observation(s) answer in one sentence without subjective"
+            sPromptHelper=f"(The reaction maybe initialize dialogues, or move to somewhere)"
+            reaction_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReaction, sPromptHelper]))
+            reaction=reaction_result.split('\n')[0]
+            # speech
+            sPromptReactionResult=f"The reaction of {self.name} based on information above is {reaction}. "
+            sPromptSpeech=f"Does the content above include the intention of saying something? If yes, directly output what should be said in double quotes. if no, just output 'No'."
+            speech_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReactionResult, sPromptSpeech]))
+            findno=speech_result.find('No'); should_oral=(findno<0 or findno>5)
+            oral=speech_result.strip(' "')
+            # target
+            sPromptTarget=f" Does this reaction has a specific target? If yes, directly output the name or how would {self.name} call it. If no, just output 'No'."
+            target_result = chat(
+                '\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReactionResult, sPromptTarget]))
+            findno = target_result.find('No'); have_target= (findno < 0 or findno > 5)
+            target=target_result.strip()
+            # terminate
+            sPromptTermintate = f"Tell me if this reaction terminates {self.name}'s status, Say yes or no."
+            terminate_result = chat(
+                '\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReactionResult, sPromptTermintate]))
+            findno = terminate_result.find('No'); terminate = (findno < 0 or findno > 5)
+            # movement
+            sPromptMovement = f"Does this reaction involve {self.name} moving to a new location? Say yes or no."
+            movement_result = chat(
+                '\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReactionResult, sPromptMovement]))
+            findno = movement_result.find('No');movement = (findno < 0 or findno > 5)
 
-            if should_react:
-                if should_oral:
-                    reaction_content = reaction+' Also saying: '+oral
-                else:
-                    reaction_content=reaction
-                if not have_target:
-                    target=None
 
-                self.environment.uilogging(self.name, reaction_content)
-                if self.environment is not None:
-                    self.environment.parse_action(self, target, reaction_content)
-                if terminate:
-                    self.plan_in_detail(current_time,reaction=reaction)
-                    next_plan=self.get_next_plan(current_time)
-                    self.status_start_time = current_time
-                    self.status = next_plan['status']
-                    self.status_duration = next_plan['duration']
-                    self.environment.uilogging(f"{self.name}",
-                                               f"status: {self.status}, duration: {self.status_duration}")
-                    # self.status=reaction
-                    # self.status_duration=0
-                    # self.status_start_time=current_time
+            if should_oral:
+                reaction_content = reaction+' Also saying: '+oral
+            else:
+                reaction_content=reaction
+            if not have_target:
+                target=None
 
-                
+            self.environment.uilogging(self.name, reaction_content)
+            if self.environment is not None:
+                self.environment.parse_action(self, target, reaction_content)
+            if terminate:
+                self.plan_in_detail(current_time,reaction=reaction)
+                next_plan=self.get_next_plan(current_time)
+                self.status_start_time = current_time
+                self.status = next_plan['status']
+                self.status_duration = next_plan['duration']
+                self.environment.uilogging(f"{self.name}",
+                                           f"status: {self.status}, duration: {self.status_duration}")
+                self.status=reaction
+                self.status_duration=0
+                self.status_start_time=current_time
             if movement:
                 self.analysis_movement_target(reaction)
 

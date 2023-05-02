@@ -8,7 +8,7 @@ import time
 
 logger = get_logger(__name__)
 
-def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.1,attemps=1) -> str:
+def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.1,attemps=5) -> str:
     if isinstance(context, str):
         context = [{"role": "user", "content": context}]
     attempt=0

@@ -11,14 +11,22 @@
     "status_duration" : 0,
     "status_start_time": null,
     "plan": [],
-    "whole_day_plan": {"April 01 2023": ["She will participate in a debate at 9:00."]},
+    "whole_day_plan": {
+        "April 01 2023": [
+            "Dave will participate in a debate at 9:00.",
+            "The debating is about whether it is proper to execute criminals or not.",
+            "Dave is an opposition debater, disagreeing the justice of death penalty."
+        ]
+    },
     "memory": "Dave_LTM",
     "description":
         [
             "Dave is a 15-year-old student at Town High School.",
             "Dave has a passion for debating",
             "Dave is very persuasive",
-            "Dave like to provide examples in debating"
+            "Dave like to provide examples in debating",
+            "The debaters include Alice, Bob, Carot, Dave, Eve, Fedo.",
+            "Alice, Bob and Carot are affirmative debaters, while Dave, Eve and Fedo are opposition debaters."
         ],
     "incoming_observation":
         [

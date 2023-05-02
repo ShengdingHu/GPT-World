@@ -11,14 +11,22 @@
     "status_duration" : 0,
     "status_start_time": null,
     "plan": [],
-    "whole_day_plan": {"April 01 2023": ["She will participate in a debate at 9:00."]},
+    "whole_day_plan": {
+        "April 01 2023": [
+            "Fedo will participate in a debate at 9:00.",
+            "The debating is about whether it is proper to execute criminals or not.",
+            "Fedo is an opposition debater, disagreeing the justice of death penalty."
+        ]
+    },
     "memory": "Fedo_LTM",
     "description":
         [
             "Fedo is a 15-year-old student at Town High School.",
             "Fedo has a passion for debating",
             "Fedo always draw conclusions",
-            "Fedo majors in social science."
+            "Fedo majors in social science.",
+            "The debaters include Alice, Bob, Carot, Dave, Eve, Fedo.",
+            "Alice, Bob and Carot are affirmative debaters, while Dave, Eve and Fedo are opposition debaters."
         ],
     "incoming_observation":
         [
