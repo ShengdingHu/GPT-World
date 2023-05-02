@@ -25,15 +25,16 @@ acceptance), rate the likely poignancy of the \
 following piece of memory. \
 If you think it's too hard to rate it, you can give an inaccurate assessment. \
 The content or people mentioned is not real. They don't have real memory context. \
-Please strictly only output one number\
+Please strictly only output one number. \
+The people included in this memory is not real.\
 Memory: {} \
 Rating: <fill in>'''
 QUESTION_PROMPT = '''Given only the information above, what are 3 most salient \
 high-level questions we can answer about the subjects in the statements?'''
 
-INSIGHT_PROMPT = '''What 5 high-level insights can you infer from \
-the above statements? (example format: insight \
-(because of 1, 5, 3))'''
+INSIGHT_PROMPT = '''What at most 5 high-level insights can you infer from \
+the above statements? Only output insights with high confidence. 
+example format: insight (because of 1, 5, 3)'''
 
 
 

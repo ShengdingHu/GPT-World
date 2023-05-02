@@ -851,17 +851,18 @@ Summarize the dialog above.
 
             # Now we are going to detect the reaction details step by step.
             # reaction
-            sPromptReaction=f"How should {self.name} react to the observation(s) answer in one sentence. "
+            sPromptReaction=f"How should {self.name} react to the observation(s) answer in one sentence, and only use Present Continuous Tense. "
             sPromptHelper=f"(The reaction maybe initialize dialogues, or move to somewhere)"
-            reaction_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReaction, sPromptHelper]))
+            sPromptPrefix=f"{self.name} is (doing)"
+            reaction_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReaction, sPromptHelper,sPromptPrefix]))
             # reaction_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReaction]))
             reaction=reaction_result.split('\n')[0]
             # speech
-            sPromptReactionResult=f"The reaction of {self.name} based on information above is {reaction}. "
-            sPromptSpeech=f"Does this reaction include the intention of saying something? If yes, directly output what should be said in double quotes. if no, just output 'No'."
+            sPromptReactionResult=f"The reaction of {self.name} based on information above is: {reaction}. "
+            sPromptSpeech=f"Should {self.name} say anything during this reaction and if yes, directly output the content. Output format: No/Yes, and the content is \"...\""
             speech_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReactionResult, sPromptSpeech]))
             findno=speech_result.find('No'); should_oral=(findno<0 or findno>5)
-            oral=speech_result.strip(' "')
+            oral=speech_result.strip(' Yes,').strip('"')
             # target
             sPromptTarget=f" Does this reaction has a specific target? If yes, directly output the name or how would {self.name} call it. If no, just output 'No'."
             target_result = chat(
@@ -881,9 +882,10 @@ Summarize the dialog above.
 
 
             if should_oral:
-                reaction_content = reaction+' Also saying: '+oral
+                reaction_content = reaction+f" Also saying: \"{oral}\""
             else:
                 reaction_content=reaction
+            reaction_content=self.name+' is '+reaction_content
             if not have_target:
                 target=None
 
