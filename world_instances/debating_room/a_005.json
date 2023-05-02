@@ -1,5 +1,5 @@
 {
-    "traits": "Outgoing",
+    "traits": "Internals",
     "name": "Eve",
     "age": 15,
     "eid": "e_001",
@@ -11,7 +11,13 @@
     "status_duration" : 0,
     "status_start_time": null,
     "plan": [],
-    "whole_day_plan": {"April 01 2023": ["She will participate in a debate at 9:00."]},
+    "whole_day_plan": {
+        "April 01 2023": [
+            "Eve will participate in a debate at 9:00.",
+            "The debating is about whether it is proper to execute criminals or not.",
+            "Eve is an opposition debater, disagreeing the justice of death penalty."
+        ]
+    },
     "memory": "Eve_LTM",
     "description":
         [
