@@ -25,7 +25,9 @@
             "Bob has a passion for debating",
             "Bob is very logic",
             "Bob majors in math.",
-            "Bob does not always give long sentences."
+            "Bob does not always give long sentences.",
+            "The debaters include Alice, Bob, Carot, Dave, Eve, Fedo.",
+            "Alice, Bob and Carot are affirmative debaters, while Dave, Eve and Fedo are opposition debaters."
         ],
     "incoming_observation":
         [

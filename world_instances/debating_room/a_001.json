@@ -24,7 +24,9 @@
             "Alice is a 15-year-old student at Town High School.",
             "Alice has a passion for debating",
             "Alice is very persuasive",
-            "Alice like to provide examples in debating"
+            "Alice like to provide examples in debating",
+            "The debaters include Alice, Bob, Carot, Dave, Eve, Fedo.",
+            "Alice, Bob and Carot are affirmative debaters, while Dave, Eve and Fedo are opposition debaters."
         ],
     "incoming_observation":
         [
