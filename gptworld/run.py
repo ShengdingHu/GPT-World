@@ -14,8 +14,9 @@ if __name__ == "__main__":
 
     # copy the files of the world_instance into a temperary runing folder
     import shutil
-    static_dir = f"world_instances/{args.world_instance}/"
-    running_dir = f"world_instances/.{args.world_instance}.running/"
+    root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+    static_dir = f"{root}/world_instances/{args.world_instance}/"
+    running_dir = f"{root}/world_instances/.{args.world_instance}.running/"
     if os.path.exists(running_dir):
         if not args.continue_run:
             ans = input(f"Overwrite existing runing world instance at {running_dir}\nInput Y to continue,  N to abort:")

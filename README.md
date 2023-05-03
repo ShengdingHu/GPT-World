@@ -54,3 +54,32 @@ python gptworld/create_world.py
 ```bash
 export GPTWORLD_LOG_LEVEL=XXX # (XXX can be debug, info, warning ...) to set the logging level
 ```
+
+## Configurations
+Config Pycharm (including script path and environment variables):
+![img.png](img.png)
+or
+```
+source activate python3.8.8
+cd ~/Workspace/GPT-World
+python setup.py develop
+export OPENAI_METHOD=pool
+python gptworld/run.py -W debating_room
+python io/app.py --world_instance debating_room
+```
+
+## Structure
+- docs: generate .html for readers (including instructions and configurations)
+- gptworld: core scripts (core/*.py for agent, object, environment)
+  - invoice.txt: outer directive control
+- world_instances: different scenarios
+  - a_*.json: agents
+  - o_*.json: objects
+  - environment_*.json: environment
+  - embeddings.json: embeddings
+  - LTM.json: long-term memory (short-term memory stored in computing memory)
+  - .*.running: temporary and real-time directory for information updating
+- io: for front-end demonstration (Vite + TypeScript)
+- logs: execution logs
+- legacy
+- unit_test
