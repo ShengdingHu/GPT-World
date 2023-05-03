@@ -26,96 +26,110 @@
             "id": "e_003",
             "location": [
                 [
-                    25,
-                    25
+                    50,
+                    45
                 ],
                 [
-                    95,
-                    65
+                    80,
+                    75
                 ]
             ]
         },
         "e_004": {
-            "name": "Coffee Bar",
+            "name": "Chinese Restaurant",
             "id": "e_004",
             "location": [
                 [
-                    20,
-                    80
+                    70,
+                    60
                 ],
                 [
                     100,
-                    130
+                    90
                 ]
             ]
         },
         "e_005": {
-            "name": "711 Shop",
+            "name": "Coffee Bar",
             "id": "e_005",
             "location": [
                 [
-                    120,
+                    0,
                     30
                 ],
                 [
-                    170,
-                    60
+                    20,
+                    50
                 ]
             ]
         },
         "e_006": {
-            "name": "Trees and Grass Area",
+            "name": "Coffee Bar",
             "id": "e_006",
             "location": [
                 [
-                    20,
-                    0
+                    0,
+                    60
                 ],
                 [
-                    60,
-                    20
+                    20,
+                    80
                 ]
             ]
         },
         "e_007": {
-            "name": "Roads",
+            "name": "711 Shop",
             "id": "e_007",
             "location": [
                 [
-                    100,
-                    0
+                    175,
+                    60
                 ],
                 [
                     200,
-                    150
+                    85
                 ]
             ]
         },
         "e_008": {
-            "name": "House 1",
+            "name": "711 Shop",
             "id": "e_008",
             "location": [
                 [
-                    0,
-                    70
+                    175,
+                    60
                 ],
                 [
-                    50,
-                    100
+                    200,
+                    85
                 ]
             ]
         },
         "e_009": {
-            "name": "House 2",
+            "name": "Green Area",
             "id": "e_009",
             "location": [
                 [
+                    0,
+                    0
+                ],
+                [
                     50,
-                    70
+                    50
+                ]
+            ]
+        },
+        "e_010": {
+            "name": "Green Area",
+            "id": "e_010",
+            "location": [
+                [
+                    50,
+                    0
                 ],
                 [
                     100,
-                    100
+                    50
                 ]
             ]
         }
@@ -125,8 +139,8 @@
             "name": "Table 1",
             "id": "o_001",
             "location": [
-                30,
-                30
+                55,
+                50
             ],
             "engine": "environment",
             "eid": "e_003"
@@ -135,8 +149,8 @@
             "name": "Table 2",
             "id": "o_002",
             "location": [
-                30,
-                50
+                55,
+                60
             ],
             "engine": "environment",
             "eid": "e_003"
@@ -145,8 +159,8 @@
             "name": "Chair 1",
             "id": "o_003",
             "location": [
-                35,
-                35
+                50,
+                52
             ],
             "engine": "environment",
             "eid": "e_003"
@@ -155,8 +169,8 @@
             "name": "Chair 2",
             "id": "o_004",
             "location": [
-                35,
-                55
+                50,
+                58
             ],
             "engine": "environment",
             "eid": "e_003"
@@ -165,8 +179,8 @@
             "name": "Cook",
             "id": "a_001",
             "location": [
-                50,
-                50
+                65,
+                65
             ],
             "eid": "e_003"
         },
@@ -174,175 +188,227 @@
             "name": "Dumplings",
             "id": "o_005",
             "location": [
-                40,
-                40
+                60,
+                55
             ],
             "engine": "object",
             "eid": "e_003"
         },
         "o_006": {
-            "name": "Coffee Machine",
+            "name": "Cook",
             "id": "o_006",
             "location": [
-                30,
-                90
+                80,
+                70
+            ],
+            "engine": "object",
+            "eid": "e_004"
+        },
+        "o_007": {
+            "name": "Table 1",
+            "id": "o_007",
+            "location": [
+                75,
+                65
             ],
             "engine": "environment",
             "eid": "e_004"
+        },
+        "o_008": {
+            "name": "Table 2",
+            "id": "o_008",
+            "location": [
+                75,
+                80
+            ],
+            "engine": "environment",
+            "eid": "e_004"
+        },
+        "o_009": {
+            "name": "Dumplings",
+            "id": "o_009",
+            "location": [
+                85,
+                75
+            ],
+            "engine": "environment",
+            "eid": "e_004"
+        },
+        "o_010": {
+            "name": "Coffee Machine",
+            "id": "o_010",
+            "location": [
+                5,
+                40
+            ],
+            "engine": "object",
+            "eid": "e_005"
         },
         "a_002": {
             "name": "Coffee Staff",
             "id": "a_002",
             "location": [
-                50,
-                100
-            ],
-            "eid": "e_004"
-        },
-        "o_007": {
-            "name": "Stocks",
-            "id": "o_007",
-            "location": [
-                130,
-                40
-            ],
-            "engine": "environment",
-            "eid": "e_005"
-        },
-        "o_008": {
-            "name": "Drinks",
-            "id": "o_008",
-            "location": [
-                150,
-                40
-            ],
-            "engine": "environment",
-            "eid": "e_005"
-        },
-        "o_009": {
-            "name": "Snacks",
-            "id": "o_009",
-            "location": [
-                140,
-                50
-            ],
-            "engine": "environment",
-            "eid": "e_005"
-        },
-        "a_003": {
-            "name": "Salesperson",
-            "id": "a_003",
-            "location": [
-                160,
-                50
+                10,
+                35
             ],
             "eid": "e_005"
-        },
-        "o_010": {
-            "name": "Oak Tree",
-            "id": "o_010",
-            "location": [
-                25,
-                5
-            ],
-            "engine": "environment",
-            "eid": "e_006"
         },
         "o_011": {
-            "name": "Pine Tree",
+            "name": "Coffee Machine",
             "id": "o_011",
             "location": [
-                30,
-                15
+                5,
+                70
             ],
-            "engine": "environment",
+            "engine": "object",
+            "eid": "e_006"
+        },
+        "a_003": {
+            "name": "Coffee Staff",
+            "id": "a_003",
+            "location": [
+                10,
+                75
+            ],
             "eid": "e_006"
         },
         "o_012": {
-            "name": "Daffodil",
+            "name": "Stocks",
             "id": "o_012",
             "location": [
-                40,
+                180,
+                65
+            ],
+            "engine": "environment",
+            "eid": "e_007"
+        },
+        "o_013": {
+            "name": "Drinks",
+            "id": "o_013",
+            "location": [
+                185,
+                70
+            ],
+            "engine": "environment",
+            "eid": "e_007"
+        },
+        "o_014": {
+            "name": "Snacks",
+            "id": "o_014",
+            "location": [
+                190,
+                75
+            ],
+            "engine": "environment",
+            "eid": "e_007"
+        },
+        "a_004": {
+            "name": "John",
+            "id": "a_004",
+            "location": [
+                195,
+                80
+            ],
+            "eid": "e_007"
+        },
+        "o_015": {
+            "name": "Stocks",
+            "id": "o_015",
+            "location": [
+                180,
+                70
+            ],
+            "engine": "environment",
+            "eid": "e_008"
+        },
+        "o_016": {
+            "name": "Coca Cola",
+            "id": "o_016",
+            "location": [
+                185,
+                75
+            ],
+            "engine": "environment",
+            "eid": "e_008"
+        },
+        "o_017": {
+            "name": "Potato Chips",
+            "id": "o_017",
+            "location": [
+                190,
+                80
+            ],
+            "engine": "environment",
+            "eid": "e_008"
+        },
+        "o_018": {
+            "name": "Tree",
+            "id": "o_018",
+            "location": [
+                10,
                 10
             ],
             "engine": "environment",
-            "eid": "e_006"
+            "eid": "e_009"
         },
-        "a_004": {
-            "name": "Grandma",
-            "id": "a_004",
-            "location": [
-                50,
-                5
-            ],
-            "eid": "e_006"
-        },
-        "a_005": {
-            "name": "Grandpa",
-            "id": "a_005",
-            "location": [
-                55,
-                15
-            ],
-            "eid": "e_006"
-        },
-        "o_013": {
-            "name": "Sofa",
-            "id": "o_013",
-            "location": [
-                10,
-                80
-            ],
-            "engine": "environment",
-            "eid": "e_008"
-        },
-        "o_014": {
-            "name": "Bed",
-            "id": "o_014",
+        "o_019": {
+            "name": "Tree",
+            "id": "o_019",
             "location": [
                 20,
-                90
-            ],
-            "engine": "environment",
-            "eid": "e_008"
-        },
-        "o_015": {
-            "name": "Bookshelf",
-            "id": "o_015",
-            "location": [
-                60,
-                80
+                20
             ],
             "engine": "environment",
             "eid": "e_009"
         },
-        "o_016": {
-            "name": "Cooker",
-            "id": "o_016",
-            "location": [
-                70,
-                90
-            ],
-            "engine": "object",
-            "eid": "e_009"
-        },
-        "a_006": {
-            "name": "Bob",
-            "id": "a_006",
+        "o_020": {
+            "name": "Grass",
+            "id": "o_020",
             "location": [
                 30,
                 30
             ],
-            "eid": "e_003"
+            "engine": "environment",
+            "eid": "e_009"
         },
-        "a_007": {
-            "name": "Fido",
-            "id": "a_007",
+        "o_021": {
+            "name": "Flower",
+            "id": "o_021",
             "location": [
-                80,
+                40,
                 40
             ],
-            "eid": "e_003"
+            "engine": "environment",
+            "eid": "e_009"
+        },
+        "a_005": {
+            "name": "Old Man",
+            "id": "a_005",
+            "location": [
+                15,
+                15
+            ],
+            "eid": "e_009"
+        },
+        "o_022": {
+            "name": "Tree 1",
+            "id": "o_022",
+            "location": [
+                60,
+                10
+            ],
+            "engine": "environment",
+            "eid": "e_010"
+        },
+        "o_023": {
+            "name": "Tree 2",
+            "id": "o_023",
+            "location": [
+                70,
+                20
+            ],
+            "engine": "environment",
+            "eid": "e_010"
         }
     }
 }
