@@ -769,7 +769,8 @@ Summarize the dialog above.
             #         queries.append(interaction['sender']+':' +interaction['content'])
             # # 一点小修改：加上对话的最后几轮作为query
 
-            memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in chain(queries_ob,queries_sub)],[])).strip()
+            # memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in chain(queries_ob,queries_sub)],[])).strip()
+            memory_string = ' '.join(self.long_term_memory.query(queries_ob+queries_sub,len(queries_ob)*4,current_time)).strip()
             if not memory_string:
                 memory_string = "Empty"
             sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
@@ -863,7 +864,8 @@ Summarize the dialog above.
             sPromptSpeech=f"Should {self.name} say anything during this reaction and if yes, directly output the content. Output format: No/Yes, and the content is \"...\""
             speech_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReactionResult, sPromptSpeech]))
             findno=speech_result.find('No'); should_oral=(findno<0 or findno>5)
-            oral=speech_result.strip(' Yes,').strip('"')
+            maybe_oral=re.findall(r'\"([^\"]*)\"',speech_result)
+            oral=maybe_oral[0] if len(maybe_oral)>0 else ""
             # target
             sPromptTarget=f" Does this reaction has a specific target? If yes, directly output the name or how would {self.name} call it. If no, just output 'No'."
             target_result = chat(

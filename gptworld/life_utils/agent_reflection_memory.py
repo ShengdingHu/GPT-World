@@ -3,13 +3,12 @@
 import openai
 import dataclasses
 import orjson
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 import numpy as np
 import os
 from datetime import datetime
 import re
 from sklearn.metrics.pairwise import cosine_similarity
-import logging
 import bisect
 from gptworld.models.openai_api import get_embedding, chat
 import gptworld.utils.logging as logging
@@ -283,15 +282,19 @@ class ReflectionMemory():
         """
         return self.query(text, k, datetime.now())
 
-    def query(self, text: str, k: int, curtime: datetime, ) -> List[Any]:
+    def query(self, text: Union[str,List[str]], k: int, curtime: datetime, nms_threshold = 1) -> List[Any]:
         """
         get topk entry based on recency, relevance, importance, immediacy
         The query result can be Short-term or Long-term queried result.
         formula is
-        $$score= sim(q,v) *max(LTM\_score, STM\_score) $$
+        $$ score= sim(q,v) *max(LTM\_score, STM\_score) $$
         $$ STM\_score=time\_score(createTime)*immediacy $$
         $$ LTM\_score=time\_score(accessTime)*importance $$
         time score is exponential decay weight. stm decays faster.
+
+        The query supports querying based on multiple texts and only gives non-overlapping results
+        If nms_threshold is not 1, nms mechanism if activated. By default, use soft nms.
+
 
         Args:
             text: str
@@ -299,41 +302,62 @@ class ReflectionMemory():
 
         Returns: List[str]
         """
+        assert(len(text)>0)
+        texts=[text] if isinstance(text,str) else text
+        maximum_score=None
+        for text in texts:
+            embedding = get_embedding(text)
 
-        embedding = get_embedding(text)
+            accesstimediff = np.array([(curtime - a).total_seconds() // 60 for a in self.data.accessTime])
+            createtimediff = np.array([(curtime - a).total_seconds() // 60 for a in self.data.createTime])
 
-        accesstimediff = np.array([(curtime - a).total_seconds() // 60 for a in self.data.accessTime])
-        createtimediff = np.array([(curtime - a).total_seconds() // 60 for a in self.data.createTime])
-
-        recency = np.power(0.99, accesstimediff)
-        instant = np.power(0.90, createtimediff)
+            recency = np.power(0.99, accesstimediff)
+            instant = np.power(0.90, createtimediff)
 
 
-        if len(self.data.embeddings) == 0:
-            return []
+            if len(self.data.embeddings) == 0:
+                return []
 
-        relevance = cosine_similarity(np.array(embedding)[np.newaxis, :], self.data.embeddings)[0]
+            relevance = cosine_similarity(np.array(embedding)[np.newaxis, :], self.data.embeddings)[0]
 
-        importance = self.data.importance / 10
-        immediacy=self.data.immediacy/10
+            importance = self.data.importance / 10
+            immediacy=self.data.immediacy/10
 
-        ltm_w=recency*importance
-        stm_w=instant*immediacy
-        score = relevance*np.maximum(ltm_w,stm_w)
+            ltm_w=recency*importance
+            stm_w=instant*immediacy
+            score = relevance*np.maximum(ltm_w,stm_w)
+            if maximum_score is not None:
+                maximum_score=np.maximum(score,maximum_score)
+            else:
+                maximum_score=score
 
-        top_k_indices = np.argsort(score)[-k:][::-1]
-        # access them
+        if nms_threshold==1:
+            # no nms is triggered
+            top_k_indices = np.argsort(maximum_score)[-k:][::-1]
+        else:
+            # TODO: soft-nms
+            pass
+
+        # access them and refresh the access time
         for i in top_k_indices:
             self.data.accessTime[i] = curtime
-
-        return [self.data.texts[i] for i in top_k_indices]
+        # sort them in time periods. if the data tag is 'observation', ad time info output.
+        top_k_indices=sorted(top_k_indices,key=lambda k:self.data.createTime[k])
+        query_results=[]
+        for i in top_k_indices:
+            query_result=self.data.texts[i]
+            if 'observation' in self.data.tags[i]:
+                query_result+='   This observation happens at {}.'.format(str(self.data.createTime[i]))
+            query_results.append(query_result)
+        return query_results
 
     def reflection(self, time: datetime):
         # initiate a reflection that inserts high level knowledge to memory
         # self.sort_data_by_createtime()
         mem_of_interest = self.data.texts[-100:]
         questions = get_questions(mem_of_interest)
-        statements = sum([self.query(q, 10, time) for q in questions], [])
+        # statements = sum([self.query(q, 10, time) for q in questions], [])
+        statements = self.query(questions,len(questions)*10,time)
         insights = get_insights(statements)
         self.uilogging(self.name, f"Insights: {insights}")
         for insight in insights:
