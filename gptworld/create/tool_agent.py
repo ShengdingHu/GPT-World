@@ -1,10 +1,8 @@
 from typing import List
-from .tool import Tool
+from gptworld.create.tool import Tool
 import re
 import json
 import copy
-import tiktoken
-
 
 # The color for intermediate result
 RESET = "\033[0m"        # reset color output
@@ -14,38 +12,44 @@ RED = "\033[31m"         # Red text
 BOLD = "\033[1m"         # Bold text
 BLUE = "\033[34m"        # Blue text
 
-
+# Maximum number of tokens of context for language model call
 MAX_SHORT_TERM_MEMORY = 3500
 
 
 class ToolAgent:
     """ Simple Implementation of Tool-using Agent with Chain of Thought 
     """
-    def __init__(self, llm:callable, tools:List[Tool], prompt_template:str, task:str):
+    def __init__(self, llm:callable, tokenizer:callable, tools:List[Tool], prompt_template:str, task:str, action_boundary:List[int]):
             """ Intialize an agent.
             llm callable: a function which could call llm and return response
+            tokenizer: callable, a function to tokenize natural language into tokens, should return a list of integers
             tools List[Tool]: a list of Tool
             prompt_template str: a template for prompt, it should contain the following 3 keywords: {tool_names_and_descriptions}, {tool_names}, {agent_playground}, {task}
             """
             self.llm = llm # caller for large language model
+            self.tokenizer = tokenizer
             self.tools = tools # a List of Tool
             self.iterations = 0 # number of iterations to now # TODO: relation with frame?
             self.prompt_template = prompt_template # template of promot, defined by user  # TODO: load from where?
             self.task = task # final task
+            self.action_boundary = action_boundary
+
             self.finish = False # if finish the task / answer the question
             self.final_answer = "" # final answer (if applicable)
             self.tool_map = {} # a mapping from action name to action Tool object
             self.tool_names = [] # a list of tool names
 
+            # register tools
             for tool in self.tools:
                 self.tool_names.append(tool.tool_name)
                 self.tool_map[tool.tool_name] = tool
 
-            self.tool_names_and_descriptions = "\n".join([tool.tool_name+" - "+tool.tool_description for tool in self.tools]) # tool names and desctiptions
-
-            print('='*20)
-            print(self.tool_names_and_descriptions)
-            print('='*20)
+            # tool names and desctiptions
+            self.tool_names_and_descriptions = "\n".join([tool.tool_name+" - "+tool.tool_description for tool in self.tools]) 
+            
+            # print('='*20)
+            # print(self.tool_names_and_descriptions)
+            # print('='*20)
 
             self.history = [] # a list of history thoughts, actions, action_inputs, obeservations,...
             self.exception_count = 0 # count the number of exceptions
@@ -54,18 +58,18 @@ class ToolAgent:
     def compose(self):
         """ Compose the context feed to large language model in this step (with trucation to avoid overflow of total tokens)
         """
-        # first truncation
-        tokenizer = tiktoken.get_encoding("cl100k_base")
+        # Firstly, truncate
 
         # count system prompt length
         formatted_prompt = self.prompt_template.format(
             tool_names_and_descriptions=self.tool_names_and_descriptions, 
             tool_names=f"[{', '.join(self.tool_names)}]", 
             task=self.task, 
-            agent_playground=""
+            action_boundary=self.action_boundary,
+            agent_playground="",
         )
         
-        num_tokens_system = len(tokenizer.encode(formatted_prompt))
+        num_tokens_system = len(self.tokenizer(formatted_prompt))
         available_tokens_for_agent_playground = MAX_SHORT_TERM_MEMORY - num_tokens_system
 
         # reverse self.history
@@ -76,9 +80,8 @@ class ToolAgent:
         agent_playground = []
         num_tokens = 0
         for message in history_copy:
-            length_message = len(tokenizer.encode(message))
-            if (num_tokens + length_message + 4) <= available_tokens_for_agent_playground:
-                num_tokens += 4
+            length_message = len(self.tokenizer(message))
+            if (num_tokens + length_message) <= available_tokens_for_agent_playground:
                 num_tokens += length_message
                 agent_playground.append(message)
 
@@ -90,6 +93,7 @@ class ToolAgent:
             tool_names_and_descriptions=self.tool_names_and_descriptions, 
             tool_names=f"[{', '.join(self.tool_names)}]", 
             task=self.task, 
+            action_boundary=self.action_boundary,
             agent_playground="".join(agent_playground)
         )
         
@@ -111,8 +115,10 @@ class ToolAgent:
         while (not no_exception) and (num_trial < 3):
             num_trial += 1
 
-            # generate response 
-            response = self.llm(formatted_prompt)
+            # Generate response 
+            # This stop token is of vital importance, if removed, this model will have hallucination.
+            response = self.llm(formatted_prompt, stop=["Observation:"]) 
+            
             if response == "":
                 continue
 

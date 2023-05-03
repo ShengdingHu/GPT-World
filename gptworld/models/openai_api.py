@@ -8,7 +8,7 @@ import time
 
 logger = get_logger(__name__)
 
-def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.1,attemps=5) -> str:
+def chat(context, MAX_OUTPUT_TOKEN_LEN=1024, temperature=0.1, attemps=5, stop=None) -> str:
     if isinstance(context, str):
         context = [{"role": "user", "content": context}]
     attempt=0
@@ -23,6 +23,7 @@ def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.1,attemps=5) -> str:
                     "messages": context,
                     "max_tokens": MAX_OUTPUT_TOKEN_LEN,
                     "temperature": temperature,
+                    "stop": stop
                 }
 
                 jsondata = json.dumps(data)
@@ -95,3 +96,4 @@ def get_embedding(text: str,attempts=3) -> List[float]:
 if __name__ == "__main__":
     print(get_embedding("hello world"))
     print(chat([{"role": "user", "content": "hello!"}]))
+    print(chat([{"role": "user", "content": "hello!"}], stop=["!"]))
