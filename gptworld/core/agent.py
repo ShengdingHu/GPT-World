@@ -631,12 +631,13 @@ Summarize the dialog above.
                 Give me the id of the movement target (with out `id` prefix).
                 """.format(json.dumps(objects), target_description)
 
-        self.target_id = None
-        while self.target_id != 'ERROR' and self.target_id not in objects:
+        self.target_id = 'ERROR'
+        RETRY_LIMIT = 3
+        for tid in range(RETRY_LIMIT):
             self.target_id = chat(prompt)
-
             self.environment.uilogging(self.name, ">>>>>>> target prompt: {}".format(target_description))
             self.environment.uilogging(self.name, ">>>>>>> target id: {}".format(self.target_id))
+            if self.target_id in objects: break
 
     def find_movement(self):
         target_id = self.target_id
