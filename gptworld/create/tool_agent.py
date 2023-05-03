@@ -117,31 +117,12 @@ class ToolAgent:
 
             # Generate response 
             # This stop token is of vital importance, if removed, this model will have hallucination.
-            response = self.llm(formatted_prompt, stop=["Observation:"]) 
+            response = self.llm(formatted_prompt, stop=["Observation:"], temperature=0.5) 
             
             if response == "":
                 continue
 
             print(f"Thought: {response}")
-            
-            if "Final Answer" in response: # in case the final answer is obtained
-                print(f"{BLUE}{BOLD}Task finished!{RESET}")
-                response += "\n"
-                self.finish = True
-                self.final_answer = response
-                self.history.append(response)
-                
-                # extract the final answer
-                pattern = r'Final Answer: (.+?)\n'
-                match = re.search(pattern, response)
-                if match:
-                    action_content = match.group(1)
-                    print(f"{BLUE}{BOLD}Final Answer: {action_content}{RESET}")
-                    self.final_answer = action_content
-                else:
-                    print(f"{RED}{BOLD}Error: cannot find Final Answer{RESET}")
-
-                return
 
             # extract the Action
             pattern = r'Action: (.+?)\n'

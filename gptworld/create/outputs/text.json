@@ -1,0 +1,151 @@
+{
+    "name": "root",
+    "current_time": "2023-04-01T07:00:00",
+    "id": "e_001",
+    "size": [
+        "800",
+        "1000"
+    ],
+    "areas": {
+        "e_002": {
+            "name": "Raven Slaughterhouse",
+            "id": "e_002",
+            "location": [
+                [
+                    100,
+                    200
+                ],
+                [
+                    600,
+                    800
+                ]
+            ]
+        },
+        "e_003": {
+            "name": "Torture Chamber",
+            "id": "e_003",
+            "location": [
+                [
+                    250,
+                    350
+                ],
+                [
+                    380,
+                    480
+                ]
+            ]
+        },
+        "e_004": {
+            "name": "Gangster Hideout",
+            "id": "e_004",
+            "location": [
+                [
+                    350,
+                    250
+                ],
+                [
+                    450,
+                    350
+                ]
+            ]
+        }
+    },
+    "objects": {
+        "o_001": {
+            "name": "Weapon Rack",
+            "id": "o_001",
+            "location": [
+                150,
+                250
+            ],
+            "engine": "environment",
+            "eid": "e_002"
+        },
+        "o_002": {
+            "name": "Chains",
+            "id": "o_002",
+            "location": [
+                280,
+                380
+            ],
+            "engine": "environment",
+            "eid": "e_003"
+        },
+        "o_003": {
+            "name": "Hooks",
+            "id": "o_003",
+            "location": [
+                310,
+                390
+            ],
+            "engine": "environment",
+            "eid": "e_003"
+        },
+        "a_001": {
+            "name": "Torturer",
+            "id": "a_001",
+            "location": [
+                270,
+                420
+            ],
+            "eid": "e_003"
+        },
+        "o_004": {
+            "name": "Dead Body",
+            "id": "o_004",
+            "location": [
+                300,
+                350
+            ],
+            "engine": "environment",
+            "eid": "e_003"
+        },
+        "a_002": {
+            "name": "Gangster 1",
+            "id": "a_002",
+            "location": [
+                200,
+                400
+            ],
+            "eid": "e_002"
+        },
+        "o_005": {
+            "name": "Secret Entrance",
+            "id": "o_005",
+            "location": [
+                350,
+                250
+            ],
+            "engine": "object",
+            "eid": "e_004"
+        },
+        "o_006": {
+            "name": "Secret Exit",
+            "id": "o_006",
+            "location": [
+                450,
+                350
+            ],
+            "engine": "object",
+            "eid": "e_004"
+        },
+        "a_003": {
+            "name": "Gang Member 1",
+            "id": "a_003",
+            "location": [
+                375,
+                275
+            ],
+            "eid": "e_004"
+        },
+        "a_004": {
+            "name": "Gang Member 2",
+            "id": "a_004",
+            "location": [
+                400,
+                300
+            ],
+            "eid": "e_004"
+        }
+    }
+}

@@ -3,7 +3,8 @@ The environment contains three part.
 The first part is area. such as a living home, a reading room, a kitchen, etc. 
 The second part is object, like an apple tree, a car, etc. 
 The third part is agent, such as a person, a cat, a dog, a policeman, etc. 
-Now you are expected to configure them one by one, if you need to build an area with fine-grained work, you could assign a job to your assistant.
+Now you are expected to configure them one by one.
+If you need to build some areas with fine-grained work, you could assign sub tasks to your assistant. You can assign mulitple sub tasks, so your work will be of high quality.
 
 Your action boundary is [top, left, bottom, right] = {action_boundary}, all locations (integers) you use could not overflow this boundary.
 
