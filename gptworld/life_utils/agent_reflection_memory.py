@@ -24,9 +24,17 @@ extremely poignant (e.g., a break up, college \
 acceptance), rate the likely poignancy of the \
 following piece of memory. \
 If you think it's too hard to rate it, you can give an inaccurate assessment. \
-The content or people mentioned is not real. They don't have real memory context. \
+The content or people mentioned is not real. You can hypothesis any reasonable context. \
 Please strictly only output one number. \
-The people included in this memory is not real.\
+Memory: {} \
+Rating: <fill in>'''
+IMMEDIACY_PROMPT = '''On the scale of 1 to 10, where 1 is requiring no short time attention\
+(e.g., a bed is in the room) and 10 is \
+needing quick attention or immediate response(e.g., being required a reply by others), rate the likely immediacy of the \
+following statement. \
+If you think it's too hard to rate it, you can give an inaccurate assessment. \
+The content or people mentioned is not real. You can hypothesis any reasonable context. \
+Please strictly only output one number. \
 Memory: {} \
 Rating: <fill in>'''
 QUESTION_PROMPT = '''Given only the information above, what are 3 most salient \
@@ -52,15 +60,20 @@ def get_importance(text):
         score = 0
     return score
 
+def get_immediacy(text):
+    prompt = IMMEDIACY_PROMPT.format(text)
+    result = chat(prompt)
+    try:
+        score = int(re.findall(r'\s*(\d+)\s*', result)[0])
+    except:
+        logger.warning(
+                    'Abnormal result of immediacy rating \'{}\'. Setting default value'.format(result))
+        score = 0
+    return score
+
 
 def get_questions(texts):
     prompt = '\n'.join(texts) + '\n' + QUESTION_PROMPT
-    # completion = openai.ChatCompletion.create(
-    #     model="gpt-3.5-turbo",
-    #     messages=[
-    #         {"role": "user", "content": prompt}
-    #     ]
-    # )
     result = chat(prompt)
     questions = [q for q in result.split('\n') if len(q.strip())>0]
     questions=questions[:3]
@@ -87,6 +100,8 @@ def create_default_embeddings():
 def create_default_importance():
     return np.zeros((0)).astype(np.int32)
 
+def create_default_immediacy():
+    return np.zeros((0)).astype(np.int32)
 
 @dataclasses.dataclass
 class CacheContent:
@@ -102,6 +117,8 @@ class CacheContent:
     accessTime: List[datetime] = dataclasses.field(default_factory=list)
     # importance rating given by asking LLM
     importance: np.ndarray = dataclasses.field(default_factory=create_default_importance)
+    # immediacy rating given by asking LLM
+    immediacy: np.ndarray = dataclasses.field(default_factory=create_default_immediacy)
     # Tags, other attributes for memory
     tags: List[List[str]] = dataclasses.field(default_factory=list)
 
@@ -162,7 +179,13 @@ class ReflectionMemory():
                 ],
                 axis=0,
             )
-
+            self.data.immediacy = np.concatenate(
+                [
+                    self.data.immediacy,
+                    np.array(jsondata.immediacy).astype(np.int32)
+                ],
+                axis=0,
+            )
             self.data.embeddings = np.concatenate(
                 [
                     self.data.embeddings,
@@ -217,6 +240,15 @@ class ReflectionMemory():
             ],
             axis=0,
         )
+        immediacy= np.array(get_immediacy(text))[np.newaxis]
+        self.data.immediacy = np.concatenate(
+            [
+                self.data.immediacy[:insert_point],
+                immediacy,
+                self.data.immediacy[insert_point:],
+            ],
+            axis=0,
+        )
         self.data.createTime.insert(insert_point,time)
         self.data.accessTime.insert(insert_point,time)
         self.data.tags.insert(insert_point,tag)
@@ -249,13 +281,17 @@ class ReflectionMemory():
         Gets the data from the memory that is most relevant to the given data.
 
         """
-        return self.query(text, k, datetime.now(), weights=[0, 1, 0])
+        return self.query(text, k, datetime.now())
 
-    def query(self, text: str, k: int, curtime: datetime, weights=[1., 1., 1.]) -> List[Any]:
+    def query(self, text: str, k: int, curtime: datetime, ) -> List[Any]:
         """
-        get topk entry based on recency, relevance and importance
-        weights can be changed.
-
+        get topk entry based on recency, relevance, importance, immediacy
+        The query result can be Short-term or Long-term queried result.
+        formula is
+        $$score= sim(q,v) *max(LTM\_score, STM\_score) $$
+        $$ STM\_score=time\_score(createTime)*immediacy $$
+        $$ LTM\_score=time\_score(accessTime)*importance $$
+        time score is exponential decay weight. stm decays faster.
 
         Args:
             text: str
@@ -263,20 +299,27 @@ class ReflectionMemory():
 
         Returns: List[str]
         """
+
         embedding = get_embedding(text)
 
-        timediff = np.array([(curtime - a).total_seconds() // 3600 for a in self.data.accessTime])
-        recency = np.power(0.99, timediff)
-        # logging.info(self.data.embeddings)
-        # logging.info(np.array(embedding)[np.newaxis, :])
+        accesstimediff = np.array([(curtime - a).total_seconds() // 60 for a in self.data.accessTime])
+        createtimediff = np.array([(curtime - a).total_seconds() // 60 for a in self.data.createTime])
+
+        recency = np.power(0.99, accesstimediff)
+        instant = np.power(0.90, createtimediff)
+
 
         if len(self.data.embeddings) == 0:
             return []
 
         relevance = cosine_similarity(np.array(embedding)[np.newaxis, :], self.data.embeddings)[0]
-        importance = self.data.importance / 10
 
-        score = recency * weights[0] + importance * weights[1] + relevance * weights[2]
+        importance = self.data.importance / 10
+        immediacy=self.data.immediacy/10
+
+        ltm_w=recency*importance
+        stm_w=instant*immediacy
+        score = relevance*np.maximum(ltm_w,stm_w)
 
         top_k_indices = np.argsort(score)[-k:][::-1]
         # access them
@@ -290,7 +333,7 @@ class ReflectionMemory():
         # self.sort_data_by_createtime()
         mem_of_interest = self.data.texts[-100:]
         questions = get_questions(mem_of_interest)
-        statements = sum([self.query(q, 5, time) for q in questions], [])
+        statements = sum([self.query(q, 10, time) for q in questions], [])
         insights = get_insights(statements)
         self.uilogging(self.name, f"Insights: {insights}")
         for insight in insights:
