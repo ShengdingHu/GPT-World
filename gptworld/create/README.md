@@ -5,7 +5,7 @@ This is an Chain-of-Thought Tool Learning implementation of automatic environmen
 ## Example Use
 
 ```sh
-python main.py 'Create Raven Slaughterhouse in GTA5. It is a gangster base, which is extremly dangerous. There are multiple rooms and various weapons. There are butchers and armed guards. Unleash your imagination. Add more details. Fine Grained.'
+python main.py 'Create a neighborhood with some Chinese restaurants (with a cook, tables, chairs, delicious foods), and coffee bar (coffee machine, coffee staff), 711 shop (stocks, drinks, snacks, etc), trees, grass area (with flower, old people, etc), roads (with some cars, bikes), multiple houses (includes some furniture, like sofa, bed, bookshelf, cooker, etc), all above should be areas, each task could be a subtask, assign the jobs with lots of details, no overlapping areas. Add some people and animals and plants, evenly distributed. Expect more unexpcted details.'
 ```
 
 ## Example Output

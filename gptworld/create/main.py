@@ -23,7 +23,7 @@ result = {
     "name": "root",
     "current_time": "2023-04-01T07:00:00",
     "id": "e_001",
-    "size": ["800", "1000"],
+    "size": ["200", "150"],
     "areas": [],
     "objects": [],
 }
@@ -52,7 +52,9 @@ def create_sub_task(task: str, action_boundary: List[int]):
 
 @as_tool("add_area")
 def add_area(name: str, area_boundary: List[int]) -> str:
-    """ This API allows you to add an object to the environment.
+    """ This API allows you to add an object to the environment. 
+    Note that new area could not overlap with existing areas, so pay attention to the area_boundary.
+    The areas should be evenly distributed with proper size, don't be too small or too large.
     Input:
         name: str: the name of area, like 'Alice's home'
         area_boundary: [top:int, left: int, bottom: int, right: int], the boundary of this area
@@ -85,7 +87,6 @@ def find_eid(c:List[int]):
             return k["id"]
     return ""
 
-
 @as_tool("add_object")
 def add_object(name: str, location: List[int], engine: str, memory: List[str]) -> str:
     """ This API allows you to add an object to the environment.
@@ -114,7 +115,7 @@ def add_object(name: str, location: List[int], engine: str, memory: List[str]) -
 def add_agent(name: str, location: List[int], memory: List[str]) -> str:
     """ This API allows you to add an agent to the environment.
     Input:
-        name: str: the name of agent, like 'Bob'
+        name: str: the name of agent, like 'Bob', it is suggested to name every agent rather than call he/she/it using a code.
         location: [x: int, y: int]: the location of this agent
         memory: List[str]: memory of this agent, like ["I have a family of 5", "I am 30 years old", "My name is Bob", ...]
     """
@@ -155,7 +156,7 @@ if __name__ == "__main__":
         tools=root_tools, 
         prompt_template=ROOT_PROMPT, 
         task=task,
-        action_boundary=[0, 0, 800, 1000]
+        action_boundary=[0, 0, 200, 150]
     )
 
     # Run the agent
@@ -172,6 +173,7 @@ if __name__ == "__main__":
     result["areas"] = areas_dict
 
     json_str = json.dumps(result, indent=4)
-    with open('./outputs/text.json', 'w') as f:
+    with open('./outputs/environment.json', 'w') as f:
         f.write(json_str)
 
+    
