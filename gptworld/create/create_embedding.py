@@ -48,3 +48,7 @@ for i in objects.keys():
 
 with open("./outputs/embeddings.json", "w") as f:
     json.dump(embedding_map, f)
+
+
+
+

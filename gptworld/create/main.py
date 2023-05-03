@@ -146,6 +146,39 @@ root_tools = [add_area, add_object, add_agent, create_sub_task, submit_job]
 child_tools = [add_area, add_object, add_agent, submit_job]
 
 
+def create_world(task: str, size: List[int]=[200, 150], max_step: int=20, output_path: str=""):
+    world_width = size[0]
+    world_height = size[1]
+    
+    # Create an agent to finish the user's request
+    agent = ToolAgent(llm=llm, 
+        tokenizer=tokenizer, 
+        tools=root_tools, 
+        prompt_template=ROOT_PROMPT, 
+        task=task,
+        action_boundary=[0, 0, world_width, world_height]
+    )
+    
+    # Run the agent
+    agent.multiple_actions(max_step=max_step)
+    
+    # Convert result["objects"] and result["areas"] into Dict[str, Dict]
+    objects_dict = {}
+    areas_dict = {}
+    for i in result["objects"]:
+        objects_dict[i["id"]] = i
+    for i in result["areas"]:
+        areas_dict[i["id"]] = i
+    result["objects"] = objects_dict
+    result["areas"] = areas_dict
+    
+    json_str = json.dumps(result, indent=4)
+    with open(output_path, 'w') as f:
+        f.write(json_str)
+    
+    
+
+
 if __name__ == "__main__":
     # Get user's request
     task = sys.argv[1] 
