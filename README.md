@@ -34,7 +34,7 @@ Take `alice_home` as an example.
 
 1. start the world engine
 ```
-python gptworld/app.py -W alice_home
+python gptworld/run.py -W alice_home
 ```
 
 2. start the web server

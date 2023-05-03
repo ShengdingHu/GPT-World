@@ -2,7 +2,7 @@ import inspect
 
 
 class Tool:
-    """ bmapi Tool class: all function will be encapulated into Tool object 
+    """ Tool class: all function will be encapulated into Tool object 
     for convenience of all.
     This class is callable, when called, it will execute the corresponding function.
     """
