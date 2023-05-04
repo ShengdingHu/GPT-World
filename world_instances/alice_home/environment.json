@@ -6,6 +6,7 @@
         200,
         150
     ],
+    "time_delta": 60,
     "areas": {
         "e_002": {
             "location": [

@@ -129,12 +129,13 @@ class ReflectionMemory():
     reflection_threshold: the threshold for deciding whether to do reflection
 
     """
+    default_thres = 100
 
     def __init__(self, state_dict, file_dir='./', uilogging=None,clear_memory=False) -> None:
         # the least importance threshold for reflection. It seems that setting it to 0 does not induce duplicate reflections
         self.name = state_dict['name']
         self.uilogging = uilogging
-        self.reflection_threshold = state_dict.get( 'reflection_threshold', 0)
+        self.reflection_threshold = state_dict.get( 'reflection_threshold', self.default_thres)
 
         # memory_ids
         self.memory_id = state_dict.get('memory', state_dict['name']+'_LTM')
@@ -282,7 +283,7 @@ class ReflectionMemory():
         """
         return self.query(text, k, datetime.now())
 
-    def query(self, text: Union[str,List[str]], k: int, curtime: datetime, nms_threshold = 1) -> List[Any]:
+    def query(self, text: Union[str,List[str]], k: int, curtime: datetime, nms_threshold = 0.99) -> List[Any]:
         """
         get topk entry based on recency, relevance, importance, immediacy
         The query result can be Short-term or Long-term queried result.
@@ -293,7 +294,9 @@ class ReflectionMemory():
         time score is exponential decay weight. stm decays faster.
 
         The query supports querying based on multiple texts and only gives non-overlapping results
-        If nms_threshold is not 1, nms mechanism if activated. By default, use soft nms.
+        If nms_threshold is not 1, nms mechanism if activated. By default,
+        use soft nms with modified iou base(score starts to decay iff cos sim is higher than this value,
+         and decay weight at this value if 0. rather than 1-threshold).
 
 
         Args:
@@ -308,7 +311,7 @@ class ReflectionMemory():
         for text in texts:
             embedding = get_embedding(text)
 
-            accesstimediff = np.array([(curtime - a).total_seconds() // 60 for a in self.data.accessTime])
+            accesstimediff = np.array([(curtime - a).total_seconds() // 3600 for a in self.data.accessTime])
             createtimediff = np.array([(curtime - a).total_seconds() // 60 for a in self.data.createTime])
 
             recency = np.power(0.99, accesstimediff)
@@ -336,7 +339,17 @@ class ReflectionMemory():
             top_k_indices = np.argsort(maximum_score)[-k:][::-1]
         else:
             # TODO: soft-nms
-            pass
+            assert(nms_threshold<1 and nms_threshold>=0)
+            top_k_indices=[]
+            while len(top_k_indices)<min(k,len(self.data.texts)):
+                top_index=np.argmax(maximum_score)
+                top_k_indices.append(top_index)
+                maximum_score[top_index]=-1  # anything to prevent being chosen again
+                top_embedding=self.data.embeddings[top_index]
+                cos_sim=cosine_similarity(np.array(top_embedding)[np.newaxis, :], self.data.embeddings)[0]
+                score_weight=np.ones_like(maximum_score)
+                score_weight[cos_sim>=nms_threshold]-=(cos_sim[cos_sim>=nms_threshold]-nms_threshold)/(1-nms_threshold)
+                maximum_score=maximum_score*score_weight
 
         # access them and refresh the access time
         for i in top_k_indices:
@@ -375,6 +388,7 @@ class ReflectionMemory():
 
     def maybe_reflect(self, time: datetime):
         if not self.should_reflect():
+            logger.debug(f"Doesn't reflect since accumulated_importance={self.accumulated_importance} < reflection_threshold={self.reflection_threshold}")
             return 'reflection reject: prevent duplicate reflecting result'
         if self.data.texts.__len__()==0:
             return 'reflection reject: no memory'

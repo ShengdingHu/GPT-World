@@ -1,6 +1,7 @@
 import os
 import json
-
+import gptworld.utils.logging as logging
+logger = logging.get_logger(__name__)
 
 # # The color for intermediate result
 RESET = "\033[0m"  # reset color output
@@ -23,9 +24,9 @@ class UILogging:
         and a file for web demo.
         """
         output_string = f"{domain}|{message}"
-        
+
         with open(self.log_path, 'a') as f:
             f.write(output_string + '\n')
-
-        print(f"{RED}{domain}: {RESET}{message}")
+        
+        logger.info(f"{RED}{domain}: {RESET}{message}")
         
