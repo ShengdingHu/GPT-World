@@ -14,7 +14,7 @@ def chat(context, MAX_OUTPUT_TOKEN_LEN=1024, temperature=0.1, attemps=5, stop=No
     attempt=0
     while attempt<attemps:
         try:
-            if os.environ['OPENAI_METHOD'] == "pool":
+            if True:
                 url = "http://freegpt.club/gptworld_chat"
                 headers={"Content-Type":"application/json"}
                 session = requests.Session()
@@ -65,7 +65,7 @@ def get_embedding(text: str,attempts=3) -> List[float]:
     attempt=0
     while attempt<attempts:
         try:
-            if os.environ['OPENAI_METHOD'] == "pool":
+            if True:
                 url = "http://freegpt.club/gptworld_embedding"
                 headers={"Content-Type":"application/json"}
                 session = requests.Session()

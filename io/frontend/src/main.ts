@@ -10,9 +10,6 @@ const API_ROOT = "http://localhost:5001";
 // for deployment
 // const API_ROOT = "";
 
-// the ratio betweem game height and width
-const HEIGHT_WIDTH_RATIO = 3 / 4;
-
 // I. UI Logging Implementation
 const messagesElement = document.getElementById('messages')!;
 
@@ -179,12 +176,12 @@ class GameScene extends Scene {
     this.gridGraphics.lineStyle(5, 0xEEE8CD, 1.0); 
 
     // add a border for the whole world
-    this.gridGraphics.strokeRect(
-      ORIGIN_X - this.squareSize / 2 - 4,
-      ORIGIN_Y - this.squareSize / 2 - 4,
-      this.mydata.size[0] * this.squareSize + 8,
-      this.mydata.size[1] * this.squareSize + 8
-    );
+    // this.gridGraphics.strokeRect(
+    //   ORIGIN_X - this.squareSize / 2 - 4,
+    //   ORIGIN_Y - this.squareSize / 2 - 4,
+    //   this.mydata.size[0] * this.squareSize + 8,
+    //   this.mydata.size[1] * this.squareSize + 8
+    // );
     
     // render all areas (no further updates)
     let areas_key = Object.keys(this.mydata.areas)
@@ -192,7 +189,7 @@ class GameScene extends Scene {
       let area_key = areas_key[i]
       let area = this.mydata.areas[area_key];
 
-      const x = ORIGIN_X - this.squareSize /2 + this.squareSize * (area.location[0][0] -1);
+      const x = ORIGIN_X - this.squareSize / 2 + this.squareSize * (area.location[0][0] -1);
       const y = ORIGIN_Y - this.squareSize / 2+ this.squareSize * (area.location[0][1] -1);
       const width = (area.location[1][0] - area.location[0][0] + 1)* this.squareSize;
       const height = (area.location[1][1] - area.location[0][1] + 1 )* this.squareSize;
@@ -208,8 +205,8 @@ class GameScene extends Scene {
 
       // Add the text in the middle of the strokeRect, with the text value of area.name
       this.add.text(
-        100 - this.squareSize /2 + this.squareSize * (area.location[0][0] -1) + ((area.location[1][0] - area.location[0][0] )* this.squareSize)/2,
-        100 - this.squareSize / 2+ this.squareSize * (area.location[0][1] -1) + ((area.location[1][1] - area.location[0][1] )* this.squareSize)/2,
+        ORIGIN_X - this.squareSize / 2 + this.squareSize * (area.location[0][0] -1) + ((area.location[1][0] - area.location[0][0] )* this.squareSize)/2,
+        ORIGIN_Y - this.squareSize / 2+ this.squareSize * (area.location[0][1] -1) + ((area.location[1][1] - area.location[0][1] )* this.squareSize)/2,
         area.name,
         {
           font: '15px Arial',
@@ -230,8 +227,10 @@ class GameScene extends Scene {
     for (let i=0; i < objects_key.length; i++){
       let object_key = objects_key[i]
       let obj = this.mydata.objects[object_key];
-      let obj_x = obj.location[0] + this.mydata.areas[obj.eid].location[0][0]
-      let obj_y = obj.location[1] + this.mydata.areas[obj.eid].location[0][1]
+      let obj_x = obj.location[0]// + this.mydata.areas[obj.eid].location[0][0]
+      let obj_y = obj.location[1]// + this.mydata.areas[obj.eid].location[0][1]
+
+      console.log(obj.name);
 
       // Check if the object already exists in the scene
       let existingObj = this.children.getByName(obj.id);
@@ -255,7 +254,7 @@ class GameScene extends Scene {
         ) as ObjectSprite;
 
         // control the size of sprites in the scene
-        newObj.setScale(this.squareSize / 40);
+        newObj.setScale(this.squareSize / 60);
         newObj.setName(object_key);
         newObj.display_name = obj.name;
 
@@ -272,15 +271,16 @@ class GameScene extends Scene {
   }
 
   async create() {
-    resize_canvas();
 
     // load environment json and tile at start (blocking function call)
+
+    resize_canvas();
+
     await this.load_file();
     await this.load_tile();
     this.lastTime = 0.0;
     this.create_scene();
     this.place_objects();
-
   }
 
   // Use the update() function to update the square's locationition every 1 second to the left
@@ -298,6 +298,8 @@ class GameScene extends Scene {
 
 const config = {
   type: WEBGL,
+  // width: '100px',
+  // height: '100px',
   zoom:Phaser.AUTO,
   canvas,
   physics: {
@@ -312,16 +314,19 @@ const config = {
 
 function resize_canvas() {
   // resize the canvas according to current window size
-  const width = Math.max(window.innerWidth * 0.7);
-  const height = Math.max(window.innerWidth * HEIGHT_WIDTH_RATIO * 0.7);
-  canvas.style.width = width + 'px';
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  canvas.style.width = width * 0.7 + 'px';
   canvas.style.height = height + 'px';
+  return [width, height]
 }
+
+new Game(config);
 
 // resize the game object as windows resize
 window.addEventListener('resize', function () {
   resize_canvas();
 });
 
-new Game(config);
+
 
