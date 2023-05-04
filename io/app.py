@@ -38,7 +38,9 @@ ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", f".{args.world_inst
 
 if not os.path.exists(ENV_PATH):
     if os.path.exists(os.path.join(f"{PARENT_DIR}/../world_instances/", args.world_instance)):
-        raise RuntimeError(f"Found static files of world: {args.world_instance}, but it has been copied into the running folder. Please start the engine by running `python gptworld/run.py -W {args.world_instance}` first.")
+        # raise RuntimeError(f"Found static files of world: {args.world_instance}, but it has been copied into the running folder. Please start the engine by running `python gptworld/run.py -W {args.world_instance}` first.")
+        print("Warning: You are under static viewing mode, the world instance is frozen.")
+        ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", f"{args.world_instance}")
     else:
         raise RuntimeError(f"No world instance named {args.world_instance} has been found.")
 

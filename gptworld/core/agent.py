@@ -69,8 +69,6 @@ class EnvElem:
         self.max_velocity = self.state_dict.get("max_velocity", 1)
 
         # interaction
-        self.incoming_interactions = [{"sender": "A", "message": "XXX"}]
-        self.incomming_objection = []
         self.incoming_invoice = []  # empty str represents no invoice, later can be changed to list
 
         # 记录当前对话历史，不止包括别人说的，也包括自己说的
@@ -79,12 +77,14 @@ class EnvElem:
         # 记录下一轮需要处理的新observation
         # self.observation进行过去重，incoming_observation没有去重
         self.incoming_observation = state_dict.get('incoming_observation',[])
-        self.pending_observation = []
+        self.pending_observation = []  # active observation will first go here, then go to incomming observation
+        self.background_observation = []  # passive observation will go here
 
         # current status information
-        self.status = self.state_dict.get('status','here')
+        self.default_status = "none"
+        self.status = self.state_dict.get('status', self.default_status)
         if len(self.status.strip(''))==0:
-            self.status='here'
+            self.status = self.default_status
         self.status_duration = self.state_dict.get('status_duration',0)
         self.status_start_time = self.state_dict.get('status_start_time',None)
 
@@ -159,23 +159,24 @@ class EnvElem:
             import math; limit=math.inf
         
         if self.environment is not None:
-            self.incoming_observation.extend(self.environment.get_neighbor_environment(self.id))
+            self.background_observation.extend(self.environment.get_neighbor_environment(self.id))
+        
+        prompt = "" # TODO: add observation summarization?
 
         # dropout
         import random;r=[random.random() for _ in range(len(self.short_term_memory))]
         self.short_term_memory=[s for i,s in enumerate(self.short_term_memory) if r[i]>dropout]
 
-        self.observation = []
-        while len(self.incoming_observation)>0 and len(self.observation)<limit:
-            ob=self.incoming_observation[0]
-            self.incoming_observation.pop(0)
+        
+        for ob in self.incoming_observation:
             if ob not in self.short_term_memory:
-                self.observation.append(ob)
                 self.short_term_memory=[s for s in self.short_term_memory if not s.split('is')[0] == ob.split('is')[0]]
                 self.short_term_memory.append(ob)
                 # observation在这里不能直接拉进记忆，否则query出来的全是observation，没有意义
                 # 在reaction判定结束以后再拉近记忆比较好。
-        self.environment.uilogging(self.name, f"short-term memory: {self.short_term_memory}")
+        # logger.info(self.name + f"short-term memory: {self.short_term_memory}")
+
+        self.observation = self.incoming_observation + self.background_observation
         return self.observation
     
     def reflect(self,time:datetime):
@@ -186,9 +187,12 @@ class EnvElem:
     
     def add_observation(self, observation):
         self.pending_observation.append(observation)
+    
+    def sync(self, current_time):
+        self._move_pending_observation_or_invoice()
+
 
     def _move_pending_observation_or_invoice(self):
-        
         if len(self.incoming_invoice) > 0:
             self.incoming_observation.append(self.incoming_invoice[0])
             self.incoming_invoice.pop(0)
@@ -483,7 +487,7 @@ Example format:
             task=entry[2].strip()
             new_plans.append({'start_time':start_time,'end_time':end_time,'task':task})
         
-        self.environment.uilogging(self.name, "Plan: " + json.dumps(new_plans))
+        logger.info(self.name + "Plan: " + json.dumps(new_plans))
         self.plan=[entry for entry in self.plan if dt.strptime(entry['end_time'],'%Y-%m-%d %H:%M:%S')<=minimum_time]
         self.plan.extend(new_plans)
         return new_plans[0]
@@ -627,15 +631,17 @@ Summarize the dialog above.
                 objects and agents that you might be your target. 
                 List: {}
                 You target movement is : {}
-                Give me the id of the movement target (with out `id` prefix).
+                Give me the id of the movement target (with out `id` prefix). 
+                Note that you can only give ONE movement target.
                 """.format(json.dumps(objects), target_description)
 
-        self.target_id = None
-        while self.target_id != 'ERROR' and self.target_id not in objects: # TBD: deadlock
+        self.target_id = 'ERROR'
+        RETRY_LIMIT = 3
+        for tid in range(RETRY_LIMIT):
             self.target_id = chat(prompt)
-
             self.environment.uilogging(self.name, ">>>>>>> target prompt: {}".format(target_description))
             self.environment.uilogging(self.name, ">>>>>>> target id: {}".format(self.target_id))
+            if self.target_id in objects: break
 
     def find_movement(self):
         target_id = self.target_id
@@ -702,6 +708,45 @@ Summarize the dialog above.
 #        self.environment.uilogging(self.name, ">>> std next step!!!: {}".format(self.get_area_location(next_step)))
 
         return self.get_area_location(next_step)
+    
+    def act(self, description=None, target=None):
+        if description is None:
+            return
+        if target is None:
+            reaction_content = f"{self.name} performs action: '{description}'."
+        else:
+            reaction_content = f"{self.name} performs action to {target}: '{description}'."
+        self.reaction_content += reaction_content
+        logger.info(reaction_content)
+        self.environment.parse_action(self, target, reaction_content)
+        
+
+    def say(self, description, target=None):
+        if description is None:
+            return
+        if target is None:
+            reaction_content = f"{self.name} says: '{description}'."
+        else:
+            reaction_content = f"{self.name} says to {target}: '{description}'."
+        self.reaction_content += reaction_content
+        logger.info(reaction_content)
+        self.environment.parse_action(self, target, reaction_content)
+
+
+    def move(self, description):
+        if description is None:
+            self.movement=False
+        else:
+            self.movement=True
+            self.movement_description = description
+    
+    def change_status(self, change):
+        if change==True:
+            self.terminate=True
+        else:
+            self.terminate=False
+            
+
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
@@ -712,7 +757,7 @@ Summarize the dialog above.
         # 一类特殊状态，observation of interaction在对话结束给出摘要时才可以确定，此前不能被环境获取。reverie如何在对话开始时生成一个完整对话暂时没看明白
         # short time observation 应该屏蔽掉同主体同状态防止冗余
 
-        logger.info("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
+        logger.debug("Agent {}, Time: {}, {}, {}".format(self.state_dict['name'], str(current_time), self.status_start_time, datetime.timedelta(self.status_duration)))
         
         # # 测试异步
         # if self.state_dict['name'].startswith("A"):
@@ -723,17 +768,15 @@ Summarize the dialog above.
         self.minimal_init(current_time)
 
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
-
-
-
         # 0. If incoming_invoice is available, process it with the highest priority
     
         # 1. 如果当前正在向openai请求，调过这一步
         # if not self.incoming_invoice:  # Only move the pending observation without any incoming invoice
-        self._move_pending_observation_or_invoice()
+        # self._move_pending_observation_or_invoice()
         # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
         if self.status_start_time is None: # fixing empty start time
             self.status_start_time = current_time
+
         if self.status_start_time+datetime.timedelta(self.status_duration) <= current_time:
             # 根据reverie，不产生新观察
             # 对话过程不会随便转状态，因此把对话duration直接设置无限
@@ -748,18 +791,22 @@ Summarize the dialog above.
         #    这里假定环境的observation是完整的，查重任务交给short time memory
         #    当前设计思路 interaction不做特殊处理，防止阻塞自身和他人动作，同时支持多人讨论等场景。
         self.observe()
-        might_react=len(self.incoming_interactions)>0 or len(self.observation)>0
+        might_react=len(self.incoming_observation)>0 or len(self.background_observation)>0
         if might_react:
             self.reflect(current_time)
 
             sSummary = self.summary
-            sTime = current_time.strftime("It is %B %d, %Y, %I:%M %p.")
+            sTime = current_time.strftime("%B %d, %Y, %I:%M %p.")
             sStatus= f"{self.name}'s status: {self.status}."
-            sObservation = "Observation: " + '\n'.join(self.observation)
+            observation_string = '\n'.join(self.observation) if len(self.observation) > 0 else "none"
+            sObservation = f"Observation: {observation_string}"
+
             subjects=[ob.split(' is')[0] for ob in self.observation]
 
-            queries_ob=self.observation.copy()
+            queries_ob = self.observation.copy()
             queries_sub=[f"What is the {self.name}'s relationship with {sub}?" for sub in subjects]
+
+            logger.debug("queries_sub {}".format(queries_sub))
             # if len(self.incoming_interactions)>0:
             #     for i,interaction in reversed(self.incoming_interactions):
             #         if i>=2:
@@ -767,143 +814,91 @@ Summarize the dialog above.
             #         queries.append(interaction['sender']+':' +interaction['content'])
             # # 一点小修改：加上对话的最后几轮作为query
 
-            memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in chain(queries_ob,queries_sub)],[])).strip()
+            # memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in chain(queries_ob,queries_sub)],[])).strip()
+            memory_string = ' '.join(self.long_term_memory.query(queries_ob+queries_sub,len(queries_ob)*4,current_time)).strip()
             if not memory_string:
                 memory_string = "Empty"
             sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
 
-#         if len(self.incoming_interactions)>0:
-#             # is currently in an conversation
-#
-#             # firstly, check whether the agent is becoming the target of interaction. If yes, change its status accordintly.
-#             if (self.incoming_interactions)==1:
-#                 self.status = 'conversing with '+self.incoming_interactions[0]['sender']
-#                 self.status_start_time = current_time
-#                 import math; self.status_duration=math.inf
-#
-#             # next, check if the other agent didn't response. If so, end the interaction.
-#             if self.incoming_interactions[-1]['sender']==self.name:
-#                 self.end_interaction(current_time)
-#
-#             else:
-#                 sDialog ='Here is the dialogue history:'+'\n'.join([interaction['sender']+':' +interaction['content'] for interaction in self.incoming_interactions])
-#                 sPrompt =f"""\
-# Would {self.name} respond or stop the conversation? If yes, directly output the response. Example output:
-# Yes. <response content>
-# No.
-#                 """
-#                 result=chat(''.join([sSummary,sTime,sStatus,sObservation,sContext,sDialog,sPrompt]))
-#                 if result.startwith('Yes'):
-#                     content= '.'.join(result.split('.')[1:]).strip().split('\n')[0]
-#                     new_interaction={'sender':self.name,'content':content}
-#                     self.incoming_interactions.append(new_interaction)
-#                 else:
-#                     if not result.startwith('No'):
-#                         logging.warning(logging.WARNING,'abnormal reaction response: '+result)
-#                     self.end_interaction(current_time)
 
-#         if len(self.observation)>0:
-#             #
-#             sPrompt = f"""
-# 1. Should {self.name} react to the observation? Say yes or no.
-# If yes, tell me about the reaction, omitting the subjective. For example, say 'eating' instead of '{self.name} eats'.
-# 2. Is this reaction about saying something? Say yes or no.
-# If yes, tell me the content being said in double quotes.
-# 3. Does this reaction has a specific target? Say yes or no.
-# If yes, tell me the name or how would {self.name} call it.
-# 4. Also tell me if this reaction terminates {self.name}'s status, Say yes or no.
-# 5. Does this reaction involve {self.name} moving to a new location? Say yes or no.
-# Strictly obeying the Output format, and don't omit answer to any of questions above
-#
-# ```
-# 1. <Yes/No for being a reaction> : <reaction>
-# 2. <Yes/No for saying something> : <content being said>
-# 3. <Yes/No for targeting> : <target name>
-# 4. <Yes/No for terminating self status>
-# 5. <Yes/No for movement>
-# ```
-# """
-#             try_num = 0
-#             send_message = '\n'.join([sSummary,sTime,sStatus,sObservation,sContext,sPrompt])
-#             logger.debug(f"Prompt of {self.name}'s reaction: "+send_message)
-#             while try_num < 3:
-#                 result=chat(send_message)
-#                 try:
-#                     lines=result.split('\n')
-#                     if len(lines)<5:
-#                         logger.warning('abnormal reaction:'+result)
-#                     # line_split=[line.strip().split('$$') for line in lines]
-#                     finds=[line.find('Yes') for line in lines]
-#                     should_react,reaction=finds[0]>=0,lines[0][finds[0]+4:].strip().strip(':').strip()
-#                     should_oral,oral=finds[1]>=0,lines[1][finds[1]+4:].strip().strip(':').strip()
-#                     have_target,target=finds[2]>=0,lines[2][finds[2]+4:].strip().strip(':').strip()
-#                     terminate=finds[3]>=0
-# #                    movement=finds[4]>=0
-#                     movement=1
-#                     break
-#                 except IndexError:
-#                     logger.debug(f"Generated reaction {result}. Retrying...",)
-#                     try_num += 1
-#                     should_react = False
-#                     pass
+            query_sources = {}
+            query_sources['name'] = self.name
+            query_sources['summary'] = sSummary # 论文
+            query_sources['time'] = sTime
+            query_sources['status'] = sStatus
+            query_sources['observation'] = sObservation
+            query_sources['context'] = sContext # 长期记忆
+            query_sources['background_observation'] = self.background_observation
 
+            reaction_prompt_template = """Now you are performing actions as an agent named {name} in a virtual world. Your mission to take the agent as yourself and directly provide what the agent will do based on the following information:\n(1) The agent's description: {summary}\n (2) Current time is {time}\n(3) Your current status is {status}\n (4) Some incoming observation is {observation}\n (5) Some background observation is {background_observation}. \nIn terms of how you actually perform the action in the virtual world, you take action for the agent by calling functions. Currently, there are the following functions that can be called.\n- act(description, target=None): do some action. `description` describes the action, set `description` to None for not act. `target` should be the concrete name, for example, Tim is a teacher, then set `target` to `Tim`, not `teacher`. \n- say(content, target=None): say something,`content` is the sentence that the agent will say.\n- move(description): move to somewhere. `description` describes the movement, set description to None for not move .\n- change_status(bool): whether to change the agent's current status, True for change, False for not change. \n\nSome actions may not be needed in this situation. Call one function at a time, please give a thought before calling these actions, i.e., use the following format strictly:
+            
 
-            # Now we are going to detect the reaction details step by step.
-            # reaction
-            sPromptReaction=f"How should {self.name} react to the observation(s) answer in one sentence, and only use Present Continuous Tense. "
-            sPromptHelper=f"(The reaction maybe initialize dialogues, or move to somewhere)"
-            sPromptPrefix=f"{self.name} is (doing)"
-            reaction_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReaction, sPromptHelper, sPromptPrefix]))
-            # reaction_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReaction]))
-            reaction=reaction_result.split('\n')[0]
-            # speech
-            sPromptReactionResult=f"The reaction of {self.name} based on information above is: {reaction}. "
-            sPromptSpeech=f"Should {self.name} say anything during this reaction and if yes, directly output the content. Output format: No/Yes, and the content is \"...\""
-            speech_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReactionResult, sPromptSpeech]))
-            findno=speech_result.find('No'); should_oral=(findno<0 or findno>5)
-            oral=speech_result.strip(' Yes,').strip('"')
-            # target
-            sPromptTarget=f" Does this reaction has a specific target? If yes, directly output the name or how would {self.name} call it. If no, just output 'No'."
-            target_result = chat(
-                '\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReactionResult, sPromptTarget]))
-            findno = target_result.find('No'); have_target= (findno < 0 or findno > 5)
-            target=target_result.strip()
-            # terminate
-            sPromptTermintate = f"Tell me if this reaction terminates {self.name}'s status, Say yes or no."
-            terminate_result = chat(
-                '\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReactionResult, sPromptTermintate]))
-            findno = terminate_result.find('No'); terminate = (findno < 0 or findno > 5)
-            # movement
-            sPromptMovement = f"Does this reaction involve {self.name} moving to a new location? Say yes or no."
-            movement_result = chat(
-                '\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReactionResult, sPromptMovement]))
-            findno = movement_result.find('No');movement = (findno < 0 or findno > 5)
+Thought: Since, ..., I might need to say something.
+Action: say("hello", target="Alice")
+Observation:
+Thought: Since, ..., I don't need to do action.
+Action: act(None)
+Observation:
+Thought: Since, ..., I don't need move to anywhere.
+Action: move(None)
+Observation:
+Thought: I think the current status: sleeping  does not need to be changed.
+Action: change_status(False)
+Observation:
+Thought: I think I've finished my action as the agent. 
+Action: end()
+Observation:
 
+Now begin your actions as the agent. **Important: If a function has been called previously, it CANNOT be called anymore, instead, end() should be called.** 
+"""
 
-            if should_oral:
-                reaction_content = reaction+f" Also saying: \"{oral}\""
-            else:
-                reaction_content=reaction
-            reaction_content=self.name+' is '+reaction_content
-            if not have_target:
-                target=None
+            end = False
+            count = 0
+            reaction_prompt = reaction_prompt_template.format(**query_sources)
+            self.reaction_content = ""
+            self.terminate = False
+            self.movement = False
+            
+            while not end and count < 2:
+                reaction_result = chat(reaction_prompt, stop=["Observation:"])
+                match = re.search(r'Action:\s*(.*)', reaction_result)
+                if match:
+                    content = match.group(1)
+                    logger.debug(f"Reaction output: {match}")
+                    # eval(content)
+                    # print(content)
+                else:
+                    print('No match found.')
+                
+                if 'say(' in content:
+                    eval("self."+content.strip())
+                elif 'act(' in content:
+                    eval("self."+content.strip())
+                elif 'move(' in content:
+                    eval("self."+content.strip())
+                elif 'change_status(' in content:
+                    eval("self."+content.strip())
+                elif 'end(' in content:
+                    end = True
+                count += 1
+                reaction_prompt += reaction_result + "Observation: [Omitted for short]\n"
 
-            self.environment.uilogging(self.name, reaction_content)
-            if self.environment is not None:
-                self.environment.parse_action(self, target, reaction_content)
-            if terminate:
-                self.plan_in_detail(current_time,reaction=reaction)
+            self.environment.uilogging(self.name, self.reaction_content)
+
+            if self.terminate:
+                self.plan_in_detail(current_time, reaction = self.reaction_content)
                 next_plan=self.get_next_plan(current_time)
                 self.status_start_time = current_time
                 self.status = next_plan['status']
                 self.status_duration = next_plan['duration']
                 self.environment.uilogging(f"{self.name}",
                                            f"status: {self.status}, duration: {self.status_duration}")
-                self.status=reaction
+                self.status=self.reaction_content
                 self.status_duration=0
                 self.status_start_time=current_time
-            if movement:
-                self.analysis_movement_target(reaction)
+
+            if self.movement:
+                self.analysis_movement_target(self.movement_description)
 
         # 3.5 observation拉入记忆
         for ob in self.observation:
@@ -920,9 +915,9 @@ Summarize the dialog above.
 
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
-
+        
         next_step, next_area = self.find_movement()
-        print(self.name, "MOVING!!! position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
+        logger.debug(self.name + "position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
         if next_step != None: map_editor.move_agent(self, next_step, next_area)
 
         return

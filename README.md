@@ -28,6 +28,32 @@ This project is for academic and experimental purposes only. We currently suspec
 
 ## Usage
 
+### Install
+
+Download this library by
+
+```sh
+git clone https://github.com/ShengdingHu/GPT-World.git
+```
+
+or download zip file.
+
+Then go to library directory.
+
+It is suggested to use `python=3.8` on all platforms.
+
+First install dependencies by
+
+```sh
+pip install -r requirements.txt
+```
+
+Then install this library by
+
+```sh
+pip install .
+```
+
 ### Run examples
 We currently provide some example sandboxes in  `world_instances/`, choose one that you want to launch.
 Take `alice_home` as an example.
@@ -39,7 +65,7 @@ python gptworld/run.py -W alice_home
 
 2. start the web server
 ```
-python io/app.py --world_instance alice_home
+python io/app.py -W alice_home
 ```
 now open the 5001 port of your localhost, and you will be able to see a simple environment.
 
