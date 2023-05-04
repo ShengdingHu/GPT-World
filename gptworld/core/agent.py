@@ -229,9 +229,8 @@ class GPTAgent(EnvElem):
         llm: callable -> a function which could call llm and return response
         tools: List[Tool] -> a list of Tool
         prompt_template: str -> a template for prompt
-
         """
-        super().__init__(agent_file=agent_file, environment=environment,clear_memory=clear_memory)
+        super().__init__(agent_file=agent_file, environment=environment, clear_memory=clear_memory)
 
 
         self.age = self.state_dict.get('age', 'unknown')
@@ -632,7 +631,7 @@ Summarize the dialog above.
                 """.format(json.dumps(objects), target_description)
 
         self.target_id = None
-        while self.target_id != 'ERROR' and self.target_id not in objects:
+        while self.target_id != 'ERROR' and self.target_id not in objects: # TBD: deadlock
             self.target_id = chat(prompt)
 
             self.environment.uilogging(self.name, ">>>>>>> target prompt: {}".format(target_description))
@@ -854,7 +853,7 @@ Summarize the dialog above.
             sPromptReaction=f"How should {self.name} react to the observation(s) answer in one sentence, and only use Present Continuous Tense. "
             sPromptHelper=f"(The reaction maybe initialize dialogues, or move to somewhere)"
             sPromptPrefix=f"{self.name} is (doing)"
-            reaction_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReaction, sPromptHelper,sPromptPrefix]))
+            reaction_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReaction, sPromptHelper, sPromptPrefix]))
             # reaction_result=chat('\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPromptReaction]))
             reaction=reaction_result.split('\n')[0]
             # speech

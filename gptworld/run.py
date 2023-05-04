@@ -2,13 +2,13 @@ import argparse
 from gptworld.core.environment import GPTWorldEnv
 import os
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--debug', action='store_true', help='If enabled, we will not use thread, so that debug becomes easier.')
-    parser.add_argument('--world_instance',"-W", type=str, required=True, help='The path of the world instance (in world_instances/)')
-    parser.add_argument('--continue_run', '-C', action='store_true', help='start from the initial state of the environment, or continue to run from with an existing .world_instance.running directory. ') 
+    parser.add_argument('--world_instance', "-W", type=str, required=True, help='The path of the world instance (in world_instances/)')
+    parser.add_argument('--continue_run', '-C', action='store_true', help='start from the initial state of the environment, or continue to run from with an existing .world_instance.running directory. ')
     # clear_memory may be legacy?
-    parser.add_argument('--clear_memory',action='store_true', help='Clear the old memory file before starting environment to prevent conflicting memory') 
+    parser.add_argument('--clear_memory', action='store_true', help='Clear the old memory file before starting environment to prevent conflicting memory')
 
     args = parser.parse_args()
 
@@ -29,7 +29,23 @@ if __name__ == "__main__":
         shutil.copytree(static_dir, running_dir)
 
     # Create an instance of the environment
-    env = GPTWorldEnv.from_file(running_dir,clear_memory=args.clear_memory)
+    env = GPTWorldEnv.from_file(running_dir, clear_memory=args.clear_memory)
 
     env.run(debug=args.debug)
 
+if __name__ == "__main__":
+    main()
+
+    # from pycallgraph import PyCallGraph
+    # from pycallgraph.output import GraphvizOutput
+    # from pycallgraph import Config
+    # from pycallgraph import GlobbingFilter
+    # graphviz = GraphvizOutput()
+    # graphviz.output_file = 'pycallgraph2.png'
+    # config = Config()
+    # config.trace_filter = GlobbingFilter(include=[
+    #     '*main*',
+    #     'gptworld.*',
+    # ])
+    # with PyCallGraph(output=graphviz, config=config):
+    #     main()

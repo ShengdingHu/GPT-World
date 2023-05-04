@@ -127,11 +127,14 @@ class GPTWorldEnv:
 
 
     @classmethod
-    def from_file(cls, file_dir, file_name ="environment.json",clear_memory=False):
+    def from_file(cls, file_dir, file_name = "environment.json", clear_memory = False):
+        '''
+            Parse .json file, load agents & objects in self.agents & self.objects
+        '''
         logger.debug(file_dir)
         with open(os.path.join(file_dir, file_name), 'r') as f:
             data = json.load(f)
-        return cls(**{"env_json": data, "file_dir": file_dir,"clear_memory":clear_memory})
+        return cls(**{"env_json": data, "file_dir": file_dir, "clear_memory": clear_memory})
         
       
     def initialize_web(self, ):
@@ -224,7 +227,9 @@ class GPTWorldEnv:
         return environment
 
     def load_objects_and_agents(self):
-
+        '''
+            Parse .json file, load agents & objects in self.agents & self.objects
+        '''
         # create_agent
         for obj_id, obj in self.env_json['objects'].items():
             if obj_id.startswith('a'):
@@ -357,6 +362,6 @@ class GPTWorldEnv:
         self.current_time = start_time
         while True:
             time.sleep(realworld_time_delta)
-            self.step(debug=debug)
+            self.step(debug = debug)
             self.current_time += datetime.timedelta(seconds = env_time_delta)
     
