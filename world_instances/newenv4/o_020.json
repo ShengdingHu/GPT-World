@@ -1,0 +1,21 @@
+{
+    "traits": "wooden, square, sturdy",
+    "name": "Table",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_007",
+    "location": [
+        40,
+        30
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "old",
+    "memory": [
+        "I am a table",
+        "I have been in this house for 10 years"
+    ],
+    "incoming_observation": []
+}

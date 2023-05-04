@@ -1,0 +1,22 @@
+{
+    "traits": "crispy, savory, diverse",
+    "name": "Snacks",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_007",
+    "location": [
+        160,
+        40
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "in stock",
+    "memory": [
+        "I am the snacks of 711 shop",
+        "I need to be kept fresh",
+        "I am the perfect companion for movies and games"
+    ],
+    "incoming_observation": []
+}

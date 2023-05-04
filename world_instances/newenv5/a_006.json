@@ -1,0 +1,27 @@
+{
+    "traits": "friendly, kind, intelligent",
+    "name": "Alice",
+    "age": 30,
+    "retention": 8,
+    "eid": "e_007",
+    "location": [
+        85,
+        85
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "happy",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Read a book",
+        "Water the apple trees"
+    ],
+    "memory": "Alice_LTM",
+    "description": [
+        "Alice is a software engineer",
+        "Alice loves reading books",
+        "Alice takes good care of her apple trees"
+    ],
+    "incoming_observation": []
+}

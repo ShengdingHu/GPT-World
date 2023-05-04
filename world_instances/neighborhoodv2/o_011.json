@@ -1,0 +1,22 @@
+{
+    "traits": "crispy, savory",
+    "name": "Stir-fried Vegetables",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_004",
+    "location": [
+        60,
+        60
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "ready to serve",
+    "memory": [
+        "I am a plate of stir-fried vegetables in the Chinese Restaurant",
+        "I have broccoli, carrots, and mushrooms",
+        "I am very savory"
+    ],
+    "incoming_observation": []
+}

@@ -1,0 +1,27 @@
+{
+    "traits": "colorful, graceful, delicate",
+    "name": "Butterfly",
+    "age": 1,
+    "retention": 8,
+    "eid": "e_003",
+    "location": [
+        5,
+        5
+    ],
+    "max_velocity": "2/s",
+    "moving": "false",
+    "status": "flying",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "I want to find nectar",
+        "I want to lay eggs"
+    ],
+    "memory": "Butterfly_LTM",
+    "description": [
+        "Butterfly is a beautiful insect",
+        "Butterfly loves flowers",
+        "Butterfly can fly up to 12 mph"
+    ],
+    "incoming_observation": []
+}

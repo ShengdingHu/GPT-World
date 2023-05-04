@@ -1,0 +1,27 @@
+{
+    "traits": "funny, caring",
+    "name": "Bob",
+    "age": 35,
+    "retention": 8,
+    "eid": "e_003",
+    "location": [
+        20,
+        45
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "relaxed",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Watch TV",
+        "Play with kids"
+    ],
+    "memory": "Bob_LTM",
+    "description": [
+        "Bob is Alice's husband",
+        "He works as a doctor",
+        "He loves spending time with his family"
+    ],
+    "incoming_observation": []
+}

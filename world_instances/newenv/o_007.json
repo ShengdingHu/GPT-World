@@ -1,0 +1,21 @@
+{
+    "traits": "traditional, comfortable, clean",
+    "name": "Tatami Mats",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_009",
+    "location": [
+        5,
+        5
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "new",
+    "memory": [
+        "I am a traditional Japanese mat",
+        "I am made of straw and cloth"
+    ],
+    "incoming_observation": []
+}

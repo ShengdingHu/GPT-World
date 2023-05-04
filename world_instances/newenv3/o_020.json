@@ -1,0 +1,21 @@
+{
+    "traits": "fast, red",
+    "name": "Car 1",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_009",
+    "location": [
+        30,
+        30
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "parked",
+    "memory": [
+        "I am a car",
+        "I am in Restaurant Area"
+    ],
+    "incoming_observation": []
+}

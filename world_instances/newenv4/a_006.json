@@ -1,0 +1,28 @@
+{
+    "traits": "kind, smart, creative",
+    "name": "Alice",
+    "age": 30,
+    "retention": 8,
+    "eid": "e_007",
+    "location": [
+        10,
+        10
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "happy",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Read a book",
+        "Take a nap",
+        "Cook dinner"
+    ],
+    "memory": "Alice_LTM",
+    "description": [
+        "Alice is an artist",
+        "Alice loves to paint and draw",
+        "Alice is single"
+    ],
+    "incoming_observation": []
+}

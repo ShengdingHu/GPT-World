@@ -1,0 +1,20 @@
+{
+    "traits": "large, high-definition, smart",
+    "name": "TV",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_007",
+    "location": [
+        85,
+        85
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "off",
+    "memory": [
+        "I am a smart TV in Alice's home"
+    ],
+    "incoming_observation": []
+}

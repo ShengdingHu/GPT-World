@@ -1,0 +1,22 @@
+{
+    "traits": "soft, white",
+    "name": "Bed",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_006",
+    "location": [
+        20,
+        20
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "made",
+    "memory": [
+        "I am a bed in Alice's home",
+        "I am very soft to sleep on",
+        "I am made of white sheets"
+    ],
+    "incoming_observation": []
+}

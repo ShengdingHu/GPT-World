@@ -1,0 +1,22 @@
+{
+    "traits": "red, foldable",
+    "name": "Bike 2",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_013",
+    "location": [
+        60,
+        28
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "parked",
+    "memory": [
+        "I am a bike",
+        "I can be easily stored",
+        "I am great for commuting"
+    ],
+    "incoming_observation": []
+}

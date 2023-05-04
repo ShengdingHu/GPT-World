@@ -1,0 +1,26 @@
+{
+    "traits": "skilled, creative",
+    "name": "Cook",
+    "age": 40,
+    "retention": 8,
+    "eid": "e_003",
+    "location": [
+        70,
+        20
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "cooking delicious meals",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Prepare sushi",
+        "Cook ramen"
+    ],
+    "memory": "Cook_LTM",
+    "description": [
+        "The cook has worked in Japan for 10 years",
+        "He is famous for his sushi rolls"
+    ],
+    "incoming_observation": []
+}

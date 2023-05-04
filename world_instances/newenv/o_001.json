@@ -1,0 +1,18 @@
+{
+    "traits": "wooden, rectangular",
+    "name": "Table 1",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_008",
+    "location": [
+        2,
+        2
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "clean",
+    "memory": [],
+    "incoming_observation": []
+}

@@ -1,0 +1,21 @@
+{
+    "traits": "wooden, comfortable",
+    "name": "Chair 1",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_005",
+    "location": [
+        62,
+        112
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "clean",
+    "memory": [
+        "I am a wooden chair",
+        "I can sit at Table 1"
+    ],
+    "incoming_observation": []
+}

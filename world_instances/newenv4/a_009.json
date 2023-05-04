@@ -1,0 +1,27 @@
+{
+    "traits": "funny, kind, adventurous",
+    "name": "Alice's Friend",
+    "age": 28,
+    "retention": 8,
+    "eid": "e_008",
+    "location": [
+        125,
+        25
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "visiting Alice",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Hang out with Alice",
+        "Explore the neighborhood"
+    ],
+    "memory": "Alice's Friend_LTM",
+    "description": [
+        "Alice's friend is a funny and kind person who loves to have adventures.",
+        "She is 28 years old and works as a graphic designer.",
+        "She enjoys spending time with Alice and exploring new places."
+    ],
+    "incoming_observation": []
+}
