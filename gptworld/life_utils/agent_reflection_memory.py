@@ -283,7 +283,7 @@ class ReflectionMemory():
         """
         return self.query(text, k, datetime.now())
 
-    def query(self, text: Union[str,List[str]], k: int, curtime: datetime, nms_threshold = 1) -> List[Any]:
+    def query(self, text: Union[str,List[str]], k: int, curtime: datetime, nms_threshold = 0.99) -> List[Any]:
         """
         get topk entry based on recency, relevance, importance, immediacy
         The query result can be Short-term or Long-term queried result.
@@ -294,7 +294,9 @@ class ReflectionMemory():
         time score is exponential decay weight. stm decays faster.
 
         The query supports querying based on multiple texts and only gives non-overlapping results
-        If nms_threshold is not 1, nms mechanism if activated. By default, use soft nms.
+        If nms_threshold is not 1, nms mechanism if activated. By default,
+        use soft nms with modified iou base(score starts to decay iff cos sim is higher than this value,
+         and decay weight at this value if 0. rather than 1-threshold).
 
 
         Args:
@@ -309,7 +311,7 @@ class ReflectionMemory():
         for text in texts:
             embedding = get_embedding(text)
 
-            accesstimediff = np.array([(curtime - a).total_seconds() // 60 for a in self.data.accessTime])
+            accesstimediff = np.array([(curtime - a).total_seconds() // 3600 for a in self.data.accessTime])
             createtimediff = np.array([(curtime - a).total_seconds() // 60 for a in self.data.createTime])
 
             recency = np.power(0.99, accesstimediff)
@@ -337,7 +339,17 @@ class ReflectionMemory():
             top_k_indices = np.argsort(maximum_score)[-k:][::-1]
         else:
             # TODO: soft-nms
-            pass
+            assert(nms_threshold<1 and nms_threshold>=0)
+            top_k_indices=[]
+            while len(top_k_indices)<min(k,len(self.data.texts)):
+                top_index=np.argmax(maximum_score)
+                top_k_indices.append(top_index)
+                maximum_score[top_index]=-1  # anything to prevent being chosen again
+                top_embedding=self.data.embeddings[top_index]
+                cos_sim=cosine_similarity(np.array(top_embedding)[np.newaxis, :], self.data.embeddings)[0]
+                score_weight=np.ones_like(maximum_score)
+                score_weight[cos_sim>=nms_threshold]-=(cos_sim[cos_sim>=nms_threshold]-nms_threshold)/(1-nms_threshold)
+                maximum_score=maximum_score*score_weight
 
         # access them and refresh the access time
         for i in top_k_indices:
