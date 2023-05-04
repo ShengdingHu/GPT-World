@@ -10,7 +10,7 @@ eggs/
 **.egg
 build/
 _build/
-**/build/
+# **/build/
 **/.DS_Store
 
 # dist/
