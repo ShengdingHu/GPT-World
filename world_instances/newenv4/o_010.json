@@ -1,0 +1,21 @@
+{
+    "traits": "wooden, sturdy, comfortable",
+    "name": "Table",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_004",
+    "location": [
+        20,
+        50
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "empty",
+    "memory": [
+        "The table can fit up to 4 people",
+        "It needs to be wiped down after each use"
+    ],
+    "incoming_observation": []
+}

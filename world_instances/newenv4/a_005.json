@@ -1,0 +1,27 @@
+{
+    "traits": "loyal, playful",
+    "name": "Max",
+    "age": 3,
+    "retention": 8,
+    "eid": "e_006",
+    "location": [
+        80,
+        40
+    ],
+    "max_velocity": "2/s",
+    "moving": "false",
+    "status": "happy",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Play with Alice",
+        "Fetch a ball"
+    ],
+    "memory": "Max_LTM",
+    "description": [
+        "Max is a golden retriever",
+        "Max loves his owner Alice",
+        "Max is very active and loves to play"
+    ],
+    "incoming_observation": []
+}

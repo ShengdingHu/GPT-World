@@ -1,0 +1,21 @@
+{
+    "traits": "hot, savory, noodles",
+    "name": "Ramen",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_003",
+    "location": [
+        80,
+        35
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "ready to serve",
+    "memory": [
+        "Ramen is a popular Japanese noodle dish",
+        "Ramen broth can be made from pork, chicken, or seafood"
+    ],
+    "incoming_observation": []
+}

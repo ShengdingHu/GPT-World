@@ -1,0 +1,20 @@
+{
+    "traits": "big, comfortable",
+    "name": "Bed",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_003",
+    "location": [
+        25,
+        20
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "old",
+    "memory": [
+        "I am an old bed in Alice's home"
+    ],
+    "incoming_observation": []
+}

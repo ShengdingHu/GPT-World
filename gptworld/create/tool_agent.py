@@ -1,8 +1,57 @@
 from typing import List
-from gptworld.create.tool import Tool
 import re
 import json
 import copy
+import inspect
+
+
+class Tool:
+    """ All function will be encapulated into Tool object for convenience of all.
+    This class is callable, when called, it will execute the corresponding function.
+    """
+    def __init__(self, func:callable, tool_name:str, tool_description:str="", tool_type:str="normal"):
+        """ Store the function, description, and tool_name in a class to store the information
+        """
+        self.func = func
+        if tool_description == "":
+            self.tool_description = f"{inspect.signature(func)} : {func.__doc__}"
+        else:
+            self.tool_description = tool_description
+        self.tool_name = tool_name
+        self.tool_type = tool_type
+    
+    def __call__(self, *args, **kwargs):
+        """ When the instance called, this method will run
+        """
+        return self.func(*args, **kwargs)
+
+def as_tool(tool_name: str, tool_type: str="normal") -> Tool:
+    """ Convert a function as a tool function, return a callable Tool
+        Usage 1:
+        @as_tool("weather")
+        def get_weather_today(location: str) -> str:
+            ''' get_weather_today(location: str) -> None: get today's weather forcast at given location.
+            '''
+            return "today is sunny!"
+        Will actually yield:
+        tool = Tool(get_weather_today, "weather")
+        which is a callable object, when called, the original function will be called.
+        Usage 2:
+        @as_tool("submit_work", "finish")
+        def submit_file():
+            ''' if you think you have completed the task, call this function to submit your work.
+            '''
+            return "the work has been submitted"
+        You will define this function as a finish tool, after this tool is called, the chain will temrinate.
+    """
+    def decorator(func: callable) -> Tool:
+        """ The original decorator, return wrapper
+        """
+        tool = Tool(func=func, tool_name=tool_name, tool_type=tool_type)
+        print(f"[system]: as tool: {tool_name}")
+        return tool # return a callable class instead of a function
+    return decorator # return a callable class instead of a function
+
 
 # The color for intermediate result
 RESET = "\033[0m"        # reset color output
@@ -21,10 +70,12 @@ class ToolAgent:
     """
     def __init__(self, llm:callable, tokenizer:callable, tools:List[Tool], prompt_template:str, task:str, action_boundary:List[int]):
             """ Intialize an agent.
-            llm callable: a function which could call llm and return response
-            tokenizer: callable, a function to tokenize natural language into tokens, should return a list of integers
-            tools List[Tool]: a list of Tool
-            prompt_template str: a template for prompt, it should contain the following 3 keywords: {tool_names_and_descriptions}, {tool_names}, {agent_playground}, {task}
+            
+            Args:
+                llm callable: a function which could call llm and return response
+                tokenizer: callable, a function to tokenize natural language into tokens, should return a list of integers
+                tools List[Tool]: a list of Tool
+                prompt_template str: a template for prompt, it should contain the following 3 keywords: {tool_names_and_descriptions}, {tool_names}, {agent_playground}, {task}
             """
             self.llm = llm # caller for large language model
             self.tokenizer = tokenizer
@@ -117,7 +168,7 @@ class ToolAgent:
 
             # Generate response 
             # This stop token is of vital importance, if removed, this model will have hallucination.
-            response = self.llm(formatted_prompt, stop=["Observation:"], temperature=0.5) 
+            response = self.llm(formatted_prompt, stop=["Observation:"], temperature=0.5, MAX_OUTPUT_TOKEN_LEN=500) 
             
             if response == "":
                 continue

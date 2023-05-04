@@ -1,0 +1,28 @@
+{
+    "traits": "friendly, skilled, knowledgeable",
+    "name": "Barista",
+    "age": 25,
+    "retention": 8,
+    "eid": "e_003",
+    "location": [
+        35,
+        35
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "ready to serve",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Make coffee for customers",
+        "Clean the coffee machine",
+        "Restock coffee beans"
+    ],
+    "memory": "Barista_LTM",
+    "description": [
+        "Barista is a skilled coffee maker",
+        "Barista has been making coffee for 5 years",
+        "Barista loves to share coffee knowledge with customers"
+    ],
+    "incoming_observation": []
+}

@@ -1,0 +1,27 @@
+{
+    "traits": "red-breasted, chirpy, agile",
+    "name": "Robin",
+    "age": 2,
+    "retention": 8,
+    "eid": "e_003",
+    "location": [
+        15,
+        10
+    ],
+    "max_velocity": "5/s",
+    "moving": "false",
+    "status": "singing",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "I want to find worms",
+        "I want to build a nest"
+    ],
+    "memory": "Robin_LTM",
+    "description": [
+        "Robin is a small bird",
+        "Robin has a beautiful red breast",
+        "Robin sings a lovely song"
+    ],
+    "incoming_observation": []
+}
