@@ -193,7 +193,7 @@ if __name__ == "__main__":
     )
 
     # Run the agent
-    agent.multiple_actions(max_step=20)
+    agent.multiple_actions(max_step=40)
 
     # Convert result["objects"] and result["areas"] into Dict[str, Dict]
     objects_dict = {}
