@@ -17,7 +17,38 @@ from PIL import Image
 import argparse
 
 
-# ----------------------- Implement TextToImage Class -------------------------
+parser = argparse.ArgumentParser()
+parser.add_argument('--world_instance',"-W", type=str, required=True, help='The path of the world instance (in world_instances/)')
+args = parser.parse_args()
+
+# Create flask app
+app = Flask(__name__, static_url_path='', static_folder='./frontend/dist') # create app with static folder
+app.logger.setLevel(logging.INFO)
+socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=5, ping_interval=5) # create socket io
+CORS(app)
+
+# Project root directory
+PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
+
+# Include assets including icons, tiles
+ASSETS_DIR = os.path.join(PARENT_DIR, "assets")
+
+# Environment path
+ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", f".{args.world_instance}.running")
+
+environment_config_file = None
+predefined_text_to_image_mapping = {}
+
+if not os.path.exists(ENV_PATH):
+    if os.path.exists(os.path.join(f"{PARENT_DIR}/../world_instances/", args.world_instance)):
+        # raise RuntimeError(f"Found static files of world: {args.world_instance}, but it has been copied into the running folder. Please start the engine by running `python gptworld/run.py -W {args.world_instance}` first.")
+        print("Warning: You are under static viewing mode, the world instance is frozen.")
+        ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", f"{args.world_instance}")
+    else:
+        raise RuntimeError(f"No world instance named {args.world_instance} has been found.")
+
+
+# ----------------------- Implement TextToImage By Semantic Matching -------------------------
 def load_jsonl(file_path):
     """Loads a JSONL file into a list of dictionaries."""
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -70,7 +101,7 @@ class TextToImage:
         return
     
     @lru_cache(maxsize=512)
-    def query(self, name: str, n: int = 1):
+    def query(self, name: str):
         """ Find top icons according to a query, use cache to avoid redundant computation
         """
 
@@ -78,62 +109,42 @@ class TextToImage:
         query_vector = self.existing_object_name_to_embedding.get(name, None)
         if query_vector is None:
             # print("error")
-            return []
+            return None
         
         # After getting the query embedding, find the top icon names
-        top_icon_paths = find_most_similar_list(query_vector, n, self.image_path_to_embedding)
+        top_icon_path = find_most_similar_list(query_vector, 1, self.image_path_to_embedding)[0]
 
-        # Load icon from file system
-        icon_images = []
-        for path in top_icon_paths:
-            full_path = os.path.join(self.assets_dir, self.category, path)
-            image = Image.open(full_path)
-            icon_images.append(image)
+        # Return full path of images
+        full_path = os.path.join(self.assets_dir, self.category, top_icon_path)
 
-        return icon_images
-# ----------------------------------------------------------------
+        return full_path
 
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--world_instance',"-W", type=str, required=True, help='The path of the world instance (in world_instances/)')
-args = parser.parse_args()
-
-
-
-app = Flask(__name__, static_url_path='', static_folder='./frontend/dist') # create app with static folder
-app.logger.setLevel(logging.INFO)
-socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=5, ping_interval=5) # create socket io
-CORS(app)
-
-
-# Project root directory
-PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
-
-# Include assets including icons, tiles
-ASSETS_DIR = os.path.join(PARENT_DIR, "assets")
-
-# Environment path
-ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", f".{args.world_instance}.running")
-
-if not os.path.exists(ENV_PATH):
-    if os.path.exists(os.path.join(f"{PARENT_DIR}/../world_instances/", args.world_instance)):
-        # raise RuntimeError(f"Found static files of world: {args.world_instance}, but it has been copied into the running folder. Please start the engine by running `python gptworld/run.py -W {args.world_instance}` first.")
-        print("Warning: You are under static viewing mode, the world instance is frozen.")
-        ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", f"{args.world_instance}")
-    else:
-        raise RuntimeError(f"No world instance named {args.world_instance} has been found.")
-
-
-#-------------------------------- Implement Text to Image -------------------------------
+# Initialize TextToImage functional object
 text_to_icon = TextToImage(ASSETS_DIR, "icon")
 text_to_tile = TextToImage(ASSETS_DIR, "tile")
 
+# Flask API
 @app.route('/text_to_icon', methods=['GET'])
 def text_to_icon_route():
+    global environment_config_file
+    global predefined_text_to_image_mapping
+    
     name = request.args.get('name')
-    if name == []:
-        return "Failed to find image for your requested text."
-    image = text_to_icon.query(name)[0]
+    
+    if environment_config_file is None:
+        read_environment()
+    
+    predefined_relative_path = predefined_text_to_image_mapping.get(name, None)
+    
+    if predefined_relative_path is not None:
+        # Case 1: If the texture is predefined, use predefined texture
+        full_path = os.path.join(ENV_PATH, predefined_relative_path)
+    else:
+        # Case 2: If no predefined texture, use semantic matching
+        full_path = text_to_icon.query(name)
+    
+    # Load image from file system and return to clients
+    image = Image.open(full_path)
     img_io = BytesIO()
     image.save(img_io, 'PNG')
     img_io.seek(0)
@@ -141,27 +152,45 @@ def text_to_icon_route():
 
 @app.route('/text_to_tile', methods=['GET'])
 def text_to_tile_route():
+    global environment_config_file
+    global predefined_text_to_image_mapping
+    
+    if environment_config_file is None:
+        read_environment()
+    
     name = request.args.get('name')
-    if name == []:
-        return "Failed to find image for your requested text."
-    image = text_to_tile.query(name)[0]
+    
+    predefined_relative_path = predefined_text_to_image_mapping.get(name, None)
+    
+    if predefined_relative_path is not None:
+        # Case 1: If the texture is predefined, use predefined texture
+        full_path = os.path.join(ENV_PATH, predefined_relative_path)
+    else:
+        # Case 2: If no predefined texture, use semantic matching
+        full_path = text_to_tile.query(name)
+
+    # Load image from file system and return to clients
+    image = Image.open(full_path)
     img_io = BytesIO()
     image.save(img_io, 'PNG')
     img_io.seek(0)
     return send_file(img_io, mimetype='image/png')
 
-def add_object_embedding():
-    embedding_path = os.path.join(ENV_PATH, 'embeddings.json')
-    with open(embedding_path, 'r') as f:
-        content = json.load(f)
-    
-    # Update the TextToImage module
-    for name in content.keys():
-        embedding = content[name]
-        text_to_icon.add_existing_object(name, embedding)
-        text_to_tile.add_existing_object(name, embedding)
+def add_embedding():
+    try:
+        embedding_path = os.path.join(ENV_PATH, 'embeddings.json')
+        with open(embedding_path, 'r') as f:
+            content = json.load(f)
+        
+        # Update the TextToImage module
+        for name in content.keys():
+            embedding = content[name]
+            text_to_icon.add_existing_object(name, embedding)
+            text_to_tile.add_existing_object(name, embedding)
+    except:
+        print("An error occured while add named entity embeddings, continue...")
 
-add_object_embedding()
+add_embedding()
 # -----------------------------------------------------------------------------------------
 
 
@@ -239,9 +268,23 @@ def static_file(path):
 
 @app.route('/read_environment', methods=['GET'])
 def read_environment():
+    global environment_config_file
+    global predefined_text_to_image_mapping
+    
     environment_main_path = os.path.join(ENV_PATH, 'environment.json')
     with open(environment_main_path, 'r') as f:
         content = json.load(f)
+        environment_config_file = content
+    
+    # Build predefined text to image mapping (if exist)
+    predefined_text_to_image_mapping = {}
+    for key in environment_config_file["objects"]:
+        value = environment_config_file["objects"][key]
+        predefined_text_to_image_mapping[value["name"]] = value.get("predefined_texture", None)
+    for key in environment_config_file["areas"]:
+        value = environment_config_file["areas"][key]
+        predefined_text_to_image_mapping[value["name"]] = value.get("predefined_texture", None)
+    
     data = {'message': content}
     return jsonify(data)
 
