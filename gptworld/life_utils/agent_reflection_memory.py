@@ -112,12 +112,13 @@ class ReflectionMemory():
     reflection_threshold: the threshold for deciding whether to do reflection
 
     """
+    default_thres = 100
 
     def __init__(self, state_dict, file_dir='./', uilogging=None,clear_memory=False) -> None:
         # the least importance threshold for reflection. It seems that setting it to 0 does not induce duplicate reflections
         self.name = state_dict['name']
         self.uilogging = uilogging
-        self.reflection_threshold = state_dict.get( 'reflection_threshold', 0)
+        self.reflection_threshold = state_dict.get( 'reflection_threshold', self.default_thres)
 
         # memory_ids
         self.memory_id = state_dict.get('memory', state_dict['name']+'_LTM')
@@ -307,6 +308,7 @@ class ReflectionMemory():
 
     def maybe_reflect(self, time: datetime):
         if not self.should_reflect():
+            logger.debug(f"Doesn't reflect since accumulated_importance={self.accumulated_importance} < reflection_threshold={self.reflection_threshold}")
             return 'reflection reject: prevent duplicate reflecting result'
         if self.data.texts.__len__()==0:
             return 'reflection reject: no memory'
