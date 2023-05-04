@@ -57,7 +57,7 @@ class GPTWorldEnv:
 
         self.load_objects_and_agents()
         
-        logger.debug("Initialize Complete!")
+        logger.info("Complete environment initialization.")
         
         # TODO: grid mapping from position tuple to agent id
         # self.grid: Dict[Tuple[int, int], str] = {}
@@ -78,8 +78,7 @@ class GPTWorldEnv:
 
         EnvironmentPrompt = f"""You are simulating an environment. When an action happens
         in your environment, you should paraphrase the action to agents and objects in 
-        your environment. In 
-        your environment there are the following agent:
+        your environment. In your environment, there are the following agent:
         """
 
         number = 1
@@ -95,7 +94,7 @@ class GPTWorldEnv:
                 number += 1
             
 
-        EnvironmentPrompt += f"\nNow please paraphrase the following action: ```{agent.name} -> {targets} : {content}``` to each of these agents and objects. Please paraphrase using the following format: \n1. To XXX: XXX\n2. To XXX: XXX"
+        EnvironmentPrompt += f"\nNow please paraphrase the following action: ```{agent.name} -> {targets} : {content}``` to the relevant agents and objects. Not that please pay attention that the receiver should be meaningful and relevant. For example, parse a `say` action to an object without life like desk is not meaningful, so you should not broadcast to it.\nPlease paraphrase using the following format: \n1. To XXX: XXX\n2. To XXX: XXX (if you don't need to broadcast to someone or something, you can you To XXX: None)"
         
         result = chat(EnvironmentPrompt)
 
@@ -106,8 +105,12 @@ class GPTWorldEnv:
         for line in lines:
             sline = line.split(":")
             target, content = sline[0], ":".join(sline[1:])
-            target = re.split(r'\d+\. ', target)[1][3:]
-            send_content[target] = content
+            try:
+                target = re.split(r'\d+\. ', target)[1][3:]
+            except:
+                continue
+            if "None" not in target:
+                send_content[target] = content
 
         for a_id in self.agents:
             ag = self.agents[a_id]
@@ -128,7 +131,7 @@ class GPTWorldEnv:
 
     @classmethod
     def from_file(cls, file_dir, file_name ="environment.json",clear_memory=False):
-        logger.debug(file_dir)
+        logger.info(f"Loading environment from {file_dir}")
         with open(os.path.join(file_dir, file_name), 'r') as f:
             data = json.load(f)
         return cls(**{"env_json": data, "file_dir": file_dir,"clear_memory":clear_memory})
@@ -147,7 +150,7 @@ class GPTWorldEnv:
 
         return
 
-    def get_neighbor_environment(self, agent_id :str = None, critical_distance = 50):
+    def get_neighbor_environment(self, agent_id :str = None, critical_distance = -1):
         '''Provide the local environment of the location.
 
         Args:
@@ -157,6 +160,8 @@ class GPTWorldEnv:
         Returns:
             :text: the observation text. E.g., Now you are at fields. There are tractor, Bob, around you.'
         '''
+        if critical_distance == -1:
+            critical_distance = 999999999
 
  
         location = self.env_json['objects'][agent_id]['location']
@@ -175,36 +180,30 @@ class GPTWorldEnv:
                     objects_within_distance.append(obj_id)
         
         observations = []
-        template = "{} is {}."
+        template = "{} is at location {} of {}, status: {}."
         for obj_id in objects_within_distance:
             if obj_id.startswith('a'):
                 agent = self.agents[obj_id]
-                filled = template.format(agent.name, agent.status)
-            elif obj_id.startswith('o'):
+                filled = template.format(agent.name, agent.location, at_area,  agent.status)
+                observations.append(filled)
+            elif obj_id.startswith('o') and  obj_id in self.objects:
                 agent = self.objects[obj_id]
-                filled = template.format(agent.name, agent.status)
-            observations.append(filled)
+                filled = template.format(agent.name, agent.location, at_area, agent.status)
+                observations.append(filled)
 
-
-        # # Generate the observation
-        # observation = {
-        #     "agent_location": at_area,
-        #     "objects_within_distance": objects_within_distance
-        # }
-        # observation_text = self.get_observation_text(observation)
 
         return observations
     
-    def get_observation_text(self, observation):
-        prompt_template = "Now you are at {}. There are {} around you."
+    # def get_observation_text(self, observation):
+    #     prompt_template = "Now you are at {}. There are {} around you."
     
-        object_text = []
-        for obj_id in observation['objects_within_distance']:
-            object_text.append(self.env_json['objects'][obj_id]['name'])
-        object_text = ", ".join(object_text) if len(object_text) > 0 else "nothing"
+    #     object_text = []
+    #     for obj_id in observation['objects_within_distance']:
+    #         object_text.append(self.env_json['objects'][obj_id]['name'])
+    #     object_text = ", ".join(object_text) if len(object_text) > 0 else "nothing"
 
-        prompt = prompt_template.format(observation['agent_location'], object_text)
-        return prompt
+    #     prompt = prompt_template.format(observation['agent_location'], object_text)
+    #     return prompt
 
 
     def show(self):
@@ -232,7 +231,8 @@ class GPTWorldEnv:
             elif obj['id'].startswith('o') and obj['engine'] == 'object':
                 self.objects[obj_id] = GPTObject(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
             elif obj['id'].startswith('o') and obj['engine'] == 'environment':
-                self.objects[obj_id] = GPTEnvObject(obj, environment=self)
+                # self.objects[obj_id] = GPTEnvObject(obj, environment=self)
+                pass
 
             
             
@@ -302,12 +302,37 @@ class GPTWorldEnv:
         """
 
         # self.movement_manager.start()
-
-   
+        logger.info(f"New environment step starts. Current environment time: {self.current_time}")
 
         thread_pool = []
         self.get_invoice()
 
+        # sync between frames
+        for agent_id in self.agents:
+            agent = self.agents[agent_id]
+            # run agent as thread
+            if debug:
+                agent.sync(self.current_time)
+            else:
+                thread = threading.Thread(target=agent.sync, args=(self.current_time,))
+                thread_pool.append(thread)
+                thread.start() 
+        
+        for obj_id in self.objects:
+            object = self.objects[obj_id]
+            if isinstance(object, GPTObject):
+                if debug:
+                    object.sync(self.current_time)
+                else:
+                    thread = threading.Thread(target=object.sync, args=(self.current_time,))
+                    thread_pool.append(thread)
+                    thread.start() 
+        
+        if not debug:
+            for thread in thread_pool:
+                thread.join()
+
+        # perform step
         for agent_id in self.agents:
             agent = self.agents[agent_id]
             # run agent as thread
@@ -349,14 +374,11 @@ class GPTWorldEnv:
     def run(self, debug=False):
         """The main loop 
         """
-        realworld_time_delta = 8
-        env_time_delta = 10
-
+        env_time_delta = int(self.env_json['time_delta'])
         start_time = datetime.datetime.strptime(self.env_json['current_time'], "%Y-%m-%dT%H:%M:%S")
         
         self.current_time = start_time
         while True:
-            time.sleep(realworld_time_delta)
             self.step(debug=debug)
             self.current_time += datetime.timedelta(seconds = env_time_delta)
     

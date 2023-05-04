@@ -11,6 +11,7 @@ eggs/
 build/
 _build/
 **/build/
+**/.DS_Store
 
 # dist/
 # dist/*
@@ -22,3 +23,5 @@ _build/
 
 
 world_instances/.*.running/
+
+apikeys.txt
