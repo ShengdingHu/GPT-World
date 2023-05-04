@@ -1,0 +1,28 @@
+{
+    "traits": "experienced, skillful, friendly",
+    "name": "Cook",
+    "age": 35,
+    "retention": 8,
+    "eid": "e_005",
+    "location": [
+        70,
+        130
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "cooking delicious Turkish food",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Prepare lamb kebab",
+        "Make Turkish tea",
+        "Serve customers"
+    ],
+    "memory": "Cook_LTM",
+    "description": [
+        "The cook has been cooking Turkish food for 10 years",
+        "He is very friendly and always greets customers with a smile",
+        "He is very skillful and can cook a variety of Turkish dishes"
+    ],
+    "incoming_observation": []
+}

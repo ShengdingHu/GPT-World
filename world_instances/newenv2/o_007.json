@@ -1,0 +1,21 @@
+{
+    "traits": "comfortable, soft, brown",
+    "name": "Sofa",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_008",
+    "location": [
+        10,
+        5
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "new",
+    "memory": [
+        "I am a sofa in Bob's living room",
+        "I am very comfortable to sit on"
+    ],
+    "incoming_observation": []
+}

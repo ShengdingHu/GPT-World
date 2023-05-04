@@ -1,0 +1,22 @@
+{
+    "traits": "spicy, delicious",
+    "name": "Lamb Kebab",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_005",
+    "location": [
+        90,
+        140
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "cooked",
+    "memory": [
+        "I am a traditional Turkish dish",
+        "I am made with marinated lamb meat",
+        "I am usually served with rice and salad"
+    ],
+    "incoming_observation": []
+}

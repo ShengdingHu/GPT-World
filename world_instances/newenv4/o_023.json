@@ -1,0 +1,22 @@
+{
+    "traits": "wooden, large, sturdy",
+    "name": "Dining Table",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_009",
+    "location": [
+        30,
+        30
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "clean",
+    "memory": [
+        "I am a handmade dining table",
+        "I was bought from a local craftsman",
+        "I have enough room for 6 people"
+    ],
+    "incoming_observation": []
+}

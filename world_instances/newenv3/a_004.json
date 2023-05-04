@@ -1,0 +1,27 @@
+{
+    "traits": "efficient, friendly",
+    "name": "Cashier",
+    "age": 35,
+    "retention": 8,
+    "eid": "e_004",
+    "location": [
+        120,
+        60
+    ],
+    "max_velocity": "1.2/s",
+    "moving": "false",
+    "status": "ringing up customers",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Ring up customers",
+        "Restock shelves",
+        "Clean store"
+    ],
+    "memory": "Cashier_LTM",
+    "description": [
+        "The cashier is an efficient and friendly person who loves helping customers.",
+        "He is 35 years old and works at the 711 Shop Area."
+    ],
+    "incoming_observation": []
+}

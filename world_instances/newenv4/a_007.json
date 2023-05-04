@@ -1,0 +1,28 @@
+{
+    "traits": "friendly, intelligent, hardworking",
+    "name": "Bob",
+    "age": 50,
+    "retention": 8,
+    "eid": "e_009",
+    "location": [
+        25,
+        25
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "at home",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "relax",
+        "watch TV",
+        "cook dinner"
+    ],
+    "memory": "Bob_LTM",
+    "description": [
+        "Bob is a professor at the local university",
+        "Bob loves to read and play chess",
+        "Bob is married with two children"
+    ],
+    "incoming_observation": []
+}

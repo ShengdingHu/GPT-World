@@ -1,0 +1,22 @@
+{
+    "traits": "various, tasty",
+    "name": "Snacks",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_009",
+    "location": [
+        115,
+        130
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "fully stocked",
+    "memory": [
+        "I am the snacks of the 711 shop",
+        "I have various flavors",
+        "I am very tasty"
+    ],
+    "incoming_observation": []
+}

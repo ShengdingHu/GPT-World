@@ -1,0 +1,27 @@
+{
+    "traits": "red, fast, powerful",
+    "name": "Car",
+    "age": 1,
+    "retention": 8,
+    "eid": "e_007",
+    "location": [
+        15,
+        30
+    ],
+    "max_velocity": "50/s",
+    "moving": "false",
+    "status": "empty",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Drive to work",
+        "Pick up kids from school"
+    ],
+    "memory": "Car_LTM",
+    "description": [
+        "This is a red sports car",
+        "It can go very fast",
+        "It has a powerful engine"
+    ],
+    "incoming_observation": []
+}

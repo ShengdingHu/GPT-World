@@ -1,0 +1,27 @@
+{
+    "traits": "funny, helpful",
+    "name": "Bob",
+    "age": 45,
+    "retention": 8,
+    "eid": "e_005",
+    "location": [
+        30,
+        100
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "relaxed",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Watch TV",
+        "Take a nap"
+    ],
+    "memory": "Bob_LTM",
+    "description": [
+        "Bob is a teacher",
+        "Bob loves making jokes and helping others",
+        "Bob has a wife and a daughter"
+    ],
+    "incoming_observation": []
+}

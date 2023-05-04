@@ -1,0 +1,21 @@
+{
+    "traits": "spicy, delicious",
+    "name": "Kung Pao Chicken",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_007",
+    "location": [
+        115,
+        30
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "freshly cooked",
+    "memory": [
+        "I am a famous Chinese dish",
+        "I am made with spicy chicken and peanuts"
+    ],
+    "incoming_observation": []
+}

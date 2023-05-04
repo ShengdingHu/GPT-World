@@ -1,0 +1,20 @@
+{
+    "traits": "various, in stock",
+    "name": "Stocks",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_004",
+    "location": [
+        20,
+        20
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "available",
+    "memory": [
+        "I am a stock of products in 711 shop"
+    ],
+    "incoming_observation": []
+}

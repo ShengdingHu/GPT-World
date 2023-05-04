@@ -1,0 +1,22 @@
+{
+    "traits": "short, red, fruitful",
+    "name": "Apple Tree 2",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_009",
+    "location": [
+        140,
+        140
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "healthy",
+    "memory": [
+        "I am an apple tree",
+        "I am 3 years old",
+        "I have many apples"
+    ],
+    "incoming_observation": []
+}

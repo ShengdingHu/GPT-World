@@ -1,0 +1,22 @@
+{
+    "traits": "large, wooden",
+    "name": "Dining Table",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_016",
+    "location": [
+        15,
+        20
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "set",
+    "memory": [
+        "I am a dining table",
+        "I can seat 6 people",
+        "I am great for family dinners"
+    ],
+    "incoming_observation": []
+}

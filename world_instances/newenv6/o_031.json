@@ -1,0 +1,22 @@
+{
+    "traits": "cold, refreshing, colorful",
+    "name": "Drinks",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_007",
+    "location": [
+        140,
+        30
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "in stock",
+    "memory": [
+        "I am the drinks of 711 shop",
+        "I need to be kept cold",
+        "I am the favorite of many customers"
+    ],
+    "incoming_observation": []
+}
