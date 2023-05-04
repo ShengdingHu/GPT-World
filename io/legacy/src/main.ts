@@ -172,17 +172,6 @@ class GameScene extends Scene {
     this.lastTime = 0;
     this.gridGraphics = this.add.graphics();
 
-    // control the size of each pixel
-    this.gridGraphics.lineStyle(5, 0xEEE8CD, 1.0); 
-
-    // add a border for the whole world
-    // this.gridGraphics.strokeRect(
-    //   ORIGIN_X - this.squareSize / 2 - 4,
-    //   ORIGIN_Y - this.squareSize / 2 - 4,
-    //   this.mydata.size[0] * this.squareSize + 8,
-    //   this.mydata.size[1] * this.squareSize + 8
-    // );
-    
     // render all areas (no further updates)
     let areas_key = Object.keys(this.mydata.areas)
     for (let i=0; i < areas_key.length; i++){
@@ -194,11 +183,6 @@ class GameScene extends Scene {
       const width = (area.location[1][0] - area.location[0][0] + 1)* this.squareSize;
       const height = (area.location[1][1] - area.location[0][1] + 1 )* this.squareSize;
 
-      // draw the border for the upcoming block
-      const graphics = this.add.graphics();
-      graphics.lineStyle(4, 0xEEE8CD, 1.0);
-      graphics.strokeRect(x-1, y-1, width+2, height+2);
-      
       // draw a block with background image
       const tileSprite = this.add.tileSprite(x, y, width, height, area.name);
       tileSprite.setOrigin(0, 0);
@@ -298,8 +282,6 @@ class GameScene extends Scene {
 
 const config = {
   type: WEBGL,
-  // width: '100px',
-  // height: '100px',
   zoom:Phaser.AUTO,
   canvas,
   physics: {
