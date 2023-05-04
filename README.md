@@ -28,7 +28,17 @@ This project is for academic and experimental purposes only. We currently suspec
 
 ## Usage
 
-## Install
+### Install
+
+Download this library by
+
+```sh
+git clone https://github.com/ShengdingHu/GPT-World.git
+```
+
+or download zip file.
+
+Then go to library directory.
 
 It is suggested to use `python=3.8` on all platforms.
 
