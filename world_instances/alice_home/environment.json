@@ -122,8 +122,7 @@
                     ]
                 ]
             ],
-            "color": "0xD3D3D3",
-            "predefined_texture": "DIY/example.png"
+            "color": "0xD3D3D3"
         },
         "e_007": {
             "location": [
@@ -275,7 +274,8 @@
             "location": [
                 89,
                 15
-            ]
+            ],
+            "predefined_texture": "DIY/example.png"
         },
         "o_007": {
             "id": "o_007",

@@ -32,10 +32,11 @@ pip install -r requirements.txt
 
 Install frontend development environment
 
+Go to `frontend_new/rpg-game` -> `src` -> `components` -> `Chat.js` and `GameArea.js`, change `API_ROOT` to `http://localhost:5001` for development mode.
+
 ```bash
-cd frontend
+cd frontend_new/rpg-game
 npm install
-npm install phaser
 ```
 
 Run backend server
@@ -46,7 +47,7 @@ python app.py --world_instance alice_home
 
 Run frontend develop server: open another termial
 ```bash
-cd frontend
+cd frontend_new/rpg-game
 npm run dev
 ```
 

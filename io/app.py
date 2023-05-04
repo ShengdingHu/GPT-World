@@ -22,7 +22,7 @@ parser.add_argument('--world_instance',"-W", type=str, required=True, help='The 
 args = parser.parse_args()
 
 # Create flask app
-app = Flask(__name__, static_url_path='', static_folder='./frontend/dist') # create app with static folder
+app = Flask(__name__, static_url_path='', static_folder='./frontend_new/rpg-game/build') # create app with static folder
 app.logger.setLevel(logging.INFO)
 socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=5, ping_interval=5) # create socket io
 CORS(app)
