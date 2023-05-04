@@ -17,6 +17,8 @@ from gptworld.models.openai_api import chat
 from itertools import chain
 import gptworld.utils.logging as logging
 import gptworld.utils.map_editor as map_editor
+from gptworld.utils.prompts import load_prompt
+
 logger = logging.get_logger(__name__)
 
 
@@ -46,11 +48,11 @@ class EnvElem:
         llm: callable -> a function which could call llm and return response
         tools: List[Tool] -> a list of Tool
         prompt_template: str -> a template for prompt
-
         """
         # base system 
         self.observation = []
         self.agent_file = agent_file
+        self.file_dir = os.path.dirname(self.agent_file)
         self.id = os.path.splitext(os.path.basename(self.agent_file))[0]
         new_state_dict = self.load_from_file(agent_file)
         state_dict = new_state_dict
@@ -175,8 +177,8 @@ class EnvElem:
                 # observation在这里不能直接拉进记忆，否则query出来的全是observation，没有意义
                 # 在reaction判定结束以后再拉近记忆比较好。
         # logger.info(self.name + f"short-term memory: {self.short_term_memory}")
-
         self.observation = self.incoming_observation + self.background_observation
+        logger.debug("incoming_observation: {}\nbackground_observation: {}".format(self.incoming_observation, self.background_observation))
         return self.observation
     
     def reflect(self,time:datetime):
@@ -719,7 +721,7 @@ Summarize the dialog above.
             reaction_content = f"{self.name} performs action to {target}: '{description}'."
         self.reaction_content += reaction_content
         logger.info(reaction_content)
-        self.environment.parse_action(self, target, reaction_content)
+        self.environment.broadcast_observations(self, target, reaction_content)
         
 
     def say(self, description, target=None):
@@ -731,7 +733,7 @@ Summarize the dialog above.
             reaction_content = f"{self.name} says to {target}: '{description}'."
         self.reaction_content += reaction_content
         logger.info(reaction_content)
-        self.environment.parse_action(self, target, reaction_content)
+        self.environment.broadcast_observations(self, target, reaction_content)
 
 
     def move(self, description):
@@ -793,6 +795,9 @@ Summarize the dialog above.
         #    当前设计思路 interaction不做特殊处理，防止阻塞自身和他人动作，同时支持多人讨论等场景。
         self.observe()
         might_react=len(self.incoming_observation)>0 or len(self.background_observation)>0
+
+        subject_prompt =  load_prompt(file_dir=self.file_dir, key='subject_parsing')
+
         if might_react:
             self.reflect(current_time)
 
@@ -802,18 +807,13 @@ Summarize the dialog above.
             observation_string = '\n'.join(self.observation) if len(self.observation) > 0 else "none"
             sObservation = f"Observation: {observation_string}"
 
-            subjects=[ob.split(' is')[0] for ob in self.observation]
+            subjects=list(set([chat(subject_prompt.format(sentence=ob)) for ob in self.observation]))
 
             queries_ob = self.observation.copy()
-            queries_sub=[f"What is the {self.name}'s relationship with {sub}?" for sub in subjects]
+            queries_sub = [f"What is the {self.name}'s relationship with {sub}?" for sub in subjects]
 
-            logger.debug("queries_sub {}".format(queries_sub))
-            # if len(self.incoming_interactions)>0:
-            #     for i,interaction in reversed(self.incoming_interactions):
-            #         if i>=2:
-            #             break
-            #         queries.append(interaction['sender']+':' +interaction['content'])
-            # # 一点小修改：加上对话的最后几轮作为query
+            logger.debug("{} | queries_sub: {}".format(self.name, queries_sub))
+   
 
             # memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in chain(queries_ob,queries_sub)],[])).strip()
             memory_string = ' '.join(self.long_term_memory.query(queries_ob+queries_sub,len(queries_ob)*4,current_time)).strip()
@@ -831,27 +831,9 @@ Summarize the dialog above.
             query_sources['context'] = sContext # 长期记忆
             query_sources['background_observation'] = self.background_observation
 
-            reaction_prompt_template = """Now you are performing actions as an agent named {name} in a virtual world. Your mission to take the agent as yourself and directly provide what the agent will do based on the following information:\n(1) The agent's description: {summary}\n (2) Current time is {time}\n(3) Your current status is {status}\n (4) Some incoming observation is {observation}\n (5) Some background observation is {background_observation}. \nIn terms of how you actually perform the action in the virtual world, you take action for the agent by calling functions. Currently, there are the following functions that can be called.\n- act(description, target=None): do some action. `description` describes the action, set `description` to None for not act. `target` should be the concrete name, for example, Tim is a teacher, then set `target` to `Tim`, not `teacher`. \n- say(content, target=None): say something,`content` is the sentence that the agent will say.\n- move(description): move to somewhere. `description` describes the movement, set description to None for not move .\n- change_status(bool): whether to change the agent's current status, True for change, False for not change. \n\nSome actions may not be needed in this situation. Call one function at a time, please give a thought before calling these actions, i.e., use the following format strictly:
-            
+            logger.debug(f"{self.name} | query_sources {query_sources}")
 
-Thought: Since, ..., I might need to say something.
-Action: say("hello", target="Alice")
-Observation:
-Thought: Since, ..., I don't need to do action.
-Action: act(None)
-Observation:
-Thought: Since, ..., I don't need move to anywhere.
-Action: move(None)
-Observation:
-Thought: I think the current status: sleeping  does not need to be changed.
-Action: change_status(False)
-Observation:
-Thought: I think I've finished my action as the agent. 
-Action: end()
-Observation:
-
-Now begin your actions as the agent. **Important: If a function has been called previously, it CANNOT be called anymore, instead, end() should be called.** 
-"""
+            reaction_prompt_template = load_prompt(file_dir=self.file_dir, key='reaction_prompt')
 
             end = False
             count = 0
@@ -862,10 +844,10 @@ Now begin your actions as the agent. **Important: If a function has been called 
             
             while not end and count < 2:
                 reaction_result = chat(reaction_prompt, stop=["Observation:"])
+                logger.debug(f"Reaction output: {reaction_result}")
                 match = re.search(r'Action:\s*(.*)', reaction_result)
                 if match:
                     content = match.group(1)
-                    logger.debug(f"Reaction output: {match}")
                     # eval(content)
                     # print(content)
                 else:

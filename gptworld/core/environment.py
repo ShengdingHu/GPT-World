@@ -12,6 +12,7 @@ import os
 import datetime
 from gptworld.models.openai_api import chat
 import re
+from gptworld.utils.prompts import load_prompt
 
 import gptworld.utils.logging as logging
 logger = logging.get_logger(__name__)
@@ -73,30 +74,29 @@ class GPTWorldEnv:
     def get_area_name(self, eid):
         return self.env_json['areas'][eid]['name']
 
-    def parse_action(self, agent, targets, content=""):
+    def broadcast_observations(self, agent, targets, content=""):
         logger.debug(f"Environment receives action: {agent.name} -> {targets} : {content}")
 
-        EnvironmentPrompt = f"""You are simulating an environment. When an action happens
-        in your environment, you should paraphrase the action to agents and objects in 
-        your environment. In your environment, there are the following agent:
-        """
-
+        EnvironmentPrompt_template = load_prompt(self.file_dir, key='broadcast_observations')
         number = 1
+        agents_and_objects = "["
+
         for a_id in self.agents:
             ag = self.agents[a_id]
             if ag.eid == agent.eid and a_id != agent.id:
-                EnvironmentPrompt += f"{number}. To {ag.name}: content\n"
+                agents_and_objects += f"{ag.name} (location: {ag.location}),"
                 number += 1
         for o_id in self.objects:
             obj = self.objects[o_id]
             if obj.eid == agent.eid and o_id != agent.id:
-                EnvironmentPrompt += f"{number}. To {obj.name}: content\n"
+                agents_and_objects += f"{obj.name} (location: {ag.location}),"
                 number += 1
-            
-
-        EnvironmentPrompt += f"\nNow please paraphrase the following action: ```{agent.name} -> {targets} : {content}``` to the relevant agents and objects. Not that please pay attention that the receiver should be meaningful and relevant. For example, parse a `say` action to an object without life like desk is not meaningful, so you should not broadcast to it.\nPlease paraphrase using the following format: \n1. To XXX: XXX\n2. To XXX: XXX (if you don't need to broadcast to someone or something, you can you To XXX: None)"
         
-        result = chat(EnvironmentPrompt)
+        agents_and_objects += "]"
+
+        EnvironmentPrompt = EnvironmentPrompt_template.format(agents_and_objects=agents_and_objects, name=agent.name, targets=targets, content=content)
+        
+        result = chat(EnvironmentPrompt, stop="Finish_Broadcast")
 
         logger.debug(f"Env broadcast the following content: {result}")
 
@@ -109,8 +109,7 @@ class GPTWorldEnv:
                 target = re.split(r'\d+\. ', target)[1][3:]
             except:
                 continue
-            if "None" not in target:
-                send_content[target] = content
+            send_content[target] = content
 
         for a_id in self.agents:
             ag = self.agents[a_id]
@@ -125,8 +124,6 @@ class GPTWorldEnv:
                     if isinstance(obj, GPTObject):
                         obj.add_observation(send_content[obj.name])
         
-
-        pass
 
 
     @classmethod
@@ -276,6 +273,7 @@ class GPTWorldEnv:
                     self.broadcast_invoice(incoming_invoice)
         else:
             logger.warning("No invoice files")
+        
     
     def broadcast_invoice(self, incoming_invoice):
         objectlist = [(aid, self.agents[aid].name) for aid in self.agents] + [(oid, self.objects[oid].name) for oid in self.objects]  
@@ -296,6 +294,13 @@ class GPTWorldEnv:
             elif item_id.startswith('o'):
                 self.objects[item_id].set_invoice(invoice_prompt + message)
 
+    def get_system_message(self, ):
+        system_message = self.env_json['system_message'].get(datetime.datetime.strftime(self.current_time, "%Y-%m-%dT%H:%M:%S"), '')
+        if system_message != '':
+            logger.critical("find system_message: {}".format(system_message))
+            self.broadcast_invoice(system_message)
+
+
 
     def step(self, debug=False):
         """ For each time frame, call step method for agents
@@ -306,6 +311,7 @@ class GPTWorldEnv:
 
         thread_pool = []
         self.get_invoice()
+        self.get_system_message()
 
         # sync between frames
         for agent_id in self.agents:

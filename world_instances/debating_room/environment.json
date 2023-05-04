@@ -130,5 +130,8 @@
             "location": [10, 80],
             "engine": "environment"
         }
+    },
+    "system_message": {
+        "2023-04-01T09:00:00": "To all: All the debaters please notice: you have already checked in the debate and settled down. please be quiet. Listen to Grace's command. Grace will let one of the debaters speak each time. Do not speak when it's not your turn. Host Grace please notice: you should give the rules of the debate and organize the debate."
     }
 }
