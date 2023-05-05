@@ -1,0 +1,22 @@
+{
+    "traits": "soft, comfortable, spacious",
+    "name": "Sofa",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_009",
+    "location": [
+        10,
+        10
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "clean",
+    "memory": [
+        "I am a leather sofa",
+        "I was bought last year",
+        "I have enough room for 3 people"
+    ],
+    "incoming_observation": []
+}

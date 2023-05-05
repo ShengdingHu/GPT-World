@@ -195,7 +195,7 @@ Strictly obeying the Output format:
                 
                 if self.environment is not None:
                     self.environment.uilogging(self.name, reaction_content)
-                    self.environment.parse_action(self, target, reaction_content)
+                    self.environment.broadcast_observations(self, target, reaction_content)
                 if terminate:
                     # object没有判定状态终止的机制，在这里duration随便填，记个开始时间就行。
                     self.status=reaction

@@ -1,0 +1,27 @@
+{
+    "traits": "friendly, efficient",
+    "name": "Waiter",
+    "age": 25,
+    "retention": 8,
+    "eid": "e_009",
+    "location": [
+        20,
+        30
+    ],
+    "max_velocity": "1.5/s",
+    "moving": "false",
+    "status": "serving customers",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Serve customers",
+        "Clean tables",
+        "Restock food and drinks"
+    ],
+    "memory": "Waiter_LTM",
+    "description": [
+        "The waiter is a friendly and efficient person who loves serving customers.",
+        "He is 25 years old and works at the Restaurant Area."
+    ],
+    "incoming_observation": []
+}

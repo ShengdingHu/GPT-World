@@ -1,0 +1,27 @@
+{
+    "traits": "kind, friendly",
+    "name": "Alice",
+    "age": 25,
+    "retention": 8,
+    "eid": "e_013",
+    "location": [
+        58,
+        15
+    ],
+    "max_velocity": "2/s",
+    "moving": "false",
+    "status": "enjoying the sunshine",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Read a book",
+        "Take a walk"
+    ],
+    "memory": "Alice_LTM",
+    "description": [
+        "Alice is a student",
+        "Alice loves animals",
+        "Alice enjoys spending time in nature"
+    ],
+    "incoming_observation": []
+}

@@ -1,0 +1,10 @@
+.chat-container {
+    width: 100%;
+    height: 100%;
+  }
+  
+  .messages-container {
+    overflow-y: auto;
+    max-height: 400px;
+    padding: 10px;
+  }

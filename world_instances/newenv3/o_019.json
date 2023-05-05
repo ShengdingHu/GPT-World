@@ -1,0 +1,21 @@
+{
+    "traits": "colorful, fragrant",
+    "name": "Flower",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_005",
+    "location": [
+        130,
+        120
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "blooming",
+    "memory": [
+        "I am a flower",
+        "I am in Grass Area"
+    ],
+    "incoming_observation": []
+}

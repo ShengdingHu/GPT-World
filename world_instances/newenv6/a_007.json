@@ -1,0 +1,26 @@
+{
+    "traits": "skilled, friendly",
+    "name": "Turkish Cook",
+    "age": 35,
+    "retention": 8,
+    "eid": "e_005",
+    "location": [
+        70,
+        120
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "preparing dishes",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Grill kebabs",
+        "Make baklava"
+    ],
+    "memory": "Turkish Cook_LTM",
+    "description": [
+        "The cook has worked in Turkey for 5 years",
+        "He is known for his delicious kebabs"
+    ],
+    "incoming_observation": []
+}

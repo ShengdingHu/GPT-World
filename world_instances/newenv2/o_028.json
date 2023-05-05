@@ -1,0 +1,21 @@
+{
+    "traits": "spacious, well-lit",
+    "name": "Garage",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_013",
+    "location": [
+        55,
+        20
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "empty",
+    "memory": [
+        "I am a garage",
+        "I can hold cars and bikes"
+    ],
+    "incoming_observation": []
+}

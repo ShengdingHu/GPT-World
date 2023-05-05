@@ -1,0 +1,22 @@
+{
+    "traits": "sturdy, wooden, square",
+    "name": "Table 2",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_010",
+    "location": [
+        12,
+        25
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "clean",
+    "memory": [
+        "Table 2 is a wooden square table",
+        "It can seat 4 customers",
+        "It was cleaned this morning"
+    ],
+    "incoming_observation": []
+}

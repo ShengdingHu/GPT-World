@@ -1,0 +1,542 @@
+{
+    "name": "new_environment",
+    "current_time": "2023-04-01T07:00:00",
+    "id": "e_001",
+    "size": [
+        200,
+        150
+    ],
+    "areas": {
+        "e_002": {
+            "name": "Grass area",
+            "id": "e_002",
+            "location": [
+                [
+                    0,
+                    0
+                ],
+                [
+                    50,
+                    50
+                ]
+            ],
+            "border": 1
+        },
+        "e_003": {
+            "name": "Japanese Restaurant",
+            "id": "e_003",
+            "location": [
+                [
+                    50,
+                    0
+                ],
+                [
+                    150,
+                    50
+                ]
+            ],
+            "border": 1
+        },
+        "e_004": {
+            "name": "Chinese Restaurant",
+            "id": "e_004",
+            "location": [
+                [
+                    60,
+                    60
+                ],
+                [
+                    140,
+                    90
+                ]
+            ],
+            "border": 1
+        },
+        "e_005": {
+            "name": "Turkish Restaurant",
+            "id": "e_005",
+            "location": [
+                [
+                    50,
+                    100
+                ],
+                [
+                    150,
+                    150
+                ]
+            ],
+            "border": 1
+        },
+        "e_006": {
+            "name": "Starbucks",
+            "id": "e_006",
+            "location": [
+                [
+                    60,
+                    160
+                ],
+                [
+                    90,
+                    190
+                ]
+            ],
+            "border": 1
+        },
+        "e_007": {
+            "name": "711 Shop",
+            "id": "e_007",
+            "location": [
+                [
+                    100,
+                    0
+                ],
+                [
+                    200,
+                    50
+                ]
+            ],
+            "border": 1
+        }
+    },
+    "objects": {
+        "o_001": {
+            "name": "Flower",
+            "id": "o_001",
+            "location": [
+                10,
+                10
+            ],
+            "engine": "environment",
+            "eid": "e_002"
+        },
+        "a_001": {
+            "name": "Alice",
+            "id": "a_001",
+            "location": [
+                20,
+                20
+            ],
+            "eid": "e_002"
+        },
+        "o_002": {
+            "name": "Table 1",
+            "id": "o_002",
+            "location": [
+                60,
+                10
+            ],
+            "engine": "environment",
+            "eid": "e_003"
+        },
+        "o_003": {
+            "name": "Table 2",
+            "id": "o_003",
+            "location": [
+                80,
+                20
+            ],
+            "engine": "environment",
+            "eid": "e_003"
+        },
+        "o_004": {
+            "name": "Chair 1",
+            "id": "o_004",
+            "location": [
+                65,
+                15
+            ],
+            "engine": "environment",
+            "eid": "e_003"
+        },
+        "o_005": {
+            "name": "Chair 2",
+            "id": "o_005",
+            "location": [
+                65,
+                25
+            ],
+            "engine": "environment",
+            "eid": "e_003"
+        },
+        "a_002": {
+            "name": "Chef",
+            "id": "a_002",
+            "location": [
+                70,
+                40
+            ],
+            "eid": "e_003"
+        },
+        "o_006": {
+            "name": "Sushi",
+            "id": "o_006",
+            "location": [
+                90,
+                30
+            ],
+            "engine": "object",
+            "eid": "e_003"
+        },
+        "o_007": {
+            "name": "Ramen",
+            "id": "o_007",
+            "location": [
+                80,
+                35
+            ],
+            "engine": "object",
+            "eid": "e_003"
+        },
+        "a_003": {
+            "name": "Cook",
+            "id": "a_003",
+            "location": [
+                70,
+                20
+            ],
+            "eid": "e_003"
+        },
+        "o_008": {
+            "name": "Table",
+            "id": "o_008",
+            "location": [
+                80,
+                30
+            ],
+            "engine": "environment",
+            "eid": "e_003"
+        },
+        "o_009": {
+            "name": "Chair",
+            "id": "o_009",
+            "location": [
+                85,
+                30
+            ],
+            "engine": "environment",
+            "eid": "e_003"
+        },
+        "o_010": {
+            "name": "Sushi",
+            "id": "o_010",
+            "location": [
+                90,
+                35
+            ],
+            "engine": "object",
+            "eid": "e_003"
+        },
+        "o_011": {
+            "name": "Table 1",
+            "id": "o_011",
+            "location": [
+                70,
+                70
+            ],
+            "engine": "environment",
+            "eid": "e_004"
+        },
+        "o_012": {
+            "name": "Table 2",
+            "id": "o_012",
+            "location": [
+                70,
+                80
+            ],
+            "engine": "environment",
+            "eid": "e_004"
+        },
+        "o_013": {
+            "name": "Chair 1",
+            "id": "o_013",
+            "location": [
+                75,
+                72
+            ],
+            "engine": "environment",
+            "eid": "e_004"
+        },
+        "o_014": {
+            "name": "Chair 2",
+            "id": "o_014",
+            "location": [
+                75,
+                78
+            ],
+            "engine": "environment",
+            "eid": "e_004"
+        },
+        "a_004": {
+            "name": "Chef Wang",
+            "id": "a_004",
+            "location": [
+                80,
+                75
+            ],
+            "eid": "e_004"
+        },
+        "o_015": {
+            "name": "Kung Pao Chicken",
+            "id": "o_015",
+            "location": [
+                85,
+                72
+            ],
+            "engine": "object",
+            "eid": "e_004"
+        },
+        "o_016": {
+            "name": "Hot and Sour Soup",
+            "id": "o_016",
+            "location": [
+                85,
+                78
+            ],
+            "engine": "object",
+            "eid": "e_004"
+        },
+        "a_005": {
+            "name": "Chef",
+            "id": "a_005",
+            "location": [
+                70,
+                70
+            ],
+            "eid": "e_004"
+        },
+        "o_017": {
+            "name": "Table",
+            "id": "o_017",
+            "location": [
+                80,
+                80
+            ],
+            "engine": "environment",
+            "eid": "e_004"
+        },
+        "o_018": {
+            "name": "Chair",
+            "id": "o_018",
+            "location": [
+                85,
+                80
+            ],
+            "engine": "environment",
+            "eid": "e_004"
+        },
+        "o_019": {
+            "name": "Noodles",
+            "id": "o_019",
+            "location": [
+                90,
+                85
+            ],
+            "engine": "object",
+            "eid": "e_004"
+        },
+        "o_020": {
+            "name": "Table 1",
+            "id": "o_020",
+            "location": [
+                60,
+                110
+            ],
+            "engine": "environment",
+            "eid": "e_005"
+        },
+        "o_021": {
+            "name": "Table 2",
+            "id": "o_021",
+            "location": [
+                80,
+                120
+            ],
+            "engine": "environment",
+            "eid": "e_005"
+        },
+        "o_022": {
+            "name": "Chair 1",
+            "id": "o_022",
+            "location": [
+                62,
+                112
+            ],
+            "engine": "environment",
+            "eid": "e_005"
+        },
+        "o_023": {
+            "name": "Chair 2",
+            "id": "o_023",
+            "location": [
+                64,
+                114
+            ],
+            "engine": "environment",
+            "eid": "e_005"
+        },
+        "a_006": {
+            "name": "Cook",
+            "id": "a_006",
+            "location": [
+                70,
+                130
+            ],
+            "eid": "e_005"
+        },
+        "o_024": {
+            "name": "Lamb Kebab",
+            "id": "o_024",
+            "location": [
+                90,
+                140
+            ],
+            "engine": "object",
+            "eid": "e_005"
+        },
+        "a_007": {
+            "name": "Turkish Cook",
+            "id": "a_007",
+            "location": [
+                70,
+                120
+            ],
+            "eid": "e_005"
+        },
+        "o_025": {
+            "name": "Table",
+            "id": "o_025",
+            "location": [
+                80,
+                130
+            ],
+            "engine": "environment",
+            "eid": "e_005"
+        },
+        "o_026": {
+            "name": "Chair",
+            "id": "o_026",
+            "location": [
+                85,
+                130
+            ],
+            "engine": "environment",
+            "eid": "e_005"
+        },
+        "o_027": {
+            "name": "Baklava",
+            "id": "o_027",
+            "location": [
+                90,
+                135
+            ],
+            "engine": "object",
+            "eid": "e_005"
+        },
+        "o_028": {
+            "name": "Coffee Machine",
+            "id": "o_028",
+            "location": [
+                70,
+                170
+            ],
+            "engine": "object",
+            "eid": "e_006"
+        },
+        "a_008": {
+            "name": "Coffee Staff",
+            "id": "a_008",
+            "location": [
+                80,
+                180
+            ],
+            "eid": "e_006"
+        },
+        "o_029": {
+            "name": "Coffee Machine",
+            "id": "o_029",
+            "location": [
+                60,
+                160
+            ],
+            "engine": "object",
+            "eid": "e_006"
+        },
+        "a_009": {
+            "name": "Barista",
+            "id": "a_009",
+            "location": [
+                70,
+                170
+            ],
+            "eid": "e_006"
+        },
+        "o_030": {
+            "name": "Stocks",
+            "id": "o_030",
+            "location": [
+                120,
+                20
+            ],
+            "engine": "environment",
+            "eid": "e_007"
+        },
+        "o_031": {
+            "name": "Drinks",
+            "id": "o_031",
+            "location": [
+                140,
+                30
+            ],
+            "engine": "environment",
+            "eid": "e_007"
+        },
+        "o_032": {
+            "name": "Snacks",
+            "id": "o_032",
+            "location": [
+                160,
+                40
+            ],
+            "engine": "environment",
+            "eid": "e_007"
+        },
+        "a_010": {
+            "name": "Manager",
+            "id": "a_010",
+            "location": [
+                180,
+                10
+            ],
+            "eid": "e_007"
+        },
+        "o_033": {
+            "name": "Chips",
+            "id": "o_033",
+            "location": [
+                120,
+                10
+            ],
+            "engine": "object",
+            "eid": "e_007"
+        },
+        "o_034": {
+            "name": "Soda",
+            "id": "o_034",
+            "location": [
+                130,
+                20
+            ],
+            "engine": "object",
+            "eid": "e_007"
+        },
+        "a_011": {
+            "name": "Policeman",
+            "id": "a_011",
+            "location": [
+                100,
+                100
+            ],
+            "eid": "e_005"
+        }
+    }
+}

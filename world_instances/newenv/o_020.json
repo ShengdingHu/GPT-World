@@ -1,0 +1,22 @@
+{
+    "traits": "colorful, fragrant",
+    "name": "Flower",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_013",
+    "location": [
+        60,
+        10
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "in bloom",
+    "memory": [
+        "I am a daisy",
+        "I love the sun",
+        "I am 1 year old"
+    ],
+    "incoming_observation": []
+}

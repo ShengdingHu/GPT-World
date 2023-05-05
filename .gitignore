@@ -8,9 +8,10 @@ eggs/
 .eggs/
 *.egg
 **.egg
-build/
+/build
+docs/build
 _build/
-**/build/
+# **/build/
 **/.DS_Store
 
 # dist/

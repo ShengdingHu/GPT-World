@@ -1,0 +1,27 @@
+{
+    "traits": "green, agile, eco-friendly",
+    "name": "Bike",
+    "age": 2,
+    "retention": 8,
+    "eid": "e_007",
+    "location": [
+        35,
+        30
+    ],
+    "max_velocity": "20/s",
+    "moving": "false",
+    "status": "empty",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Ride to the park",
+        "Go to the grocery store"
+    ],
+    "memory": "Bike_LTM",
+    "description": [
+        "This is a green bicycle",
+        "It is very agile and easy to maneuver",
+        "It is an eco-friendly mode of transportation"
+    ],
+    "incoming_observation": []
+}

@@ -1,0 +1,28 @@
+{
+    "traits": "skilled, experienced, creative",
+    "name": "Chef Wang",
+    "age": 45,
+    "retention": 8,
+    "eid": "e_004",
+    "location": [
+        80,
+        75
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "busy cooking",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Prepare ingredients",
+        "Cook dishes",
+        "Serve customers"
+    ],
+    "memory": "Chef Wang_LTM",
+    "description": [
+        "Chef Wang is a famous chef in the Chinese Restaurant",
+        "He has been cooking for over 20 years",
+        "He specializes in Sichuan cuisine"
+    ],
+    "incoming_observation": []
+}

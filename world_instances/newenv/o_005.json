@@ -1,0 +1,21 @@
+{
+    "traits": "steamed, delicious",
+    "name": "Dumplings",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_008",
+    "location": [
+        12,
+        2
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "freshly made",
+    "memory": [
+        "I am a type of Chinese food",
+        "I am made with pork and vegetables"
+    ],
+    "incoming_observation": []
+}
