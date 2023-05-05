@@ -24,5 +24,8 @@ _build/
 
 
 world_instances/.*.running/
+world_instances/debating_room_3ps
 
 apikeys.txt
+
+figs/*
