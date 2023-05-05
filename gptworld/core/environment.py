@@ -295,7 +295,7 @@ class GPTWorldEnv:
                 self.objects[item_id].set_invoice(invoice_prompt + message)
 
     def get_system_message(self, ):
-        system_message = self.env_json['system_message'].get(datetime.datetime.strftime(self.current_time, "%Y-%m-%dT%H:%M:%S"), '')
+        system_message = self.env_json.get('system_message', {}).get(datetime.datetime.strftime(self.current_time, "%Y-%m-%dT%H:%M:%S"), '')
         if system_message != '':
             logger.critical("find system_message: {}".format(system_message))
             self.broadcast_invoice(system_message)
