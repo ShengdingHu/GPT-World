@@ -59,7 +59,9 @@ class GPTWorldEnv:
         self.load_objects_and_agents()
         
         logger.info("Complete environment initialization.")
-        
+        print("len(env.agents)", len(self.agents), [agent.name for agent in self.agents.values()])
+        print("len(env.objects)", len(self.objects), [object.name for object in self.objects.values()])
+
         # TODO: grid mapping from position tuple to agent id
         # self.grid: Dict[Tuple[int, int], str] = {}
 
@@ -68,6 +70,8 @@ class GPTWorldEnv:
 
         # TODO: control mode mapping from agent id to mode (either 'auto' or 'human')
         # self.control_mode: Dict[str, str] = {}
+
+        self.whole_actions = []
 
         pass
 
@@ -116,6 +120,8 @@ class GPTWorldEnv:
             if ag.eid == agent.eid and a_id != agent.id:
                 if ag.name in send_content:
                     ag.add_observation(send_content[ag.name])
+                    print(send_content[ag.name])
+                    self.whole_actions.append(send_content[ag.name])
   
         for o_id in self.objects:
             obj = self.objects[o_id]
@@ -123,6 +129,7 @@ class GPTWorldEnv:
                 if obj.name in send_content:
                     if isinstance(obj, GPTObject):
                         obj.add_observation(send_content[obj.name])
+                        # self.environment.whole_actions.append(send_content[obj.name])
         
 
 
@@ -226,7 +233,7 @@ class GPTWorldEnv:
         # create_agent
         for obj_id, obj in self.env_json['objects'].items():
             if obj_id.startswith('a'):
-                self.agents[obj_id] = GPTAgent(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self,clear_memory=self.clear_memory)
+                self.agents[obj_id] = GPTAgent(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self, clear_memory=self.clear_memory)
             elif obj['id'].startswith('o') and obj['engine'] == 'object':
                 self.objects[obj_id] = GPTObject(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
             elif obj['id'].startswith('o') and obj['engine'] == 'environment':
@@ -270,8 +277,8 @@ class GPTWorldEnv:
         if os.path.exists(INVOICE_PATH):
             with open(INVOICE_PATH, 'r') as fp:
                 incoming_invoice = fp.read()
-                logger.critical("find invoice: {}".format(incoming_invoice))
                 if incoming_invoice:
+                    logger.critical("find invoice: {}".format(incoming_invoice))
                     self.broadcast_invoice(incoming_invoice)
         else:
             logger.warning("No invoice files")

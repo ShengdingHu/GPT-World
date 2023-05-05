@@ -8,7 +8,7 @@ import time
 
 logger = get_logger(__name__)
 
-def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.1,attemps=5, stop=None) -> str:
+def chat(context, MAX_OUTPUT_TOKEN_LEN=1024, temperature=0.1, attemps=5, stop=None) -> str:
     if isinstance(context, str):
         context = [{"role": "user", "content": context}]
     attempt=0
@@ -18,6 +18,7 @@ def chat(context, MAX_OUTPUT_TOKEN_LEN=1024,temperature=0.1,attemps=5, stop=None
                     model="gpt-3.5-turbo",
                     messages=context,
                     stop=stop,
+                    # temperature=temperature, #TBD
                     )
             return response['choices'][0]['message']['content'].strip()
         except Exception as e:

@@ -12,19 +12,15 @@ def main():
 
     args = parser.parse_args()
 
-    # copy the files of the world_instance into a temperary runing folder
+    # copy the files of the world_instance into a temporary running folder
     import shutil
     root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
     static_dir = f"{root}/world_instances/{args.world_instance}/"
     running_dir = f"{root}/world_instances/.{args.world_instance}.running/"
     if os.path.exists(running_dir):
         if not args.continue_run:
-            ans = input(f"Overwrite existing runing world instance at {running_dir}\nInput Y to continue,  N to abort:")
-            if ans == 'Y':
-                shutil.rmtree(running_dir)
-                shutil.copytree(static_dir, running_dir)
-            else:
-                exit(0)
+            shutil.rmtree(running_dir)
+            shutil.copytree(static_dir, running_dir)
     else:
         shutil.copytree(static_dir, running_dir)
 

@@ -1,0 +1,43 @@
+{
+    "name": "Debating Room",
+    "size": [
+        100,
+        100
+    ],
+    "current_time": "2023-04-01T09:00:00",
+    "time_delta": "60",
+    "areas": {
+        "e_001": {
+            "location": [
+                [
+                    1,
+                    1
+                ],
+                [
+                    100,
+                    100
+                ]
+            ],
+            "name": "debating room",
+            "id": "e_001",
+            "border": 1,
+            "color": "0x228B22"
+        }
+    },
+    "objects": {
+        "a_001": {
+            "id": "a_001",
+            "name": "Debator 1",
+            "eid": "e_001",
+            "location": [10, 10]
+        },
+        "a_002": {
+            "id": "a_002",
+            "name": "Debator 2",
+            "eid": "e_001",
+            "location": [10, 30]
+        }
+    },
+    "system_message": {
+    }
+}

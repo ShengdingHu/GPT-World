@@ -75,10 +75,10 @@ class EnvElem:
 
         # 记录当前对话历史，不止包括别人说的，也包括自己说的
         # 直接根据len判断自己是否在对话中
-        self.incoming_interactions = state_dict.get('incoming_interactions',[])
+        self.incoming_interactions = state_dict.get('incoming_interactions', [])
         # 记录下一轮需要处理的新observation
         # self.observation进行过去重，incoming_observation没有去重
-        self.incoming_observation = state_dict.get('incoming_observation',[])
+        self.incoming_observation = state_dict.get('incoming_observation', [])
         self.pending_observation = []  # active observation will first go here, then go to incomming observation
         self.background_observation = []  # passive observation will go here
 
@@ -166,8 +166,8 @@ class EnvElem:
         prompt = "" # TODO: add observation summarization?
 
         # dropout
-        import random;r=[random.random() for _ in range(len(self.short_term_memory))]
-        self.short_term_memory=[s for i,s in enumerate(self.short_term_memory) if r[i]>dropout]
+        import random; r=[random.random() for _ in range(len(self.short_term_memory))]
+        self.short_term_memory = [s for i,s in enumerate(self.short_term_memory) if r[i]>dropout]
 
         
         for ob in self.incoming_observation:
@@ -179,6 +179,11 @@ class EnvElem:
         # logger.info(self.name + f"short-term memory: {self.short_term_memory}")
         self.observation = self.incoming_observation + self.background_observation
         logger.debug("incoming_observation: {}\nbackground_observation: {}".format(self.incoming_observation, self.background_observation))
+
+        print("self.observation:")
+        for obs in self.observation:
+            print("\t{}".format(obs))
+
         return self.observation
     
     def reflect(self,time:datetime):
@@ -291,9 +296,9 @@ class GPTAgent(EnvElem):
         # many different regions. Major in Electrical Engineering, but join in the Natural Language Processing Research Team
         # , very busy at his schoolwork.
         # """
-        qResList1 = self.long_term_memory.query(f"{self.name}'s core characteristics",10,time)
-        qResList2 = self.long_term_memory.query(f"{self.name}'s current daily occupation",10,time)
-        qResList3 = self.long_term_memory.query(f"{self.name}'s feeling about his recent progress in life",10,time)
+        qResList1 = self.long_term_memory.query(f"{self.name}'s core characteristics", 10, time)
+        qResList2 = self.long_term_memory.query(f"{self.name}'s current daily occupation", 10, time)
+        qResList3 = self.long_term_memory.query(f"{self.name}'s feeling about his recent progress in life", 10, time)
 
         q1,q2,q3=map(lambda k: '\n'.join(k),(qResList1,qResList2,qResList3))
 
@@ -488,8 +493,11 @@ Example format:
             end_time=str(dt.combine(time.date(),dt.strptime(entry[1],'%H:%M').time()))
             task=entry[2].strip()
             new_plans.append({'start_time':start_time,'end_time':end_time,'task':task})
-        
+
         logger.info(self.name + "Plan: " + json.dumps(new_plans))
+        for plan in new_plans:
+            print("{} -> {}    {}".format(plan["start_time"], plan["end_time"], plan["task"]))
+
         self.plan=[entry for entry in self.plan if dt.strptime(entry['end_time'],'%Y-%m-%d %H:%M:%S')<=minimum_time]
         self.plan.extend(new_plans)
         return new_plans[0]
@@ -557,11 +565,11 @@ Example format:
 
             # logging.info(self.whole_day_plan)
 
-            for k,v in self.whole_day_plan.items():
-                sPlan=f"This is {self.name}'s plan for {k}: "+','.join(v)
-                self.long_term_memory.add(sPlan,dt.strptime(k,"%B %d %Y"),['plan'])
+            for k, v in self.whole_day_plan.items():
+                sPlan = f"This is {self.name}'s plan for {k}: " + ' '.join(v)
+                self.long_term_memory.add(sPlan, dt.strptime(k, "%B %d %Y"), ['plan'])
             for des in self.description:
-                self.long_term_memory.add(des,current_time,['description'])
+                self.long_term_memory.add(des, current_time, ['description'])
 
         if self.summary is None:
             self.generate_summary(current_time)
@@ -759,7 +767,7 @@ Summarize the dialog above.
         # 一类特殊状态，observation of interaction在对话结束给出摘要时才可以确定，此前不能被环境获取。reverie如何在对话开始时生成一个完整对话暂时没看明白
         # short time observation 应该屏蔽掉同主体同状态防止冗余
 
-        logger.debug("Agent {}, Time: {}, {}, {}".format(self.state_dict['name'], str(current_time), self.status_start_time, datetime.timedelta(self.status_duration)))
+        logger.debug("Agent: {}, Time: {}, {}, {}".format(self.state_dict['name'], str(current_time), self.status_start_time, datetime.timedelta(self.status_duration)))
         
         # # 测试异步
         # if self.state_dict['name'].startswith("A"):
@@ -779,10 +787,16 @@ Summarize the dialog above.
         if self.status_start_time is None: # fixing empty start time
             self.status_start_time = current_time
 
-        if self.status_start_time+datetime.timedelta(self.status_duration) <= current_time:
+        if self.status_start_time + datetime.timedelta(self.status_duration) <= current_time:
             # 根据reverie，不产生新观察
             # 对话过程不会随便转状态，因此把对话duration直接设置无限
             next_plan=self.get_next_plan(current_time)
+
+            if self.name == "Grace": # TBD
+                next_plan["status"] = "let Alice begin deliver her arguments" # TBD
+            else:
+                next_plan["status"] = "following previous conversations to deliver your arguments and supporting details"  # TBD
+
             self.status_start_time=current_time
             self.status=next_plan['status']
             self.status_duration=next_plan['duration']
@@ -802,11 +816,13 @@ Summarize the dialog above.
 
             sSummary = self.summary
             sTime = current_time.strftime("%B %d, %Y, %I:%M %p.")
-            sStatus= f"{self.name}'s status: {self.status}."
+            sStatus= f"{self.status}"
             observation_string = '\n'.join(self.observation) if len(self.observation) > 0 else "none"
             sObservation = f"Observation: {observation_string}"
 
-            subjects=list(set([chat(subject_prompt.format(sentence=ob)) for ob in self.observation]))
+            subjects = [chat(subject_prompt.format(sentence=ob)) for ob in self.observation]
+            subjects = [subject.strip(" .") for subject in subjects]
+            subjects = list(set(subjects))
 
             queries_ob = self.observation.copy()
             queries_sub = [f"What is the {self.name}'s relationship with {sub}?" for sub in subjects]
@@ -820,17 +836,24 @@ Summarize the dialog above.
                 memory_string = "Empty"
             sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
 
+            conversations = "\n".join(self.environment.whole_actions) if len(self.environment.whole_actions)>0 else "None"
+            sync = "Note that there is no need to wait for the end of other debates' speaking, since it is the starting time you perform a certain action."
 
             query_sources = {}
             query_sources['name'] = self.name
-            query_sources['summary'] = sSummary # 论文
+            query_sources['summary'] = sSummary
             query_sources['time'] = sTime
             query_sources['status'] = sStatus
             query_sources['observation'] = sObservation
-            query_sources['context'] = sContext # 长期记忆
+            query_sources['context'] = sContext
+            query_sources['conversations'] = conversations
             query_sources['background_observation'] = self.background_observation
+            query_sources['sync'] = sync
+
+            print("conversations:", conversations)
 
             logger.debug(f"{self.name} | query_sources {query_sources}")
+
 
             reaction_prompt_template = load_prompt(file_dir=self.file_dir, key='reaction_prompt')
 
@@ -841,7 +864,7 @@ Summarize the dialog above.
             self.terminate = False
             self.movement = False
             
-            while not end and count < 2:
+            while not end and count < 1:
                 reaction_result = chat(reaction_prompt, stop=["Observation:"])
                 logger.debug(f"Reaction output: {reaction_result}")
                 match = re.search(r'Action:\s*(.*)', reaction_result)
@@ -873,8 +896,7 @@ Summarize the dialog above.
                 self.status_start_time = current_time
                 self.status = next_plan['status']
                 self.status_duration = next_plan['duration']
-                self.environment.uilogging(f"{self.name}",
-                                           f"status: {self.status}, duration: {self.status_duration}")
+                self.environment.uilogging(f"{self.name}", f"status: {self.status}, duration: {self.status_duration}")
                 self.status=self.reaction_content
                 self.status_duration=0
                 self.status_start_time=current_time
@@ -884,7 +906,7 @@ Summarize the dialog above.
 
         # 3.5 observation拉入记忆
         for ob in self.observation:
-            self.long_term_memory.add(ob,current_time,['observation'])
+            self.long_term_memory.add(ob, current_time, ['observation'])
 
         # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) 
 
@@ -899,7 +921,7 @@ Summarize the dialog above.
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
         
         next_step, next_area = self.find_movement()
-        logger.debug(self.name + "position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
+        logger.debug(self.name + " position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
         if next_step != None: map_editor.move_agent(self, next_step, next_area)
 
         return
