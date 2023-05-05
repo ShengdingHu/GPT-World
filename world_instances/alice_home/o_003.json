@@ -1,13 +1,1 @@
-{
-    "IdentityPrompt": "I am a chair. I cannot give active feedback",
-    "name": "chair",
-    "eid": "e_002",
-    "location": [30, 80], 
-    "engine": "environment",
-    "VelocityUpperBound": "0/s",
-    "Moving": "false",
-    "Schedule": {
-        "timepoint1": "Growing"
-    },
-    "Status": ["Flowering"]
-}
+{"IdentityPrompt": "I am a chair. I cannot give active feedback", "name": "chair", "eid": "e_002", "location": [30, 80], "engine": "environment", "VelocityUpperBound": "0/s", "Moving": "false", "Schedule": {"timepoint1": "Growing"}, "Status": ["Flowering"]}

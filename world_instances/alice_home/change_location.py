@@ -1,8 +1,6 @@
 import os
 import json
 
-exit(0)
-
 env_file = 'environment.json'
 env_data = json.loads(open(env_file, 'r').read())
 
