@@ -1,43 +1,39 @@
-# Visualization Your GPTWorld in Browser!
+# Visualize Your GPTWorld in Browser
 
-## Normal User Setup
+We have designed a web interface for users to view and interact with a world instance. The backend server should be started by specifying a `world_instance`, after that, users (both the host and remote users) could use a url to access the web interface.
 
-Install requirements.txt in the parent directory:
+## Usage
 
-```bash
-cd ..
-pip install -r requirements.txt
-```
+1. Make sure you have install `requirements.txt` in project root directory.
 
-Run backend server (with pre-compiled frontend inside):
+2. Run backend server by
 
 ```bash
-python app.py --world_instance alice_home
+python app.py -W alice_home
 ```
 
-View in your browser:
+3. View in your browser:
 
 Go to `http://localhost:5001` to view your world, others could use `http://{Your IP address}:5001` to access.
 
+4. Distribute the URL to others.
+
 ---
 
-## Developer Setup
+## Development
 
-Install requirements.txt in the parent directory
+1. Make sure you have install `requirements.txt` in project root directory.
 
-```bash
-cd ..
-pip install -r requirements.txt
-```
-
-Install frontend development environment
-
-Go to `frontend_new/rpg-game` -> `src` -> `components` -> `Chat.js` and `GameArea.js`, change `API_ROOT` to `http://localhost:5001` for development mode.
+2. Install frontend development environment by
 
 ```bash
 cd frontend_new/rpg-game
 npm install
 ```
+
+3. Change 
+
+Go to `frontend_new/rpg-game` -> `src` -> `components` -> `Chat.js` and `GameArea.js`, change `API_ROOT` to `http://localhost:5001` for development mode.
 
 Run backend server
 
@@ -51,15 +47,10 @@ cd frontend_new/rpg-game
 npm run dev
 ```
 
-View demo in your browser at `http://localhost:5173`
+View demo in your browser at `http://localhost:3000`
 
 ---
 
-## FYI
+## GPT-World IO Module
 
-1. If you have any question, refer to [this blog](https://saricden.com/how-to-setup-a-phaser-3-project-with-vite)
 
-2. Phaser 3 API doc refer to [this doc](https://photonstorm.github.io/phaser3-docs/)
-
-3. Develop manual
-    - [Add obstacles](https://developer.amazon.com/blogs/post/Tx3AT4I2ENBOI6R/Intro-to-Phaser-Part-3-Obstacles-Collision-Score-Sound-and-Publishing)
