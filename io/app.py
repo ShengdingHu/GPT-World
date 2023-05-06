@@ -48,7 +48,7 @@ if not os.path.exists(ENV_PATH):
         raise RuntimeError(f"No world instance named {args.world_instance} has been found.")
 
 
-# ----------------------- Implement TextToImage By Semantic Matching -------------------------
+# Implement TextToImage By Semantic Matching 
 def load_jsonl(file_path):
     """Loads a JSONL file into a list of dictionaries."""
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -195,10 +195,9 @@ def add_embedding():
         print("An error occured while add named entity embeddings, continue...")
 
 add_embedding()
-# -----------------------------------------------------------------------------------------
 
 
-# ----------------------------- Implement Realtime UI Logging ------------------------------------
+# Implement Realtime UI Logging
 clients = []
 
 @socketio.on('connect')
@@ -256,10 +255,9 @@ def uilogging(sid: str):
         time.sleep(1)
     
     return
-# ----------------------------------------------------------------------------------------
 
 
-# ----------------------------- Static Files (Frontend dist) --------------------------------
+# Static Files (Frontend pre compiled)
 @app.route('/')
 def index():
     return send_from_directory(app.static_folder, 'index.html')
@@ -267,7 +265,6 @@ def index():
 @app.route('/<path:path>')
 def static_file(path):
     return send_from_directory(app.static_folder, path)
-# -------------------------------------------------------------------------------------------
 
 
 @app.route('/read_environment', methods=['GET'])
