@@ -30,7 +30,7 @@ This project is for academic and experimental purposes only. We currently suspec
 
 ### Install
 
-(Important) It is suggested to use `python=3.8` on all platforms.
+It is suggested to use `python=3.8` on all platforms.
 
 1. Download project by
 
