@@ -10,8 +10,7 @@
     top: 0;
     left: 0;
     right: 0;
-    border-top: 2px solid rgb(78, 78, 78);
-    z-index: 5;
+    /* z-index: 5; */
   }
   
   .wall-top {
@@ -19,12 +18,11 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 50px; /* 根据您的图像调整高度 */
-    background: url('../assets/top.png') repeat-x;
-    background-size: 50px 50px; /* 设置背景图像的宽度和高度 */
+    height: 48px; /* 根据您的图像调整高度 */
+    background: url('../assets/top_clean.png') repeat-x;
+    background-size: 24px 48px; /* 设置背景图像的宽度和高度 */
     z-index: 1;
-    background-position: 20px 0;
-    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.3);
+    background-position: 0px 0;
   }
   
   .wall-left {
@@ -32,13 +30,12 @@
     top: 0;
     left: 0;
     bottom: 0;
-    width: 20px; /* 根据您的图像调整宽度 */
+    width: 24px; /* 根据您的图像调整宽度 */
     height: 100%;
-    background: url('../assets/side.png') repeat-y;
-    background-size: 20px 50px; /* 设置背景图像的宽度和高度 */
-    background-position: 0 -2px;
+    background: url('../assets/side_clean.png') repeat-y;
+    background-size: 24px 24px; /* 设置背景图像的宽度和高度 */
+    background-position: 0 0px;
     z-index: 1;
-    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
   }
   
   .wall-right {
@@ -46,35 +43,62 @@
     top: 0;
     right: 0;
     bottom: 0;
-    width: 20px; /* 根据您的图像调整宽度 */
+    width: 24px; /* 根据您的图像调整宽度 */
     height: 100%;
-    background: url('../assets/side.png') repeat-y;
-    background-size: 20px 50px; /* 设置背景图像的宽度和高度 */
+    background: url('../assets/side_clean.png') repeat-y;
+    background-size: 24px 24px; /* 设置背景图像的宽度和高度 */
     z-index: 1;
 
   }
   
+  .wall-top-left {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 24px; /* 根据您的图像调整宽度 */
+    height: 24px; 
+    background: url('../assets/topleft_clean.png') no-repeat;
+    background-size: 24px 24px; /* 设置背景图像的宽度和高度 */
+    z-index: 3;
+
+  }
+
+
+
   .wall-bottom-left {
     position: absolute;
     left: 0;
     bottom: 0;
-    width: 20px; /* 根据您的图像调整宽度 */
-    height: 50px; 
-    background: url('../assets/corner.png') no-repeat;
-    background-size: 20px 50px; /* 设置背景图像的宽度和高度 */
+    width: 24px; /* 根据您的图像调整宽度 */
+    height: 48px; 
+    background: url('../assets/bottom_clean.png') no-repeat;
+    /* background-size: 48px 48px; 设置背景图像的宽度和高度 */
+    background-size: 24px 48px; /* 设置背景图像的宽度和高度 */
     z-index: 3;
 
   }
+
+  .wall-top-right {
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 24px; /* 根据您的图像调整宽度 */
+    height: 24px; 
+    background: url('../assets/topright_clean.png') no-repeat;
+    background-size: 24px 24px; /* 设置背景图像的宽度和高度 */
+    z-index: 3;
+    /* box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1); */
+  }
+
   
   .wall-bottom-right {
     position: absolute;
     right: 0;
     bottom: 0;
-    width: 20px; /* 根据您的图像调整宽度 */
-    height: 50px; 
-    background: url('../assets/corner.png') no-repeat;
-    background-size: 20px 50px; /* 设置背景图像的宽度和高度 */
+    width: 24px; /* 根据您的图像调整宽度 */
+    height: 48px; 
+    background: url('../assets/bottom_clean.png') no-repeat;
+    background-size: 24px 48px; /* 设置背景图像的宽度和高度 */
     z-index: 3;
-    box-shadow: 0 5px 5px rgba(0, 0, 0, 0.1);
   }
   
