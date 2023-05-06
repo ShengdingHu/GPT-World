@@ -59,12 +59,12 @@ def make_entity_embedding(env_path):
 
 if __name__ == "__main__":
     # Project root directory
-    # import argparse
-    # import os
+    import argparse
+    import os
 
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('--world_instance',"-W", type=str, required=True, help='The path of the world instance (in world_instances/)')
-    # args = parser.parse_args()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--world_instance',"-W", type=str, required=True, help='The path of the world instance (in world_instances/)')
+    args = parser.parse_args()
     PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
     make_entity_embedding(os.path.join(PARENT_DIR, "../../world_instances/alice_home"))
-    pass
+

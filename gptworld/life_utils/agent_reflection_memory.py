@@ -372,7 +372,7 @@ class ReflectionMemory():
         # statements = sum([self.query(q, 10, time) for q in questions], [])
         statements = self.query(questions,len(questions)*10,time)
         insights = get_insights(statements)
-        self.uilogging(self.name, f"Insights: {insights}")
+        logger.info(self.name + f" Insights: {insights}")
         for insight in insights:
             self.add(insight, time, tag=['reflection'])
         return insights

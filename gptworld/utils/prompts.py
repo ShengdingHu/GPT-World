@@ -45,6 +45,9 @@ Now begin your actions as the agent. **Important: If a function has been called 
 2. The message might be captured by the potential receiver because of physical distance althought the potential receiver is not the direct target. For example, A is saying some content to B, C is close to A and B, then C might also hear it. 
 3. The message is related to the potential receiver. For example, a `read book` action is not related to the bed in any way, so you shouldn't broadcast. 
 
+Also follow the following rules:
+1. Only broadcast to the listed potential receivers, do not imagine not existing ones. 
+
 You should broadcast using the following format (end with `Finish_Broadcast` ):
 Thought: I will look through the list and pick the ones that meets one of the following principles. I think ... are related, ... will get information, ... might capter.
 Broadcast:

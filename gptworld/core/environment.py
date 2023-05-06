@@ -39,12 +39,6 @@ class GPTWorldEnv:
         env_json,
         file_dir,
         clear_memory=False
-        # name,
-        # id,
-        # size,
-        # areas,
-        # objects = None,
-        # agents = None,
         ):
         # TODO: agents mapping from agent id to AgentThread object
 

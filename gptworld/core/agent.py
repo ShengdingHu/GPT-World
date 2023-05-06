@@ -684,7 +684,7 @@ Summarize the dialog above.
 
 #        self.environment.uilogging(self.name, ">>> find_movement cur_pos: {}, {}".format(self.location, self.eid))
 #        self.environment.uilogging(self.name, ">>> find_movement current_pos: {}".format(next_step))
-
+        
         Q = Queue(maxsize=0)
         Q.put(target)
         while not Q.empty():
@@ -706,9 +706,7 @@ Summarize the dialog above.
                 break
         
         if not reached: self.unreachable_signal(target)
-        self.environment.uilogging(self.name, ">>> find next step!!! : {}".format(next_step))
-#        self.environment.uilogging(self.name, ">>> cur pos!!!: {}".format(self.get_area_location(current_pos)))
-#        self.environment.uilogging(self.name, ">>> std next step!!!: {}".format(self.get_area_location(next_step)))
+        logger.debug(f"{self.name} move to next step: {next_step}")
 
         return self.get_area_location(next_step)
     
@@ -901,9 +899,11 @@ Summarize the dialog above.
 
         # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
         
-        next_step, next_area = self.find_movement()
+        for s in range(10):
+            next_step, next_area = self.find_movement()
+            if next_step != None: map_editor.move_agent(self, next_step, next_area)
         logger.debug(self.name + "position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
-        if next_step != None: map_editor.move_agent(self, next_step, next_area)
+        
 
         return
 

@@ -6,11 +6,15 @@ import Chat from "./components/Chat";
 
 function App() {
   return (
-    <div>
-      <div>WorldGPT User Interface</div>
+    <div className="app">
+      <div className="header">Welcome to GPTWorld</div>
       <div className="container">
         <div className="left-column">
-          <GameArea />
+          <div className="game-area-container">
+            <div className="game-area-scroll">
+              <GameArea />
+            </div>
+          </div>
         </div>
         <div className="right-column">
           <Chat />
@@ -19,5 +23,6 @@ function App() {
     </div>
   );
 }
+
 
 export default App;

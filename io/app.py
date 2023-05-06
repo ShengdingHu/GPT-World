@@ -117,6 +117,8 @@ class TextToImage:
         # Return full path of images
         full_path = os.path.join(self.assets_dir, self.category, top_icon_path)
 
+        print("Full paths", full_path)
+
         return full_path
 
 # Initialize TextToImage functional object
@@ -162,8 +164,10 @@ def text_to_tile_route():
     
     predefined_relative_path = predefined_text_to_image_mapping.get(name, None)
     
+    print("Texture: ", ENV_PATH, predefined_relative_path)
     if predefined_relative_path is not None:
         # Case 1: If the texture is predefined, use predefined texture
+        
         full_path = os.path.join(ENV_PATH, predefined_relative_path)
     else:
         # Case 2: If no predefined texture, use semantic matching

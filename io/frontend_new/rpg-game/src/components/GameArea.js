@@ -47,6 +47,15 @@ const GameArea = () => {
     };
   }, []);
 
+  const getImageSize = (object) => {
+    console.log(object)
+    if ('size' in object) {
+      return { width: object.size[0] * scale, height: object.size[1] * scale};
+    } else {
+      return { width: 5*scale, height: 5*scale };
+    }
+  };
+
   return (
     <div className="game-container">
       {gameData &&
@@ -89,10 +98,7 @@ const GameArea = () => {
                     className="object"
                     src={`${API_ROOT}/text_to_icon?name=${fixedEncodeURIComponent(object.name)}`}
                     alt={object.name}
-                    style={{
-                        width: 40,
-                        height: 40,
-                    }}
+                    style={getImageSize(object)}
                 />
                 <span className="object-tooltip" data-tooltip={object.name}>{object.name}</span>
             </div>
