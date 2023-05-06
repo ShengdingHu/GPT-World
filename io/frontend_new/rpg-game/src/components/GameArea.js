@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import './GameArea.css';
 import './Border.css';
 
-const API_ROOT = '';
-// const API_ROOT = 'http://localhost:5001/';
+const API_ROOT = process.env.REACT_APP_API_ROOT;
 
 
 const ORIGIN_X = 10;
