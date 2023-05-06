@@ -20,11 +20,20 @@ const GameArea = () => {
   const [gameData, setGameData] = useState(null);
   const scale = 4;
 
+  // store the true value of world's size
+  const [true_width, set_true_width] = useState(null);
+  const [true_height, set_true_height] = useState(null);
+
   const loadFile = async () => {
     const environmentApi = API_ROOT + '/read_environment';
     const response = await fetch(environmentApi);
     const data = await response.json();
     setGameData(data.message);
+    
+    // store original width and original height
+    set_true_height(data.message.size[0])
+    set_true_width(data.message.size[1]);
+    
   };
 
 
@@ -47,7 +56,7 @@ const GameArea = () => {
   }, []);
 
   const getImageSize = (object) => {
-    console.log(object)
+    // console.log(object)
     if ('size' in object) {
       return { width: object.size[0] * scale, height: object.size[1] * scale};
     } else {
@@ -56,7 +65,9 @@ const GameArea = () => {
   };
 
   return (
-    <div className="game-container">
+    <div 
+      className="game-container"
+    >
       {gameData &&
         Object.values(gameData.areas).map((area, index) => (
             <div

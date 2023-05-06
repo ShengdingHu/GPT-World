@@ -19,7 +19,7 @@
     top: 0;
     left: 0;
     right: 0;
-    height: 20px; /* 根据您的图像调整高度 */
+    height: 50px; /* 根据您的图像调整高度 */
     background: url('../assets/top.png') repeat-x;
     background-size: 50px 50px; /* 设置背景图像的宽度和高度 */
     z-index: 1;
