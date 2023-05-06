@@ -42,7 +42,14 @@ Then go to library directory.
 
 It is suggested to use `python=3.8` on all platforms.
 
-First install dependencies by
+
+(Optional) Create a python3.8 enviornment by
+
+```
+conda create -n gptworld python=3.8
+```
+
+Install dependencies by
 
 ```sh
 pip install -r requirements.txt
