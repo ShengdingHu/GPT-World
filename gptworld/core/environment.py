@@ -92,7 +92,7 @@ class GPTWorldEnv:
         
         result = chat(EnvironmentPrompt, stop="Finish_Broadcast")
 
-        logger.debug(f"Env broadcast the following content: {result}")
+        logger.debug(f"Candidate Broadcast Target: {agents_and_objects}\n Env broadcast the following content: {result}")
 
         lines = result.split("\n")
         send_content = {}
@@ -289,7 +289,7 @@ class GPTWorldEnv:
                 self.objects[item_id].set_invoice(invoice_prompt + message)
 
     def get_system_message(self, ):
-        system_message = self.env_json.get('system_message', {}).get(datetime.datetime.strftime(self.current_time, "%Y-%m-%dT%H:%M:%S"), '')
+        system_message = self.env_json.get('system_message', {}).get(datetime.datetime.strftime(self.current_time, "%Y-%m-%d %H:%M:%S"), '')
         if system_message != '':
             logger.critical("find system_message: {}".format(system_message))
             self.broadcast_invoice(system_message)
@@ -375,7 +375,7 @@ class GPTWorldEnv:
         """The main loop 
         """
         env_time_delta = int(self.env_json['time_delta'])
-        start_time = datetime.datetime.strptime(self.env_json['current_time'], "%Y-%m-%dT%H:%M:%S")
+        start_time = datetime.datetime.strptime(self.env_json['current_time'], "%Y-%m-%d %H:%M:%S")
         
         self.current_time = start_time
         while True:

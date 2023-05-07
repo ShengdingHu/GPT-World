@@ -80,3 +80,15 @@ python gptworld/create_world.py
 ```bash
 export GPTWORLD_LOG_LEVEL=XXX # (XXX can be debug, info, warning ...) to set the logging level
 ```
+
+
+
+## Star History
+
+<br>
+<div align="center">
+
+<img src="https://api.star-history.com/svg?repos=THUNLP/GPTWorld&type=Date" width="600px">
+
+</div>
+<br>

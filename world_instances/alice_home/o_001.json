@@ -1,1 +1,30 @@
-{"IdentityPrompt": "I am an apple tree", "name": "apple tree", "eid": "e_002", "location": [10, 130], "engine": "object", "VelocityUpperBound": "1/s", "Moving": "false", "size": [10,10], "Schedule": {"timepoint1": "None"}, "Status": ["No movement"]}
+{
+    "IdentityPrompt": "I am an apple tree",
+    "name": "apple tree",
+    "eid": "e_002",
+    "location": [
+        10,
+        130
+    ],
+    "engine": "object",
+    "VelocityUpperBound": "1/s",
+    "Moving": "false",
+    "size": [
+        10,
+        10
+    ],
+    "Schedule": {
+        "timepoint1": "None"
+    },
+    "Status": "none",
+    "description": [
+        "1. Apple trees are deciduous trees that grow slowly, typically taking several years to reach maturity",
+        "2. They are stationary and cannot move or relocate on their own.",
+        "3. Apple trees require specific environmental conditions to grow and thrive, such as adequate sunlight, water, and soil nutrients.",
+        "4. They rely on cross-pollination with other apple trees to produce fruit.",
+        "5. Apple trees can change their growth and yield based on environmental factors such as weather and pests, but they cannot change their basic genetic makeup without human intervention (such as through grafting or genetic engineering).",
+        "6. Apple trees can go dormant in the winter months, slowing down or stopping their growth until the weather warms up again.",
+        "7. Apple trees can sometimes be pruned or trained to change their shape or growth pattern, such as producing more fruit or growing in a certain direction.",
+        "8. Apple trees are susceptible to various diseases and pests that can affect their health and yield, and may require human intervention to control or prevent these issues."
+    ]
+}
