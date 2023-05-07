@@ -1,12 +1,12 @@
 {
     "name": "Alice's Home",
-    "current_time": "2023-04-01T07:00:00",
+    "current_time": "2023-04-01 07:00:00",
     "id": "e_001",
     "size": [
         200,
         150
     ],
-    "time_delta": 60,
+    "time_delta": 120,
     "areas": {
         "e_002": {
             "location": [
@@ -190,6 +190,32 @@
         }
     },
     "objects": {
+        "a_001": {
+            "id": "a_001",
+            "name": "Alice",
+            "eid": "e_005",
+            "location": [
+                93,
+                54
+            ],
+            "size": [
+                7, 13
+            ],
+            "predefined_texture": "DIY/alice.png"
+        },
+        "a_002": {
+            "id": "a_002",
+            "name": "Bob",
+            "eid": "e_006",
+            "location": [
+                89,
+                25
+            ],
+            "size": [
+                10, 10
+            ],
+            "predefined_texture": "DIY/Santa.png"
+        },
         "o_001": {
             "id": "o_001",
             "name": "apple tree",
@@ -199,8 +225,8 @@
                 130
             ],
             "size": [
-                5,
-                5
+                15,
+                15
             ],
             "engine": "object"
         },
@@ -213,8 +239,8 @@
                 130
             ],
             "size": [
-                5,
-                5
+                15,
+                15
             ],
             "engine": "object"
         },
@@ -226,6 +252,10 @@
                 30,
                 80
             ],
+            "size": [
+                10,
+                10
+            ],
             "engine": "environment"
         },
         "o_004": {
@@ -234,11 +264,11 @@
             "eid": "e_004",
             "location": [
                 104,
-                144
+                140
             ],
             "size": [
                 10,
-                5
+                10
             ],
             "engine": "environment"
         },
@@ -249,6 +279,10 @@
             "location": [
                 104,
                 104
+            ],
+            "size": [
+                15,
+                15
             ],
             "engine": "object"
         },
@@ -266,36 +300,17 @@
             ],
             "engine": "environment"
         },
-        "a_001": {
-            "id": "a_001",
-            "name": "Alice",
-            "eid": "e_005",
-            "location": [
-                89,
-                54
-            ]
-        },
-        "a_002": {
-            "id": "a_002",
-            "name": "Bob",
-            "eid": "e_006",
-            "location": [
-                89,
-                15
-            ],
-            "predefined_texture": "DIY/example.png"
-        },
         "o_007": {
             "id": "o_007",
             "name": "Alarm",
             "eid": "e_005",
             "location": [
-                89,
+                84,
                 59
             ],
             "size": [
-                3,
-                3
+                8,
+                8
             ],
             "engine": "object"
         },
@@ -329,6 +344,6 @@
         }
     },
     "system_message": {
-        "2023-04-01T07:00:00": "To Alice: please walk to the sofa and watch TV now."
+        "2023-04-01 07:02:00": "To Alice: please walk to the sofa and watch TV now."
     }
 }

@@ -1,1 +1,25 @@
-{"IdentityPrompt": "I am a tree", "id": "o_002", "name": "apple tree", "eid": "e_002", "location": [20, 130], "engine": "object", "VelocityUpperBound": "0/s", "Moving": "false", "Schedule": {"timepoint1": "Growing"}, "Status": ["Flowering"]}
+{
+    "IdentityPrompt": "I am a tree",
+    "id": "o_002",
+    "name": "apple tree",
+    "eid": "e_002",
+    "location": [
+        20,
+        130
+    ],
+    "engine": "object",
+    "VelocityUpperBound": "0/s",
+    "Moving": "false",
+    "Schedule": {
+        "timepoint1": "Growing"
+    },
+    "Status": "none",
+    "description": [
+        "1. Apple trees typically grow slowly, taking several years to reach maturity.",
+        "2. Apple trees are stationary and cannot move from their location once planted.",
+        "3. Without human intervention, apple trees cannot change their status or characteristics such as their species or fruit type.",
+        "4. Apple trees may naturally change their status in response to environmental factors such as weather patterns, disease, or pests.",
+        "5. Pruning and grafting techniques can alter the growth and fruiting characteristics of an apple tree, but these changes require human intervention."
+    ]
+    
+}

@@ -1,1 +1,32 @@
-{"traits": "brandnew", "name": "dining table", "vision_radius": 8, "attention_bandwidth": 8, "retention": 8, "time": null, "eid": "e_009", "location": [159, 114], "max_velocity": "0/s", "moving": "false", "status": "", "memory": [""], "incoming_observation": []}
+{
+    "traits": "brandnew",
+    "name": "dining table",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_009",
+    "location": [
+        159,
+        114
+    ],
+    "max_velocity": "0/s",
+    "moving": "false",
+    "status": "none",
+    "memory": [
+        ""
+    ],
+    "incoming_observation": [],
+    "description": [
+        "1. A dining table is a piece of furniture designed for eating meals.",
+        "2. It is typically a flat surface supported by legs or a pedestal.",
+        "3. It should have enough space for the dining chairs to fit around it comfortably.",
+        "4. The height of a dining table is usually around 28-30 inches.",
+        "5. It is made of wood.",
+        "7. Its status as a dining table cannot be changed without human intervention.",
+        "8. However, its appearance and function can be altered through decoration, like adding a tablecloth or changing the tableware.",
+        "9. A dining table can be used for other purposes, like studying or working, but it still retains its status as a dining table.",
+        "10. A dining table can last for a long time with proper care and maintenance."
+    ]
+
+}

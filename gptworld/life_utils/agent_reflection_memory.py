@@ -170,8 +170,8 @@ class ReflectionMemory():
             loaded = orjson.loads(f.read())
             jsondata = CacheContent(**loaded)
             # conversions induced by orjson
-            self.data.accessTime.extend([datetime.strptime(a, '%Y-%m-%dT%H:%M:%S') for a in jsondata.accessTime])
-            self.data.createTime.extend([datetime.strptime(a, '%Y-%m-%dT%H:%M:%S') for a in jsondata.createTime])
+            self.data.accessTime.extend([datetime.strptime(a, '%Y-%m-%d %H:%M:%S') for a in jsondata.accessTime])
+            self.data.createTime.extend([datetime.strptime(a, '%Y-%m-%d %H:%M:%S') for a in jsondata.createTime])
             self.data.importance = np.concatenate(
                 [
                     self.data.importance,
@@ -260,6 +260,7 @@ class ReflectionMemory():
                 option=SAVE_OPTIONS
             )
             f.write(out)
+        logger.debug("write the following content: {} to memory file {}.".format(text, self.memory_id))
         return text
 
     def check_repeat(self, text: str, time: datetime):

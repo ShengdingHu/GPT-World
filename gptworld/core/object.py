@@ -13,7 +13,7 @@ from gptworld.life_utils.agent_tool import as_tool, Tool
 import os
 from gptworld.models.openai_api import chat
 from gptworld.core.agent import EnvElem
-
+from gptworld.utils.prompts import load_prompt
 import gptworld.utils.logging as logging
 logger = logging.get_logger(__name__)
 
@@ -79,20 +79,19 @@ class GPTObject(EnvElem):
         """
         super().__init__(agent_file=agent_file, environment=environment)
 
-        sumPrompt=f"""Give me rules and characteristics of a {self.name} \
-especially on what circumstances it can change or cannot change its status \
-and what kind of status changing can be done without human intervention. 
-The answer should be as concise and accurate as possible. 
-Output format:
-1. I grow very slowly.
-2. I cannot move
-3. I cannot shut down myself unless some one do so. 
-"""
-        self.summary=f'Pretend you are a {self.name}, obeying following rules:\n' + chat(sumPrompt)
-        # self.summary = ""
+        self.description = self.state_dict.get("description", "")
+        self.description = "\n".join(self.description)
+        if len(self.description) == 0:
+            summary_prompt_template = load_prompt(file_dir=self.file_dir, key='object_summary')
+            summary_prompt = summary_prompt_template.format(name=self.name)
 
+            self.description = chat(summary_prompt)
+            logger.debug(f"Objects {self.name} is created with the following description: {self.description}")
+
+        self.summary=f'Now you are act as a {self.name} in the virtual world, obeying following rules:\n' + self.description
+        logger.info(f"Objects {self.name} mounted into area {self.environment.get_elem_by_id(self.eid)}")
         self.blocking = False
-        logger.info(f"Objects {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
+
 
 
 
