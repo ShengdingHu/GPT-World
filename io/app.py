@@ -4,6 +4,7 @@ import json
 from functools import lru_cache
 import logging
 import numpy as np
+from scipy.spatial import distance
 from typing import List, Dict
 
 from flask import Flask, request, send_file, send_from_directory
@@ -21,24 +22,19 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--world_instance',"-W", type=str, required=True, help='The path of the world instance (in world_instances/)')
 args = parser.parse_args()
 
-# Create flask app
-app = Flask(__name__, static_url_path='', static_folder='./frontend_new/rpg-game/build') # create app with static folder
-app.logger.setLevel(logging.INFO)
-socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=5, ping_interval=5) # create socket io
-CORS(app)
-
 # Project root directory
 PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
+
+# Pre-compiled frontend path
+FRONTEND_PATH = os.path.join(PARENT_DIR, "frontend_new/rpg-game/build")
 
 # Include assets including icons, tiles
 ASSETS_DIR = os.path.join(PARENT_DIR, "assets")
 
-# Environment path
+# World instance path
 ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", f".{args.world_instance}.running")
 
-environment_config_file = None
-predefined_text_to_image_mapping = {}
-
+# Check if world instance exist
 if not os.path.exists(ENV_PATH):
     if os.path.exists(os.path.join(f"{PARENT_DIR}/../world_instances/", args.world_instance)):
         # raise RuntimeError(f"Found static files of world: {args.world_instance}, but it has been copied into the running folder. Please start the engine by running `python gptworld/run.py -W {args.world_instance}` first.")
@@ -47,64 +43,105 @@ if not os.path.exists(ENV_PATH):
     else:
         raise RuntimeError(f"No world instance named {args.world_instance} has been found.")
 
+# Global variables
+environment_config_file = None
+predefined_text_to_image_mapping = {}
 
-# ----------------------- Implement TextToImage By Semantic Matching -------------------------
-def load_jsonl(file_path):
-    """Loads a JSONL file into a list of dictionaries."""
-    with open(file_path, 'r', encoding='utf-8') as f:
-        return [json.loads(line) for line in f]
+# Create flask app with static folder
+app = Flask(__name__, static_url_path='', static_folder=FRONTEND_PATH) 
+app.logger.setLevel(logging.INFO)
 
-def calculate_similarity(list1: List[float], list2: List[float]) -> float:
-    """ calculate the cosine similarity of two semantic vectors
-    """
-    arr1 = np.array(list1)
-    arr2 = np.array(list2)
-    dot_product = np.dot(arr1, arr2)
-    norm1 = np.linalg.norm(arr1)
-    norm2 = np.linalg.norm(arr2)
-    cosine_similarity = dot_product / (norm1 * norm2)
-    return cosine_similarity
+# create socket io
+socketio = SocketIO(app, cors_allowed_origins="*", ping_timeout=5, ping_interval=5) 
 
-def find_most_similar_list(query: List[float], n: int, database: Dict[str, List[float]]) -> List[str]:
-    """ find the most similar icons for new query in predefined database
-    """
-    similarities = {}
-    for list_id, lst in database.items():
-        similarity = calculate_similarity(query, lst)
-        similarities[list_id] = similarity
-    sorted_similarities = sorted(similarities.items(), key=lambda x: x[1], reverse=True)
-    most_similar_lists = [list_id for list_id, similarity in sorted_similarities[:n]]
-    return most_similar_lists
+CORS(app)
 
-class TextToImage:
-    def __init__(self, assets_dir: str, category: str):
+
+# Static Files (pre-compiled frontend)
+@app.route('/')
+def index():
+    return send_from_directory(app.static_folder, 'index.html')
+
+@app.route('/<path:path>')
+def static_file(path):
+    return send_from_directory(app.static_folder, path)
+
+
+# read_environment API
+@app.route('/read_environment', methods=['GET'])
+def read_environment():
+    global environment_config_file
+    global predefined_text_to_image_mapping
+    
+    environment_main_path = os.path.join(ENV_PATH, 'environment.json')
+    with open(environment_main_path, 'r') as f:
+        content = json.load(f)
+        environment_config_file = content
+    
+    # Build predefined text to image mapping (if exist)
+    predefined_text_to_image_mapping = {}
+    for key in environment_config_file["objects"]:
+        value = environment_config_file["objects"][key]
+        predefined_text_to_image_mapping[value["name"]] = value.get("predefined_texture", None)
+    for key in environment_config_file["areas"]:
+        value = environment_config_file["areas"][key]
+        predefined_text_to_image_mapping[value["name"]] = value.get("predefined_texture", None)
+    
+    data = {'message': content}
+    return jsonify(data)
+
+
+# Implement Semantic Matching 
+class SemanticMatching:
+    def __init__(self, assets_dir: str, world_instance_path: str, category: str):
         self.assets_dir = assets_dir
+        self.world_instance_path = world_instance_path
         self.category = category
         self.existing_object_name_to_embedding = {}
+        
         # Build a map of image path -> semantic embedding vectors
         self.image_path_to_embedding = {}
 
+        # Load semantic embeddings from image library
         try:
-            icon_data = load_jsonl(os.path.join(self.assets_dir, f'{self.category}_embeddings.jsonl'))
-            for item in icon_data:
+            image_library_embedding_path = os.path.join(self.assets_dir, f'{self.category}_embeddings.jsonl')
+            with open(image_library_embedding_path, 'r', encoding='utf-8') as f:
+                image_data = [json.loads(line) for line in f]
+            for item in image_data:
                 path = item["path"]
                 embedding = item["embedding"]
                 self.image_path_to_embedding[path] = embedding
             print(f"Loaded {self.category} embeddings")
         except:
             print(f"Failed to load {self.category} embeddings")
+        
+        # Load semantic embeddings from image library from environment
+        try:
+            embedding_path = os.path.join(self.world_instance_path, 'embeddings.json')
+            with open(embedding_path, 'r') as f:
+                content = json.load(f)
+            
+            # Update the TextToImage module
+            for name in content.keys():
+                embedding = content[name]
+                self.existing_object_name_to_embedding[name] = embedding
+        except:
+            print("An error occured while add named entity embeddings, continue...")
 
         return
 
-    def add_existing_object(self, name: str, embedding: List[float]):
-        self.existing_object_name_to_embedding[name] = embedding
-        return
+    @classmethod
+    def find_most_similar_list(cls, query: List[float], database: Dict[str, List[float]]) -> List[str]:
+        """ find the most similar icons for new query in predefined database
+        """
+        cosine_similarities = {k: np.dot(query, v) / (np.linalg.norm(query) * np.linalg.norm(v)) for k, v in database.items()}
+        most_similar_key = max(cosine_similarities, key=cosine_similarities.get)
+        return most_similar_key
     
     @lru_cache(maxsize=512)
     def query(self, name: str):
         """ Find top icons according to a query, use cache to avoid redundant computation
         """
-
         # First get the embedding of query word
         query_vector = self.existing_object_name_to_embedding.get(name, None)
         if query_vector is None:
@@ -112,7 +149,7 @@ class TextToImage:
             return None
         
         # After getting the query embedding, find the top icon names
-        top_icon_path = find_most_similar_list(query_vector, 1, self.image_path_to_embedding)[0]
+        top_icon_path = self.find_most_similar_list(query_vector, self.image_path_to_embedding)
 
         # Return full path of images
         full_path = os.path.join(self.assets_dir, self.category, top_icon_path)
@@ -121,11 +158,13 @@ class TextToImage:
 
         return full_path
 
-# Initialize TextToImage functional object
-text_to_icon = TextToImage(ASSETS_DIR, "icon")
-text_to_tile = TextToImage(ASSETS_DIR, "tile")
 
-# Flask API
+# Initialize TextToImage functional object
+text_to_icon = SemanticMatching(ASSETS_DIR, ENV_PATH, "icon")
+text_to_tile = SemanticMatching(ASSETS_DIR, ENV_PATH, "tile")
+
+
+# text_to_icon API
 @app.route('/text_to_icon', methods=['GET'])
 def text_to_icon_route():
     global environment_config_file
@@ -152,6 +191,7 @@ def text_to_icon_route():
     img_io.seek(0)
     return send_file(img_io, mimetype='image/png')
 
+# text_to_tile API
 @app.route('/text_to_tile', methods=['GET'])
 def text_to_tile_route():
     global environment_config_file
@@ -181,25 +221,8 @@ def text_to_tile_route():
     img_io.seek(0)
     return send_file(img_io, mimetype='image/png')
 
-def add_embedding():
-    try:
-        embedding_path = os.path.join(ENV_PATH, 'embeddings.json')
-        with open(embedding_path, 'r') as f:
-            content = json.load(f)
-        
-        # Update the TextToImage module
-        for name in content.keys():
-            embedding = content[name]
-            text_to_icon.add_existing_object(name, embedding)
-            text_to_tile.add_existing_object(name, embedding)
-    except:
-        print("An error occured while add named entity embeddings, continue...")
 
-add_embedding()
-# -----------------------------------------------------------------------------------------
-
-
-# ----------------------------- Implement Realtime UI Logging ------------------------------------
+# Implement Realtime UI Logging
 clients = []
 
 @socketio.on('connect')
@@ -257,42 +280,8 @@ def uilogging(sid: str):
         time.sleep(1)
     
     return
-# ----------------------------------------------------------------------------------------
 
-
-# ----------------------------- Static Files (Frontend dist) --------------------------------
-@app.route('/')
-def index():
-    return send_from_directory(app.static_folder, 'index.html')
-
-@app.route('/<path:path>')
-def static_file(path):
-    return send_from_directory(app.static_folder, path)
-# -------------------------------------------------------------------------------------------
-
-
-@app.route('/read_environment', methods=['GET'])
-def read_environment():
-    global environment_config_file
-    global predefined_text_to_image_mapping
-    
-    environment_main_path = os.path.join(ENV_PATH, 'environment.json')
-    with open(environment_main_path, 'r') as f:
-        content = json.load(f)
-        environment_config_file = content
-    
-    # Build predefined text to image mapping (if exist)
-    predefined_text_to_image_mapping = {}
-    for key in environment_config_file["objects"]:
-        value = environment_config_file["objects"][key]
-        predefined_text_to_image_mapping[value["name"]] = value.get("predefined_texture", None)
-    for key in environment_config_file["areas"]:
-        value = environment_config_file["areas"][key]
-        predefined_text_to_image_mapping[value["name"]] = value.get("predefined_texture", None)
-    
-    data = {'message': content}
-    return jsonify(data)
-
+# Drop invoice API
 def drop_invoice(invoice: str):
     """
     drop invoice to a file for the agent to be notified.

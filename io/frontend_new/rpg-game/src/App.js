@@ -11,9 +11,7 @@ function App() {
       <div className="container">
         <div className="left-column">
           <div className="game-area-container">
-            <div className="game-area-scroll">
               <GameArea />
-            </div>
           </div>
         </div>
         <div className="right-column">

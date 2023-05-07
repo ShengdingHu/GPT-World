@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import "./Chat.css";
 
-const API_ROOT = '';
-// const API_ROOT = 'http://localhost:5001/';
+const API_ROOT = process.env.REACT_APP_API_ROOT;
 
 
 const Chat = () => {

@@ -20,18 +20,15 @@
   display: flex;
   justify-content: space-between;
   width: 80%;
-  max-width: 1200px;
+  height: 80%;
 }
 
 .game-area-container {
   width: 100%;
-  height: 500px;
+  height: 100%;
   overflow: auto;
 }
 
-.game-area-scroll {
-  width: 130%;
-}
 
 .left-column {
   flex: 2;
