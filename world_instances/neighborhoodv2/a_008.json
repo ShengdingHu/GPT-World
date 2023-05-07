@@ -1,0 +1,27 @@
+{
+    "traits": "friendly, helpful",
+    "name": "Shopkeeper",
+    "age": 30,
+    "retention": 8,
+    "eid": "e_006",
+    "location": [
+        105,
+        55
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "working",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Help customers find what they need",
+        "Restock shelves when needed"
+    ],
+    "memory": "Shopkeeper_LTM",
+    "description": [
+        "The shopkeeper is a friendly person who loves to help customers",
+        "She has been working at the 711 shop for 5 years",
+        "She knows the inventory like the back of her hand"
+    ],
+    "incoming_observation": []
+}

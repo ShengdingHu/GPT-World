@@ -1,0 +1,21 @@
+{
+    "traits": "modern, efficient",
+    "name": "Coffee Machine",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_006",
+    "location": [
+        60,
+        160
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "ready to make coffee",
+    "memory": [
+        "I am a coffee machine in Starbucks",
+        "I can make many different types of coffee"
+    ],
+    "incoming_observation": []
+}

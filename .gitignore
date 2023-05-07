@@ -8,10 +8,12 @@ eggs/
 .eggs/
 *.egg
 **.egg
-build/
+/build
+docs/build
 _build/
 **/build/
 **/node_modules
+**/.DS_Store
 # dist/
 # dist/*
 
@@ -22,3 +24,5 @@ _build/
 
 
 world_instances/.*.running/
+
+apikeys.txt

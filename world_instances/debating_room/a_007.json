@@ -27,7 +27,13 @@
             "Grace always takes care of the student",
             "Grace majors in social science in university.",
             "The debaters include Alice, Bob, Carot, Dave, Eve, Fedo.",
+<<<<<<< HEAD
             "Alice, Bob and Carot are affirmative debaters, while Dave, Eve and Fedo are opposition debaters."
+=======
+            "Alice, Bob and Carot are affirmative debaters, while Dave, Eve and Fedo are opposition debaters.",
+            "Host should speak first and give the rules and speaking order to every one.",
+            "The registration process and preparation has been complete. It is time to directly debate."
+>>>>>>> main
         ],
     "incoming_observation":
         [

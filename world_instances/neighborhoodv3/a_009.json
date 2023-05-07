@@ -1,0 +1,27 @@
+{
+    "traits": "wise, humorous, friendly",
+    "name": "Grandpa",
+    "age": 80,
+    "retention": 8,
+    "eid": "e_010",
+    "location": [
+        180,
+        40
+    ],
+    "max_velocity": "0.5/s",
+    "moving": "false",
+    "status": "admiring the flowers",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Enjoy the scenery",
+        "Chat with Grandma"
+    ],
+    "memory": "Grandpa_LTM",
+    "description": [
+        "Grandpa is a retired engineer",
+        "He loves gardening and photography",
+        "He has a great sense of humor"
+    ],
+    "incoming_observation": []
+}

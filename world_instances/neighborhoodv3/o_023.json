@@ -1,0 +1,22 @@
+{
+    "traits": "red, fast, sporty",
+    "name": "Car1",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_011",
+    "location": [
+        60,
+        60
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "new",
+    "memory": [
+        "I am a red sports car",
+        "I can go really fast",
+        "I was just bought by my owner"
+    ],
+    "incoming_observation": []
+}

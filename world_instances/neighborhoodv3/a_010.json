@@ -1,0 +1,27 @@
+{
+    "traits": "experienced, careful, confident",
+    "name": "Driver1",
+    "age": 35,
+    "retention": 8,
+    "eid": "e_011",
+    "location": [
+        70,
+        70
+    ],
+    "max_velocity": "30/s",
+    "moving": "false",
+    "status": "driving",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Drive to work",
+        "Pick up kids from school"
+    ],
+    "memory": "Driver1_LTM",
+    "description": [
+        "Driver1 is an experienced driver",
+        "Driver1 is 35 years old",
+        "Driver1 loves to drive"
+    ],
+    "incoming_observation": []
+}

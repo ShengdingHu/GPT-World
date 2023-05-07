@@ -1,0 +1,22 @@
+{
+    "traits": "modern, stainless steel",
+    "name": "Cooker",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_006",
+    "location": [
+        40,
+        40
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "turned off",
+    "memory": [
+        "I am a cooker in Alice's home",
+        "I am modern and made of stainless steel",
+        "I can cook delicious food"
+    ],
+    "incoming_observation": []
+}

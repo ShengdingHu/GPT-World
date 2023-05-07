@@ -1,0 +1,26 @@
+{
+    "traits": "brave, just",
+    "name": "Policeman",
+    "age": 35,
+    "retention": 8,
+    "eid": "e_005",
+    "location": [
+        100,
+        100
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "patrolling the neighborhood",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Keep the neighborhood safe",
+        "Help people in need"
+    ],
+    "memory": "Policeman_LTM",
+    "description": [
+        "The policeman has worked in this neighborhood for 5 years",
+        "He is respected by the community"
+    ],
+    "incoming_observation": []
+}

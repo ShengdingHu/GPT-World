@@ -1,0 +1,22 @@
+{
+    "traits": "bright, cheerful, tall",
+    "name": "Sunflower",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_006",
+    "location": [
+        60,
+        60
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "growing",
+    "memory": [
+        "I am a bright and cheerful sunflower",
+        "I am tall and strong",
+        "I love the sunshine"
+    ],
+    "incoming_observation": []
+}

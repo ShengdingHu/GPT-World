@@ -1,0 +1,21 @@
+{
+    "traits": "fizzy, sweet",
+    "name": "Soda",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_007",
+    "location": [
+        130,
+        20
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "ready to be drank",
+    "memory": [
+        "I am a can of soda in the 711 shop",
+        "I come in many different flavors"
+    ],
+    "incoming_observation": []
+}

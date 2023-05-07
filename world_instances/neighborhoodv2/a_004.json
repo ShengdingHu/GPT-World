@@ -1,0 +1,28 @@
+{
+    "traits": "experienced, skilled, friendly",
+    "name": "Chef Liu",
+    "age": 35,
+    "retention": 8,
+    "eid": "e_004",
+    "location": [
+        70,
+        50
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "preparing food",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Prepare dumplings",
+        "Stir-fry vegetables",
+        "Boil noodles"
+    ],
+    "memory": "Chef Liu_LTM",
+    "description": [
+        "Chef Liu has been cooking for over 10 years",
+        "He specializes in Chinese cuisine",
+        "He is known for his delicious dumplings"
+    ],
+    "incoming_observation": []
+}

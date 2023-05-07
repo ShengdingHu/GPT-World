@@ -1,0 +1,22 @@
+{
+    "traits": "black, sleek, modern",
+    "name": "Car2",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_011",
+    "location": [
+        90,
+        90
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "new",
+    "memory": [
+        "I am a black modern car",
+        "I have a sleek design",
+        "I was just bought by my owner"
+    ],
+    "incoming_observation": []
+}

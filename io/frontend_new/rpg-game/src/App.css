@@ -1,0 +1,48 @@
+
+.app {
+  background-color: #f2f2f2;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.header {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 2rem;
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  width: 80%;
+  height: 80%;
+}
+
+.game-area-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+}
+
+
+.left-column {
+  flex: 2;
+  margin-right: 2rem;
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.right-column {
+  flex: 1;
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}

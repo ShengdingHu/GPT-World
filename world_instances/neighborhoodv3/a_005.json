@@ -1,0 +1,25 @@
+{
+    "traits": "skilled, experienced",
+    "name": "Cook",
+    "age": 40,
+    "retention": 8,
+    "eid": "e_007",
+    "location": [
+        120,
+        35
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "busy cooking",
+    "status_duration": 0,
+    "status_start_time": null,
+    "plan": [
+        "Cook delicious Chinese food"
+    ],
+    "memory": "Cook_LTM",
+    "description": [
+        "The cook has been cooking for 20 years",
+        "He is famous for his delicious Chinese food"
+    ],
+    "incoming_observation": []
+}

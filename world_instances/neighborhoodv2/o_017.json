@@ -1,0 +1,20 @@
+{
+    "traits": "cold, refreshing, fizzy",
+    "name": "Soda",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_006",
+    "location": [
+        120,
+        60
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "new",
+    "memory": [
+        "I am a new soda in the 711 shop."
+    ],
+    "incoming_observation": []
+}

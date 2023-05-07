@@ -1,0 +1,21 @@
+{
+    "traits": "large, high-definition, smart",
+    "name": "TV",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_008",
+    "location": [
+        5,
+        10
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "on",
+    "memory": [
+        "I am a TV in Bob's living room",
+        "I can play Netflix and Youtube"
+    ],
+    "incoming_observation": []
+}

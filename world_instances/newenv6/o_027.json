@@ -1,0 +1,21 @@
+{
+    "traits": "sweet, flaky",
+    "name": "Baklava",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_005",
+    "location": [
+        90,
+        135
+    ],
+    "max_velocity": "1/s",
+    "moving": "false",
+    "status": "ready to be served",
+    "memory": [
+        "I am a piece of baklava in the Turkish restaurant",
+        "I have been made by the skilled Turkish cook"
+    ],
+    "incoming_observation": []
+}

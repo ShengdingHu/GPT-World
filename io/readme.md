@@ -1,64 +1,67 @@
-# Visualization Your GPTWorld in Browser!
+# Visualize Your GPTWorld Instance in Browser
 
-## Normal User Setup
+We have designed a web interface for users to view and interact with a world instance. The server should be started by specifying a `world_instance`, after that, users (including remote users) could use a url to access the web interface.
 
-Install requirements.txt in the parent directory:
+## Usage
 
-```bash
-cd ..
-pip install -r requirements.txt
-```
+1. Make sure you have install `requirements.txt` in project root directory.
 
-Run backend server (with pre-compiled frontend inside):
+2. Start server by
 
 ```bash
-python app.py --world_instance alice_home
+python app.py -W alice_home
 ```
 
-View in your browser:
+The server will try to read `world_instance` folder in project root directory and find your specified world instance.
+
+3. View in your browser:
 
 Go to `http://localhost:5001` to view your world, others could use `http://{Your IP address}:5001` to access.
 
+4. Distribute the URL to others.
+
 ---
 
-## Developer Setup
+## For Developer
 
-Install requirements.txt in the parent directory
+The web interface consists of two components: a `react` frontend and a `flask` backend. In release version, we have pre-compiled the frontend client, and make it a part of backend, which will make all things convenient. 
+
+For develooment, we should seperately handle frontend and backend.
+
+1. Make sure you have install `requirements.txt` in project root directory.
+
+2. Install frontend development environment by
 
 ```bash
-cd ..
-pip install -r requirements.txt
-```
-
-Install frontend development environment
-
-```bash
-cd frontend
+cd frontend_new/rpg-game
 npm install
-npm install phaser
 ```
 
-Run backend server
+3. Start backend server by 
 
 ```bash
-python app.py --world_instance alice_home
+cd .
+python app.py -W alice_home
 ```
 
-Run frontend develop server: open another termial
+4. Start frontend development server by
+
 ```bash
-cd frontend
-npm run dev
+cd frontend_new/rpg-game
+npm start
 ```
 
-View demo in your browser at `http://localhost:5173`
+5. View
 
----
+View demo in your browser at `http://localhost:3000`
 
-## FYI
+6. Release
 
-1. If you have any question, refer to [this blog](https://saricden.com/how-to-setup-a-phaser-3-project-with-vite)
+If you would like to release your work, please pre-compile your frontend client by
 
-2. Phaser 3 API doc refer to [this doc](https://photonstorm.github.io/phaser3-docs/)
+```bash
+cd frontend_new/rpg-game
+npm run build
+```
 
-3. Develop manual
-    - [Add obstacles](https://developer.amazon.com/blogs/post/Tx3AT4I2ENBOI6R/Intro-to-Phaser-Part-3-Obstacles-Collision-Score-Sound-and-Publishing)
+It will produce a `build` folder under `frontend_new/rpg-game`. Then you are done, the backend server will automatically read it.

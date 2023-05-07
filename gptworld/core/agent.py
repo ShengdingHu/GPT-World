@@ -14,10 +14,14 @@ from gptworld.life_utils.agent_tool import as_tool, Tool
 
 import os
 from gptworld.models.openai_api import chat
-
+from itertools import chain
 import gptworld.utils.logging as logging
 import gptworld.utils.map_editor as map_editor
+from gptworld.utils.prompts import load_prompt
+
 logger = logging.get_logger(__name__)
+
+
 
 
 # print(os.path.exists(INVOICE_PATH))
@@ -44,11 +48,11 @@ class EnvElem:
         llm: callable -> a function which could call llm and return response
         tools: List[Tool] -> a list of Tool
         prompt_template: str -> a template for prompt
-
         """
         # base system 
         self.observation = []
         self.agent_file = agent_file
+        self.file_dir = os.path.dirname(self.agent_file)
         self.id = os.path.splitext(os.path.basename(self.agent_file))[0]
         new_state_dict = self.load_from_file(agent_file)
         state_dict = new_state_dict
@@ -67,8 +71,6 @@ class EnvElem:
         self.max_velocity = self.state_dict.get("max_velocity", 1)
 
         # interaction
-        self.incoming_interactions = [{"sender": "A", "message": "XXX"}]
-        self.incomming_objection = []
         self.incoming_invoice = []  # empty str represents no invoice, later can be changed to list
 
         # 记录当前对话历史，不止包括别人说的，也包括自己说的
@@ -77,10 +79,14 @@ class EnvElem:
         # 记录下一轮需要处理的新observation
         # self.observation进行过去重，incoming_observation没有去重
         self.incoming_observation = state_dict.get('incoming_observation',[])
-        self.pending_observation = []
+        self.pending_observation = []  # active observation will first go here, then go to incomming observation
+        self.background_observation = []  # passive observation will go here
 
         # current status information
-        self.status = self.state_dict.get('status','idle')
+        self.default_status = "none"
+        self.status = self.state_dict.get('status', self.default_status)
+        if len(self.status.strip(''))==0:
+            self.status = self.default_status
         self.status_duration = self.state_dict.get('status_duration',0)
         self.status_start_time = self.state_dict.get('status_start_time',None)
 
@@ -155,23 +161,24 @@ class EnvElem:
             import math; limit=math.inf
         
         if self.environment is not None:
-            self.incoming_observation.extend(self.environment.get_neighbor_environment(self.id))
+            self.background_observation.extend(self.environment.get_neighbor_environment(self.id))
+        
+        prompt = "" # TODO: add observation summarization?
 
         # dropout
         import random;r=[random.random() for _ in range(len(self.short_term_memory))]
         self.short_term_memory=[s for i,s in enumerate(self.short_term_memory) if r[i]>dropout]
 
-        self.observation = []
-        while len(self.incoming_observation)>0 and len(self.observation)<limit:
-            ob=self.incoming_observation[0]
-            self.incoming_observation.pop(0)
+        
+        for ob in self.incoming_observation:
             if ob not in self.short_term_memory:
-                self.observation.append(ob)
                 self.short_term_memory=[s for s in self.short_term_memory if not s.split('is')[0] == ob.split('is')[0]]
                 self.short_term_memory.append(ob)
                 # observation在这里不能直接拉进记忆，否则query出来的全是observation，没有意义
                 # 在reaction判定结束以后再拉近记忆比较好。
-        self.environment.uilogging(self.name, f"short-term memory: {self.short_term_memory}")
+        # logger.info(self.name + f"short-term memory: {self.short_term_memory}")
+        self.observation = self.incoming_observation + self.background_observation
+        logger.debug("incoming_observation: {}\nbackground_observation: {}".format(self.incoming_observation, self.background_observation))
         return self.observation
     
     def reflect(self,time:datetime):
@@ -182,9 +189,12 @@ class EnvElem:
     
     def add_observation(self, observation):
         self.pending_observation.append(observation)
+    
+    def sync(self, current_time):
+        self._move_pending_observation_or_invoice()
+
 
     def _move_pending_observation_or_invoice(self):
-        
         if len(self.incoming_invoice) > 0:
             self.incoming_observation.append(self.incoming_invoice[0])
             self.incoming_invoice.pop(0)
@@ -229,10 +239,12 @@ class GPTAgent(EnvElem):
         """
         super().__init__(agent_file=agent_file, environment=environment,clear_memory=clear_memory)
 
-        self.age = self.state_dict.get('age', 'unknown')
 
+        self.age = self.state_dict.get('age', 'unknown')
+        self.plan = [{"task": "XXX", "start_time": datetime.datetime(2023,4, 1), "end_time": datetime.datetime(2023,4, 1)}]
+        
         # self summary of current state.
-        self.summary = self.state_dict.get('summary', None)
+        self.summary = self.state_dict.get( 'summary', None)
 
         # Broad Stroke Plan
         # format: {"%B %d %Y": ["... ", "... ", ...]} no strict format
@@ -483,7 +495,7 @@ Example format:
             task=entry[2].strip()
             new_plans.append({'start_time':start_time,'end_time':end_time,'task':task})
         
-        self.environment.uilogging(self.name, "Plan: " + json.dumps(new_plans))
+        logger.info(self.name + "Plan: " + json.dumps(new_plans))
         self.plan=[entry for entry in self.plan if dt.strptime(entry['end_time'],'%Y-%m-%d %H:%M:%S')<=minimum_time]
         self.plan.extend(new_plans)
         return new_plans[0]
@@ -607,7 +619,7 @@ Summarize the dialog above.
             area_size = (x1 - x0 + 1) * (y1 - y0 + 1)
             if x0 <= x <= x1 and y0 <= y <= y1 and area_size < current_size:
                 current_size = area_size
-                ret_location, ret_eid = [x - x0 + 1, y - y0 + 1], eid
+                ret_location, ret_eid = abs_location, eid
 
         return ret_location, ret_eid
                 
@@ -615,42 +627,41 @@ Summarize the dialog above.
 #        self.observe()  # TODO: 为什么这里要 observe
         self.environment.uilogging(self.name, "Target {} is unreacable.".format(target))
 
-    def fetch_movement_target(self):
-        target_candidate = []
-        for obj in self.environment.objects:
-            target_candidate.append({'name':self.environment.objects[obj].name, 'id':self.environment.objects[obj].id})
-        for agt in self.environment.agents:
-            target_candidate.append({'name':self.environment.agents[agt].name, 'id':self.environment.agents[agt].id})
-        return target_candidate
+    def fetch_objects(self):
+        objects = {}
+        for id, info in self.environment.env_json['objects'].items():
+            objects[id] = info['name']
+        return objects
 
     def analysis_movement_target(self, target_description):
-        target_candidate = self.fetch_movement_target()
-        prompt = f"""Now you want to perform a movement action. I will give you a list of 
-        objects and agents that you might be your target. 
-        List: {target_candidate}
-        You target movement is : {target_description}
-        Give me the id of the movement target (with out `id` prefix).
-        """
-        self.target_id = chat(prompt)
+        objects = self.fetch_objects()
+        prompt = """Now you want to perform a movement action. I will give you a list of 
+                objects and agents that you might be your target. 
+                List: {}
+                You target movement is : {}
+                Give me the id of the movement target (with out `id` prefix). 
+                Note that you can only give ONE movement target.
+                """.format(json.dumps(objects), target_description)
 
-        logger.debug(self.name + "target prompt: {}, target_id: {}".format(target_description, self.target_id))
+        self.target_id = 'ERROR'
+        RETRY_LIMIT = 3
+        for tid in range(RETRY_LIMIT):
+            self.target_id = chat(prompt)
+            self.environment.uilogging(self.name, ">>>>>>> target prompt: {}".format(target_description))
+            self.environment.uilogging(self.name, ">>>>>>> target id: {}".format(self.target_id))
+            if self.target_id in objects: break
 
     def find_movement(self):
-        def abs_location(pos, eid):
-            area_delta = self.environment.env_json['areas'][eid]['location'][0]
-            target = [pos[0] + area_delta[0] - 1, pos[1] + area_delta[1] - 1]
-            return target
-
         target_id = self.target_id
         target = None
         for id, info in self.environment.env_json['objects'].items():
 #            self.environment.uilogging(self.name, "compare id: {}, target_id: {}".format(id, target_id))
             if id == target_id:
-                target = abs_location(info['location'], info['eid'])
+                target = info['location']
                 break
 
-        self.environment.uilogging(self.name, ">>> find_movement target_id: {}".format(target_id))
-        self.environment.uilogging(self.name, ">>> find_movement target_pos: {}".format(target))
+#        self.environment.uilogging(self.name, ">>> find_movement target_id: {}".format(target_id))
+#        self.environment.uilogging(self.name, ">>> find_movement target_pos: {}".format(target))
 
         if target_id == "ERROR" or target == None:
             self.unreachable_signal("[N/A]")
@@ -672,13 +683,13 @@ Summarize the dialog above.
 
         d[target[0]][target[1]] = 0
 
-        current_pos = abs_location(self.location, self.eid)
+        current_pos = self.location
         next_step = current_pos
         if next_step == target: return None, None
 
-        self.environment.uilogging(self.name, ">>> find_movement cur_pos: {}, {}".format(self.location, self.eid))
-        self.environment.uilogging(self.name, ">>> find_movement current_pos: {}".format(next_step))
-
+#        self.environment.uilogging(self.name, ">>> find_movement cur_pos: {}, {}".format(self.location, self.eid))
+#        self.environment.uilogging(self.name, ">>> find_movement current_pos: {}".format(next_step))
+        
         Q = Queue(maxsize=0)
         Q.put(target)
         while not Q.empty():
@@ -700,11 +711,48 @@ Summarize the dialog above.
                 break
         
         if not reached: self.unreachable_signal(target)
-        logger.debug(self.name + ">>> find next step!!! : {}".format(next_step))
-        logger.debug(self.name + ">>> cur pos!!!: {}".format(self.get_area_location(current_pos)))
-        logger.debug(self.name + ">>> std next step!!!: {}".format(self.get_area_location(next_step)))
+        logger.debug(f"{self.name} move to next step: {next_step}")
 
         return self.get_area_location(next_step)
+    
+    def act(self, description=None, target=None):
+        if description is None:
+            return
+        if target is None:
+            reaction_content = f"{self.name} performs action: '{description}'."
+        else:
+            reaction_content = f"{self.name} performs action to {target}: '{description}'."
+        self.reaction_content += reaction_content
+        logger.info(reaction_content)
+        self.environment.broadcast_observations(self, target, reaction_content)
+        
+
+    def say(self, description, target=None):
+        if description is None:
+            return
+        if target is None:
+            reaction_content = f"{self.name} says: '{description}'."
+        else:
+            reaction_content = f"{self.name} says to {target}: '{description}'."
+        self.reaction_content += reaction_content
+        logger.info(reaction_content)
+        self.environment.broadcast_observations(self, target, reaction_content)
+
+
+    def move(self, description):
+        if description is None:
+            self.movement=False
+        else:
+            self.movement=True
+            self.movement_description = description
+    
+    def change_status(self, change):
+        if change==True:
+            self.terminate=True
+        else:
+            self.terminate=False
+            
+
 
     def react(self, current_time):
         """
@@ -861,15 +909,21 @@ Summarize the dialog above.
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
+        目前尽量塞主step函数简化变量调用，TODO:后期切成几个子函数方便维护
         """
 
         # 产生observation的条件： following reverie, 所有observation都是主体或客体的状态，所以这一步暂时直接交给环境处理。
         # 一类特殊状态，observation of interaction在对话结束给出摘要时才可以确定，此前不能被环境获取。reverie如何在对话开始时生成一个完整对话暂时没看明白
         # short time observation 应该屏蔽掉同主体同状态防止冗余
 
+<<<<<<< HEAD
         logger.info("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
         # self.print()
 
+=======
+        logger.debug("Agent {}, Time: {}, {}, {}".format(self.state_dict['name'], str(current_time), self.status_start_time, datetime.timedelta(self.status_duration)))
+        
+>>>>>>> main
         # # 测试异步
         # if self.state_dict['name'].startswith("A"):
         #     time.sleep(20)
@@ -879,20 +933,24 @@ Summarize the dialog above.
         self.minimal_init(current_time)
 
         # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
-
-
-
         # 0. If incoming_invoice is available, process it with the highest priority
-
+    
         # 1. 如果当前正在向openai请求，调过这一步
         # if not self.incoming_invoice:  # Only move the pending observation without any incoming invoice
+<<<<<<< HEAD
         self._move_pending_observation_or_invoice()
         # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）
 
         # TODO: functionize all actions
 
         if self.status_start_time is None:  # fixing empty start time
+=======
+        # self._move_pending_observation_or_invoice()
+        # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
+        if self.status_start_time is None: # fixing empty start time
+>>>>>>> main
             self.status_start_time = current_time
+
         if self.status_start_time+datetime.timedelta(self.status_duration) <= current_time:
             # 根据reverie，不产生新观察
             # 对话过程不会随便转状态，因此把对话duration直接设置无限
@@ -901,8 +959,20 @@ Summarize the dialog above.
             self.status=next_plan['status']
             self.status_duration=next_plan['duration']
             self.environment.uilogging(f"{self.name}", f"status: {self.status}, duration: {self.status_duration}")
+<<<<<<< HEAD
 
         subject_prompt = load_prompt(file_dir=self.file_dir, key='subject_parsing')
+=======
+        # 3. 检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
+        #    多个observation一起处理，处理过就扔进短期记忆。
+        #    短期记忆是已经处理过的observation。
+        #    这里假定环境的observation是完整的，查重任务交给short time memory
+        #    当前设计思路 interaction不做特殊处理，防止阻塞自身和他人动作，同时支持多人讨论等场景。
+        self.observe()
+        might_react=len(self.incoming_observation)>0 or len(self.background_observation)>0
+
+        subject_prompt =  load_prompt(file_dir=self.file_dir, key='subject_parsing')
+>>>>>>> main
 
         if might_react:
             self.reflect(current_time)
@@ -913,8 +983,12 @@ Summarize the dialog above.
             observation_string = '\n'.join(self.observation) if len(self.observation) > 0 else "none"
             sObservation = f"Observation: {observation_string}"
 
+<<<<<<< HEAD
             subjects=list(set([chat(subject_prompt.format(sentence=ob)).strip('". ')
                                for ob in self.observation]))
+=======
+            subjects=list(set([chat(subject_prompt.format(sentence=ob)) for ob in self.observation]))
+>>>>>>> main
 
             queries_ob = self.observation.copy()
             queries_sub = [f"What is the {self.name}'s relationship with {sub}?" for sub in subjects]
@@ -1005,5 +1079,17 @@ Summarize the dialog above.
         if self.step_cnt % self.reflection_interval == 0:
             self.reflect(current_time)
 
+<<<<<<< HEAD
+=======
+
+        # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
+        
+        for s in range(10):
+            next_step, next_area = self.find_movement()
+            if next_step != None: map_editor.move_agent(self, next_step, next_area)
+        logger.debug(self.name + "position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
+        
+
+>>>>>>> main
         return
 
