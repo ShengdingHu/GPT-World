@@ -190,7 +190,6 @@
         }
     },
     "objects": {
-<<<<<<< HEAD
         "a_001": {
             "id": "a_001",
             "name": "Alice",
@@ -217,8 +216,6 @@
             ],
             "predefined_texture": "DIY/Santa.png"
         },
-=======
->>>>>>> main
         "o_001": {
             "id": "o_001",
             "name": "apple tree",
@@ -228,13 +225,8 @@
                 130
             ],
             "size": [
-<<<<<<< HEAD
                 15,
                 15
-=======
-                5,
-                5
->>>>>>> main
             ],
             "engine": "object"
         },
@@ -247,13 +239,8 @@
                 130
             ],
             "size": [
-<<<<<<< HEAD
                 15,
                 15
-=======
-                5,
-                5
->>>>>>> main
             ],
             "engine": "object"
         },
@@ -265,13 +252,10 @@
                 30,
                 80
             ],
-<<<<<<< HEAD
             "size": [
                 10,
                 10
             ],
-=======
->>>>>>> main
             "engine": "environment"
         },
         "o_004": {
@@ -280,19 +264,11 @@
             "eid": "e_004",
             "location": [
                 104,
-<<<<<<< HEAD
                 140
             ],
             "size": [
                 10,
                 10
-=======
-                144
-            ],
-            "size": [
-                10,
-                5
->>>>>>> main
             ],
             "engine": "environment"
         },
@@ -304,13 +280,10 @@
                 104,
                 104
             ],
-<<<<<<< HEAD
             "size": [
                 15,
                 15
             ],
-=======
->>>>>>> main
             "engine": "object"
         },
         "o_006": {
@@ -327,48 +300,17 @@
             ],
             "engine": "environment"
         },
-<<<<<<< HEAD
-=======
-        "a_001": {
-            "id": "a_001",
-            "name": "Alice",
-            "eid": "e_005",
-            "location": [
-                89,
-                54
-            ]
-        },
-        "a_002": {
-            "id": "a_002",
-            "name": "Bob",
-            "eid": "e_006",
-            "location": [
-                89,
-                15
-            ],
-            "predefined_texture": "DIY/example.png"
-        },
->>>>>>> main
         "o_007": {
             "id": "o_007",
             "name": "Alarm",
             "eid": "e_005",
             "location": [
-<<<<<<< HEAD
                 84,
                 59
             ],
             "size": [
                 8,
                 8
-=======
-                89,
-                59
-            ],
-            "size": [
-                3,
-                3
->>>>>>> main
             ],
             "engine": "object"
         },

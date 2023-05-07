@@ -916,14 +916,8 @@ Summarize the dialog above.
         # 一类特殊状态，observation of interaction在对话结束给出摘要时才可以确定，此前不能被环境获取。reverie如何在对话开始时生成一个完整对话暂时没看明白
         # short time observation 应该屏蔽掉同主体同状态防止冗余
 
-<<<<<<< HEAD
-        logger.info("Agent {}, Current Time: {}".format(self.state_dict['name'], str(current_time)) )
-        # self.print()
-
-=======
         logger.debug("Agent {}, Time: {}, {}, {}".format(self.state_dict['name'], str(current_time), self.status_start_time, datetime.timedelta(self.status_duration)))
         
->>>>>>> main
         # # 测试异步
         # if self.state_dict['name'].startswith("A"):
         #     time.sleep(20)
@@ -937,18 +931,10 @@ Summarize the dialog above.
     
         # 1. 如果当前正在向openai请求，调过这一步
         # if not self.incoming_invoice:  # Only move the pending observation without any incoming invoice
-<<<<<<< HEAD
-        self._move_pending_observation_or_invoice()
-        # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）
 
-        # TODO: functionize all actions
-
-        if self.status_start_time is None:  # fixing empty start time
-=======
         # self._move_pending_observation_or_invoice()
         # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
         if self.status_start_time is None: # fixing empty start time
->>>>>>> main
             self.status_start_time = current_time
 
         if self.status_start_time+datetime.timedelta(self.status_duration) <= current_time:
@@ -959,10 +945,6 @@ Summarize the dialog above.
             self.status=next_plan['status']
             self.status_duration=next_plan['duration']
             self.environment.uilogging(f"{self.name}", f"status: {self.status}, duration: {self.status_duration}")
-<<<<<<< HEAD
-
-        subject_prompt = load_prompt(file_dir=self.file_dir, key='subject_parsing')
-=======
         # 3. 检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
         #    多个observation一起处理，处理过就扔进短期记忆。
         #    短期记忆是已经处理过的observation。
@@ -972,7 +954,6 @@ Summarize the dialog above.
         might_react=len(self.incoming_observation)>0 or len(self.background_observation)>0
 
         subject_prompt =  load_prompt(file_dir=self.file_dir, key='subject_parsing')
->>>>>>> main
 
         if might_react:
             self.reflect(current_time)
@@ -983,12 +964,9 @@ Summarize the dialog above.
             observation_string = '\n'.join(self.observation) if len(self.observation) > 0 else "none"
             sObservation = f"Observation: {observation_string}"
 
-<<<<<<< HEAD
             subjects=list(set([chat(subject_prompt.format(sentence=ob)).strip('". ')
                                for ob in self.observation]))
-=======
             subjects=list(set([chat(subject_prompt.format(sentence=ob)) for ob in self.observation]))
->>>>>>> main
 
             queries_ob = self.observation.copy()
             queries_sub = [f"What is the {self.name}'s relationship with {sub}?" for sub in subjects]
@@ -1079,17 +1057,5 @@ Summarize the dialog above.
         if self.step_cnt % self.reflection_interval == 0:
             self.reflect(current_time)
 
-<<<<<<< HEAD
-=======
-
-        # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
-        
-        for s in range(10):
-            next_step, next_area = self.find_movement()
-            if next_step != None: map_editor.move_agent(self, next_step, next_area)
-        logger.debug(self.name + "position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
-        
-
->>>>>>> main
         return
 

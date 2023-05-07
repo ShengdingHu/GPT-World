@@ -124,6 +124,7 @@ class GPTWorldEnv:
     def from_file(cls, file_dir, file_name ="environment.json",clear_memory=False):
         logger.info(f"Loading environment from {file_dir}")
         with open(os.path.join(file_dir, file_name), 'r') as f:
+            print(os.path.join(file_dir, file_name))
             data = json.load(f)
         return cls(**{"env_json": data, "file_dir": file_dir,"clear_memory":clear_memory})
         
