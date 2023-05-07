@@ -1,12 +1,12 @@
 {
     "name": "Alice's Home",
-    "current_time": "2023-04-01T07:00:00",
+    "current_time": "2023-04-01 07:00:00",
     "id": "e_001",
     "size": [
         200,
         150
     ],
-    "time_delta": 60,
+    "time_delta": 120,
     "areas": {
         "e_002": {
             "location": [
@@ -329,6 +329,6 @@
         }
     },
     "system_message": {
-        "2023-04-01T07:00:00": "To Alice: please walk to the sofa and watch TV now."
+        "2023-04-01 07:02:00": "To Alice: please walk to the sofa and watch TV now."
     }
 }

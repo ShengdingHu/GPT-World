@@ -1,1 +1,29 @@
-{"traits": "brandnew", "name": "Alarm Clock", "vision_radius": 8, "attention_bandwidth": 8, "retention": 8, "time": null, "eid": "e_005", "location": [89, 59], "max_velocity": "0/s", "moving": "false", "status": "", "memory": ["Alarm at 7:00 o'clock"], "incoming_observation": []}
+{
+    "traits": "brandnew",
+    "name": "Alarm Clock",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_005",
+    "location": [
+        89,
+        59
+    ],
+    "max_velocity": "0/s",
+    "moving": "false",
+    "status": "none",
+    "memory": [
+        "Alice has set me to Alarm at 7:01"
+    ],
+    "incoming_observation": [],
+    "description": [
+        "1. An alarm clock is an electronic device used to set and sound an alarm at a specific time to wake up the user.",
+        "2. It typically consists of a clock display and alarm sound output.",
+        "3. The alarm sound can be adjusted in terms of volume and tone.",
+        "4. The alarm setting can be changed by the user manually using the buttons or knobs on the device.",
+        "5. Some alarm clocks may have additional features, such as a snooze button to delay the alarm for a few minutes.",
+        "6. Once set, the alarm will sound at the designated time unless manually turned off by the user.",
+        "7. In some cases, the alarm clock may be able to automatically adjust for daylight saving time changes or changes in time zones without human intervention."
+    ]
+}
