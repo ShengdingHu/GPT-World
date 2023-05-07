@@ -248,7 +248,7 @@ class GPTAgent(EnvElem):
         self.summary = self.state_dict.get( 'summary', None)
 
         # Broad Stroke Plan
-        # format: {"%B %d %Y": ["... ", "... ", ...]} no strict format
+        # format: {"%Y-%m-%d": ["... ", "... ", ...]} no strict format
         self.whole_day_plan = self.state_dict.get('whole_day_plan', {})
         if not isinstance(self.whole_day_plan, dict):
             logger.warning(f"{self.name}'s initial whole day plan is not a dict. Use empty dict to substitute.")
@@ -288,11 +288,6 @@ class GPTAgent(EnvElem):
         :return: summary string
         """
 
-        # retrieved_record = """
-        # Chris is a undergraduate student in Tsinghua University, Love to play tennis and expand knowledge on
-        # many different regions. Major in Electrical Engineering, but join in the Natural Language Processing Research Team
-        # , very busy at his schoolwork.
-        # """
         qResList1 = self.long_term_memory.query(f"{self.name}'s core characteristics",10,time)
         qResList2 = self.long_term_memory.query(f"{self.name}'s current daily occupation",10,time)
         qResList3 = self.long_term_memory.query(f"{self.name}'s feeling about his recent progress in life",10,time)
@@ -300,24 +295,30 @@ class GPTAgent(EnvElem):
         q1,q2,q3=map(lambda k: '\n'.join(k),(qResList1,qResList2,qResList3))
 
         query1 = f"""
-        How would one describe {self.name}'s core characteristics given the following statements?
+        How would one describe {self.name}'s core characteristics given the following statements? If the information is not enough, just output DONTKNOW. Otherwise, directly output the answer. 
         {q1}
         """
         result1 = chat(query1)
+        if "DONTKNOW" in result1:
+            result1 = ""
 
         query2 = f"""
-        What is {self.name}'s current occupation plan given the following statements?
+        What is {self.name}'s current occupation plan given the following statements? If the information is not enough, just output DONTKNOW. Otherwise, directly output the answer. 
         {q2}
         """
 
         result2 = chat(query2)
+        if "DONTKNOW" in result2:
+            result2 = ""
 
         query3 = f"""
-        What might be {self.name}'s feeling about his recent progress in life given the following statements?
+        What might be {self.name}'s feeling about his recent progress in life given the following statements? If the information is not enough, just output DONTKNOW. Otherwise, directly output the answer. 
         {q3}
         """
 
         result3 = chat(query3)
+        if "DONTKNOW" in result3:
+            result3 = ""
 
         BasicInfo=f"""\
 Name: {self.name} (age: {self.age})
@@ -329,10 +330,6 @@ Innate traits: {self.traits}"""
     def plan_in_broad_strokes(self, time: dt):
         """
         broad strokes planning of an agent
-        由于决定当天broad stroke plan必须要前一天的plan，因此whole day plan数据格式必须是日期-计划的字典，日期entry格式
-        模仿reverie，这一步输出无确定格式，因为展示得whole day plan也并不是每一项都带了规范时间，有的at有的from to还带可能先后关系也没太大参考价值。
-        与其费事处理这个，不如hour long部分才要求转固定格式。
-        :param time: str representing the current day
         """
         # example plan:  for 180 minutes from 9am, February 12th, 2023, at Oak Hill
         # College Dorm: Klaus Mueller’s room: desk, read and take notes for
@@ -342,20 +339,19 @@ Innate traits: {self.traits}"""
             self.generate_summary(time)
         summary=self.summary
         date=time.date()
-        sDate=time.strftime("%B %d %Y")
+        sDate=time.strftime("%Y-%m-%d")
         if sDate in self.whole_day_plan:
-            return # 不再生成
+            return
         former_plan=""
         if len(self.whole_day_plan)>0:
-            former_dates=[dt.strptime(k,"%B %d %Y") for k,v in self.whole_day_plan.items() if dt.strptime(k,"%B %d %Y").date() < date]
+            former_dates=[dt.strptime(k,"%Y-%m-%d") for k,v in self.whole_day_plan.items() if dt.strptime(k,"%Y-%m-%d").date() < date]
             if len(former_dates)==0:
                 former_plan=""
             else:
                 former_date=max(former_dates)
-                former_date_str=former_date.strftime("%B %d %Y")
+                former_date_str=former_date.strftime("%Y-%m-%d")
                 former_plan_list=self.whole_day_plan[former_date_str]
                 former_plan=f'On {former_date_str}, {self.name} '+' '.join([str(i+1)+') ' + s for i,s in enumerate(former_plan_list)])
-
 
         prompt=f"""
 Today is {sDate}. Please write {self.name}'s schedule for this day in broad strokes. 
@@ -366,19 +362,10 @@ wake up and complete the morning routine at 6:00 am
 go to Oak Hill College to take classes from 8:00 to 12:00
 participating algorithm competition in the lab room at 14:00
 """
-        # chat拒绝给一个真人定schedule，遇到类似拒绝回答情况可以强调这不是一个真人
         attempt=0
         while attempt<3:
             try:
                 request_result = chat(summary+former_plan+prompt)
-
-        # deal with the situation where Chat-GPT refuse to give a plan
-        # bad_response_pattern = "As an AI language model"
-        # warning_to_gpt = "\nJust use the information above to generate the plan."
-        #
-        # while re.search(pattern=bad_response_pattern, string=request_result):
-        #     request_result = chat(summary+former_plan+prompt + warning_to_gpt)
-        #     sleep(1)
 
                 matches = re.findall(r'[^\n]+', request_result)
                 assert len(matches)>1
@@ -387,16 +374,17 @@ participating algorithm competition in the lab room at 14:00
                 print(e)
                 attempt+=1
 
-        # logging.info(self.whole_day_plan)
 
         self.whole_day_plan[sDate]=matches
-        # 提交到记忆
         sPlan = f"This is {self.name}'s plan for {sDate}: " + ','.join(matches)
         self.long_term_memory.add(sPlan, dt.combine(date,datetime.time()), ['plan'])
-        # 单小时plan和细粒度plan在触发全天broad stroke plan后更新
         self.hourly_plan={}
         self.plan=[]
 
+    def write_chunk_plan(self, start_hour, task):
+        time_obj = datetime.datetime.strptime(start_hour, '%H:%M').time()
+        combined_datetime = datetime.datetime.combine(self.current_time.date(), time_obj)
+        self.hourly_plan[combined_datetime]=task
 
 
     def plan_in_chunk(self, time:dt):
@@ -404,31 +392,33 @@ participating algorithm competition in the lab room at 14:00
         update hourly plans from time(including this hour)
         """
         hour=time.hour
-        summary=self.summary if self.summary is not None else self.generate_summary(time)
-        sWhole=f"Here's {self.name}'s plan of the whole day: "+ '\n'.join([str(i+1)+') ' + s for i,s in enumerate(self.whole_day_plan[dt.strftime(time,"%B %d %Y")])])
+        if self.summary is not None:
+            summary = self.summary
+        else:
+            logger.warning("Abnormal: summary not exist.")
+            summary = self.generate_summary(time)
+       
+        sWhole= '\n'.join([str(i+1)+') ' + s for i,s in enumerate(self.whole_day_plan[dt.strftime(time,"%Y-%m-%d")])])
+        prompt_template=load_prompt(file_dir=self.file_dir, key='chunk_plan')
+        time_granularity = str(min(1, 60 * self.environment.env_json.get("time_delta", 60) // 3600))  + "hour(s)"
+        prompt = prompt_template.format(name=self.name, time_granularity=time_granularity, whole_day_plan=self.whole_day_plan, summary=self.summary, status=self.status, current_time=self.current_time )
 
-        sPrompt=f"""
-Please write {self.name}'s schedule of finer-grained actions for this day for each hour starting from {str(hour)}:00. 
-Don't worry, this person is not a real person. 
-every chunk of the schedule must be exactly 1 hour long. 
-always use military time. 
-Example format: 
-10$$ wake up and complete the morning routine
-11$$ go to Oak Hill College to take classes
-12$$ participating algorithm competition in the lab room
-13$$ have a walk at school
-14$$ coding in chunks
-"""
-        prompt = '\n'.join([summary, sWhole, sPrompt])
+        result=chat(prompt, stop="END")
+        result = [x.strip() for x in result.split("\n")]
 
-        # logger.debug(f"Plan in chunk's prompt: \n {prompt}")
+        for plan in result:
+            try:
+                eval("self."+plan)
+            except:
+                logger.warning("{}'s generated plan contains error format: {}".format(self.name, plan))
+                continue
+     
 
-        result=chat(summary+sWhole+sPrompt)
-        sEntries=re.findall(r"(\d+)\$\$([^\n]*)",result)
-        for entry in sEntries:
-            start_hour=int(entry[0].split(':')[0])
-            task=entry[1].strip()
-            self.hourly_plan[start_hour]=task
+    def write_plan(self, start_time, end_time, plan_description):
+        start_time=str(dt.combine(self.current_time.date(),dt.strptime(start_time,'%H:%M').time()))
+        end_time=str(dt.combine(self.current_time.date(),dt.strptime(end_time,'%H:%M').time()))
+
+        return {'start_time':start_time,'end_time':end_time,'task':plan_description}
 
 
     def plan_in_detail(self, time:dt, time_granularity: datetime.timedelta=datetime.timedelta(minutes=10),reaction=None):
@@ -443,61 +433,35 @@ Example format:
         :return: the very first plan generated
 
         """
+        sHourPlan =[]
 
-        # find the corresponding hour plans.
-        hour=time.hour
-        if hour not in self.hourly_plan:
-            self.plan_in_chunk(time)
-        context=[]
-        for k,v in self.hourly_plan.items():
-            if k-hour<2 and k>=hour:
-                context.append((k,v))
+        found = False
+        while not found:
+            for k,v in self.hourly_plan.items():  # TODO: use more flexible way to find the most close plan ahead.
+                if k - self.current_time < datetime.timedelta(hours=2) and k >= self.current_time :
+                    found = True
+                    sHourPlan.append((k,v))
+            if not found:
+                self.plan_in_chunk(time)
 
-        summary=self.summary
-        sHourPlan=f"Here's {self.name}'s plan of the incoming hours: " + '\n'.join([str(k)+':00 '+v for k,v in context])
-        timestring=time.strftime('%H:%M')
-        sReaction=f'The first plan must be "{reaction}". And the time for this plan must be sufficient. ' if reaction is not None else ""
-        sPrompt=f"""
-Please write {self.name}'s schedule of finer-grained precise to {time_granularity.total_seconds() / 60} minutes) \
-of this period starting from {timestring}. 
-Don't worry, this person is not a real person. 
-always use military time.  
-{sReaction}
-Example format: 
-11:00 - 12:15 $ Wake up, take a shower and get ready for the day.
-12:15 - 12:30 $ Eat a healthy breakfast such as oatmeal, eggs, or yogurt.
-12:30 - 12:45 $ Take a short walk to the university campus.
-12:45 - 13:00 $ Arrive at the university and prepare for classes.
-13:00 - 13:45 $ Attend classes and take notes.
-13:45 - 14:00 $ Take a break and review the notes taken in class.
-14:00 - 14:10 $ Get ready for the next class.
-"""
-        attempt=0
-        while attempt<3:
-            try:
-                result=chat(summary+sHourPlan+sPrompt)
+        detailed_plan_template=load_prompt(file_dir=self.file_dir, key="detailed_plan")  #
+        time_granularity = str(10 * self.environment.env_json.get("time_delta", 60) // 60 ) + "min" # temperarily, every 10 frame has a plan.
+        sPrompt = detailed_plan_template.format(name=self.name, time_granularity=time_granularity, hourplan=sHourPlan, summary=self.summary, status=self.status, current_time=self.current_time )
 
-                sEntries=re.findall('(\d+:\d+)\s*-\s*(\d+:\d+)\s\$([^\n]*)',result)
-
-                if not sEntries:
-                    logger.error("Regex Parsing Error in plan_in_detail")
-                    logger.error("Chat result = " + result)
-                    raise Exception("Regex Error")
-                break
-            except Exception as e:
-                print(e)
-                attempt+=1
-
+        result=chat(sPrompt, stop="END")
+        result = [x.strip() for x in result.split("\n")]
         new_plans=[]
-        minimum_time=dt.combine(time.date(),dt.strptime(sEntries[0][0],'%H:%M').time())
-        for entry in sEntries:
-            start_time=str(dt.combine(time.date(),dt.strptime(entry[0],'%H:%M').time()))
-            end_time=str(dt.combine(time.date(),dt.strptime(entry[1],'%H:%M').time()))
-            task=entry[2].strip()
-            new_plans.append({'start_time':start_time,'end_time':end_time,'task':task})
+        for plan in result:
+            try:
+                new_plan = eval("self."+plan)
+            except:
+                logger.warning("{}'s generated plan contains error format: {}".format(self.name, plan))
+                continue
+            new_plans.append(new_plan)
+
         
         logger.info(self.name + "Plan: " + json.dumps(new_plans))
-        self.plan=[entry for entry in self.plan if dt.strptime(entry['end_time'],'%Y-%m-%d %H:%M:%S')<=minimum_time]
+        # self.plan=[entry for entry in self.plan if dt.strptime(entry['end_time'],'%Y-%m-%d %H:%M:%S')<=minimum_time]
         self.plan.extend(new_plans)
         return new_plans[0]
 
@@ -513,6 +477,7 @@ Example format:
         # format: [{"task": "XXX", "start_time": str(datetime.datetime(2023, 4, 1)),
         #           "end_time": str(datetime.datetime(2023, 4, 1))}]
         for plan_entry in self.plan:
+            logger.debug("!!!!! plan_entry: "+plan_entry+str(type(plan_entry)))
             s,e=dt.strptime(plan_entry['start_time'],'%Y-%m-%d %H:%M:%S'),dt.strptime(plan_entry['end_time'],'%Y-%m-%d %H:%M:%S')
             # we reject the plan that end at this time. So make sure don't generate plan with 0 duration!!!!
             if e>current_time and s<=current_time:
@@ -562,16 +527,14 @@ Example format:
         
         if len(self.long_term_memory.data.texts)==0:
 
-            # logging.info(self.whole_day_plan)
-
             for k,v in self.whole_day_plan.items():
                 sPlan=f"This is {self.name}'s plan for {k}: "+','.join(v)
-                self.long_term_memory.add(sPlan,dt.strptime(k,"%B %d %Y"),['plan'])
+                self.long_term_memory.add(sPlan,dt.strptime(k,"%Y-%m-%d"),['plan'])
             for des in self.description:
                 self.long_term_memory.add(des,current_time,['description'])
 
         if self.summary is None:
-            self.generate_summary(current_time)
+            self.generate_summary(current_time)        
         self.plan_in_broad_strokes(current_time)
 
     def end_interaction(self,current_time:dt):
@@ -912,12 +875,12 @@ Summarize the dialog above.
         """ Call this method at each time frame
         目前尽量塞主step函数简化变量调用，TODO:后期切成几个子函数方便维护
         """
-
+        self.current_time = current_time
         # 产生observation的条件： following reverie, 所有observation都是主体或客体的状态，所以这一步暂时直接交给环境处理。
         # 一类特殊状态，observation of interaction在对话结束给出摘要时才可以确定，此前不能被环境获取。reverie如何在对话开始时生成一个完整对话暂时没看明白
         # short time observation 应该屏蔽掉同主体同状态防止冗余
 
-        logger.debug("Agent {}, Time: {}, {}, {}".format(self.state_dict['name'], str(current_time), self.status_start_time, datetime.timedelta(self.status_duration)))
+        logger.debug("Agent {}, Time: {}, Status {}, Status Start: {}, Will last: {}".format(self.state_dict['name'], str(current_time), self.status, self.status_start_time, datetime.timedelta(self.status_duration)))
         
         # # 测试异步
         # if self.state_dict['name'].startswith("A"):
@@ -954,7 +917,7 @@ Summarize the dialog above.
         self.observe()
         might_react=len(self.incoming_observation)>0 or len(self.background_observation)>0
 
-        subject_prompt =  load_prompt(file_dir=self.file_dir, key='subject_parsing')
+        
 
         if might_react:
             self.reflect(current_time)
@@ -962,21 +925,25 @@ Summarize the dialog above.
             sSummary = self.summary
             sTime = current_time.strftime("%B %d, %Y, %I:%M %p.")
             sStatus= f"{self.name}'s status: {self.status}."
-            observation_string = '\n'.join(self.observation) if len(self.observation) > 0 else "none"
-            sObservation = f"Observation: {observation_string}"
+
+
+            subject_prompt =  load_prompt(file_dir=self.file_dir, key='subject_parsing')
+
+            observation = self.incoming_observation + self.background_observation
 
             subjects=list(set([chat(subject_prompt.format(sentence=ob)).strip('". ')
                                for ob in self.observation]))
-            subjects=list(set([chat(subject_prompt.format(sentence=ob)) for ob in self.observation]))
 
-            queries_ob = self.observation.copy()
+            queries_ob = observation.copy()
             queries_sub = [f"What is the {self.name}'s relationship with {sub}?" for sub in subjects]
 
             logger.debug("{} | queries_sub: {}".format(self.name, queries_sub))
-   
 
             # memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in chain(queries_ob,queries_sub)],[])).strip()
             memory_string = ' '.join(self.long_term_memory.query(queries_ob+queries_sub,len(queries_ob)*4,current_time)).strip()
+
+            logger.debug("-"*20+"\nUse the following queries to query {}:\n {}\n Get the following memories: {}\n".format(self.name, queries_sub, memory_string ))
+
             if not memory_string:
                 memory_string = "Empty"
             sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
@@ -987,11 +954,11 @@ Summarize the dialog above.
             query_sources['summary'] = sSummary # 论文
             query_sources['time'] = sTime
             query_sources['status'] = sStatus
-            query_sources['observation'] = sObservation
+            query_sources['observation'] = self.incoming_observation
             query_sources['context'] = sContext # 长期记忆
             query_sources['background_observation'] = self.background_observation
 
-            logger.debug(f"{self.name} | query_sources {query_sources}")
+            logger.debug(f"{self.name} reaction prompt sources {query_sources}")
 
             reaction_prompt_template = load_prompt(file_dir=self.file_dir, key='reaction_prompt')
 
@@ -1002,8 +969,10 @@ Summarize the dialog above.
             self.terminate = False
             self.movement = False
             
-            while not end and count < 2:
+            all_reactions = ""
+            while not end and count < 1:
                 reaction_result = chat(reaction_prompt, stop=["Observation:"])
+                all_reactions += reaction_result
                 logger.debug(f"Reaction output: {reaction_result}")
                 match = re.search(r'Action:\s*(.*)', reaction_result)
                 if match:
@@ -1013,20 +982,22 @@ Summarize the dialog above.
                 else:
                     print('No match found.')
                 
+                if 'do_nothing(' in content:
+                    end = True
                 if 'say(' in content:
                     eval("self."+content.strip())
                 elif 'act(' in content:
                     eval("self."+content.strip())
                 elif 'move(' in content:
                     eval("self."+content.strip())
-                elif 'change_status(' in content:
-                    eval("self."+content.strip())
                 elif 'end(' in content:
                     end = True
                 count += 1
-                reaction_prompt += reaction_result + "Observation: [Omitted for short]\n"
+                reaction_prompt += reaction_result + "\nObservation: [Observation omitted]\n"
 
-
+            change_status_prompt_template = load_prompt(file_dir=self.file_dir, key='change_status')
+            change_status_prompt = change_status_prompt_template.format(**query_sources, reaction=reaction_result)
+            chat(change_status_prompt)
             self.environment.uilogging(self.name, self.reaction_content)
 
 

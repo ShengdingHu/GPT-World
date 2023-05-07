@@ -1,1 +1,33 @@
-{"traits": "brandnew", "name": "Television", "vision_radius": 8, "attention_bandwidth": 8, "retention": 8, "time": null, "eid": "e_004", "location": [104, 104], "max_velocity": "0/s", "moving": "false", "status": "off", "memory": ["television has 10 channel.", "Channel 1: History Channel", "Channel 2: Entertainment Channel", "Channel 3: Science Chaneel"], "incoming_observation": []}
+{
+    "traits": "brandnew",
+    "name": "Television",
+    "vision_radius": 8,
+    "attention_bandwidth": 8,
+    "retention": 8,
+    "time": null,
+    "eid": "e_004",
+    "location": [
+        104,
+        104
+    ],
+    "max_velocity": "0/s",
+    "moving": "false",
+    "status": "off",
+    "memory": [
+        "television has 10 channel.",
+        "Channel 1: History Channel",
+        "Channel 2: Entertainment Channel",
+        "Channel 3: Science Chaneel"
+    ],
+    "incoming_observation": [],
+    "description": [
+        "1. A television is an electronic device that displays video and audio content.", 
+        "2. It is designed to be stationary and cannot move on its own.",
+        "3. It can be turned on or off by pressing a button by an agent, but it can not be turned on by itself.",
+        "4. Its status can change from displaying content to being on standby mode when not in use.",
+        "5. TVs can automatically switch to different inputs when detecting a signal from a connected device.",
+        "6. Some smart TVs can update their software and apps without human intervention.",
+        "7. Screen size, resolution, and sound quality are important characteristics of a television.",
+        "8. A television should be used in appropriate lighting conditions and at a reasonable volume to reduce eye strain and hearing damage."
+    ]
+}

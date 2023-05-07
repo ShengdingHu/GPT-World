@@ -182,7 +182,7 @@ def text_to_icon_route():
     else:
         # Case 2: If no predefined texture, use semantic matching
         full_path = text_to_icon.query(name)
-    
+    print("Icon: ", name, full_path)
     # Load image from file system and return to clients
     image = Image.open(full_path)
     img_io = BytesIO()
@@ -212,6 +212,7 @@ def text_to_tile_route():
         # Case 2: If no predefined texture, use semantic matching
         full_path = text_to_tile.query(name)
 
+    print("Name, predefined relative path", name, predefined_relative_path)
     # Load image from file system and return to clients
     image = Image.open(full_path)
     img_io = BytesIO()
