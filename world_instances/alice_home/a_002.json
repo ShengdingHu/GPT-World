@@ -17,14 +17,14 @@
     ],
     "whole_day_plan": {
         "2023-04-01": ["wake up and have breakfast with his family at 6:30 am",
-        "drive to work and arrive at the car dealership at 8:00 am", 
-        "work on fixing cars and helping customers until lunchtime", 
-        "have lunch at the nearby diner at 12:00 pm", 
-        "watch TV with Alice at 1:00 pm return to work and continue fixing cars until 5:00 pm", 
-        "drive home and help his wife prepare dinner at 5:30 pm", 
-        "have dinner with his family at 6:00 pm", 
-        "relax and watch TV with his family until 8:00 pm", 
-        "work on his car restoration project in the garage until 10:00 pm", 
+        "drive to work and arrive at the car dealership at 8:00 am",
+        "work on fixing cars and helping customers until lunchtime",
+        "have lunch at the nearby diner at 12:00 pm",
+        "watch TV with Alice at 1:00 pm return to work and continue fixing cars until 5:00 pm",
+        "drive home and help his wife prepare dinner at 5:30 pm",
+        "have dinner with his family at 6:00 pm",
+        "relax and watch TV with his family until 8:00 pm",
+        "work on his car restoration project in the garage until 10:00 pm",
         "and then get ready for bed at 10:30 pm."]
     },
     "memory": "Bob_LTM",
@@ -42,3 +42,4 @@
     ],
     "incoming_observation": []
 }
+>>>>>>> main

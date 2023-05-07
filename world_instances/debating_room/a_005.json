@@ -27,9 +27,13 @@
             "Eve majors in math.",
             "Eve does not always give long sentences.",
             "The debaters include Alice, Bob, Carot, Dave, Eve, Fedo.",
+<<<<<<< HEAD
+            "Alice, Bob and Carot are affirmative debaters, while Dave, Eve and Fedo are opposition debaters."
+=======
             "Alice, Bob and Carot are affirmative debaters, while Dave, Eve and Fedo are opposition debaters.",
             "A debater should not say anything before the host begin to instruct.",
             "The registration process and preparation has been complete. It is time to directly debate."
+>>>>>>> main
         ],
     "incoming_observation":
         [

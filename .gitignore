@@ -11,9 +11,9 @@ eggs/
 /build
 docs/build
 _build/
-# **/build/
+**/build/
+**/node_modules
 **/.DS_Store
-
 # dist/
 # dist/*
 

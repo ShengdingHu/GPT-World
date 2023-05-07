@@ -171,7 +171,6 @@ def text_to_icon_route():
     global predefined_text_to_image_mapping
     
     name = request.args.get('name')
-    
     if environment_config_file is None:
         read_environment()
     

@@ -362,7 +362,11 @@ class GPTWorldEnv:
             else:
                 thread = threading.Thread(target=agent.step, args=(self.current_time,))
                 thread_pool.append(thread)
-                thread.start() 
+                thread.start()
+                # 5. 每个帧都要跑下寻路系统。
+                move_thread = threading.Thread(target=agent.move_async, args=())
+                thread_pool.append(move_thread)
+                move_thread.start()
         
         for obj_id in self.objects:
             object = self.objects[obj_id]
@@ -372,8 +376,7 @@ class GPTWorldEnv:
                 else:
                     thread = threading.Thread(target=object.step, args=(self.current_time,))
                     thread_pool.append(thread)
-                    thread.start() 
-            
+                    thread.start()
 
         if not debug:
             for thread in thread_pool:

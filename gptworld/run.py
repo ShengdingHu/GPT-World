@@ -24,6 +24,8 @@ if __name__ == "__main__":
                 shutil.copytree(static_dir, running_dir)
             else:
                 exit(0)
+        else:
+            pass  # TODO: continue to run
     else:
         shutil.copytree(static_dir, running_dir)
 

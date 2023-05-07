@@ -29,7 +29,7 @@ const GameArea = () => {
     const response = await fetch(environmentApi);
     const data = await response.json();
     setGameData(data.message);
-    
+
     // store original width and original height
     set_true_height(data.message.size[0])
     set_true_width(data.message.size[1]);
@@ -64,10 +64,16 @@ const GameArea = () => {
     }
   };
 
+  const getZIndex = (object) => {
+    if (object.id.startsWith("a")) {
+      return { zIndex: 1000 };
+    } else {
+      return { zIndex: 0 };
+    }
+  };
+
   return (
-    <div 
-      className="game-container"
-    >
+    <div className="game-container">
       {gameData &&
         Object.values(gameData.areas).map((area, index) => (
             <div
@@ -108,7 +114,7 @@ const GameArea = () => {
                     className="object"
                     src={`${API_ROOT}/text_to_icon?name=${fixedEncodeURIComponent(object.name)}`}
                     alt={object.name}
-                    style={getImageSize(object)}
+                    style={{...getImageSize(object) , ...getZIndex(object)}}
                 />
                 <span className="object-tooltip" data-tooltip={object.name}>{object.name}</span>
             </div>
