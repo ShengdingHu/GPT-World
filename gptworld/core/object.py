@@ -89,7 +89,7 @@ class GPTObject(EnvElem):
             logger.debug(f"Objects {self.name} is created with the following description: {self.description}")
 
         self.summary=f'Now you are act as a {self.name} in the virtual world, obeying following rules:\n' + self.description
-        logger.info(f"Objects {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
+        logger.info(f"Objects {self.name} mounted into area {self.environment.get_elem_by_id(self.eid)}")
         self.blocking = False
 
 

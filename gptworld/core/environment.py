@@ -65,8 +65,18 @@ class GPTWorldEnv:
 
         pass
 
-    def get_area_name(self, eid):
-        return self.env_json['areas'][eid]['name']
+
+    def get_elem_by_id(self, id):
+        if id.startswith("o"):
+            obj = self.env_json['objects'].get(id, {})
+            if obj.get('engine', '') == "object":
+                return self.objects[id].name
+            else:
+                return obj['name']
+        elif id.startswith("a"):
+            return self.agents[id].name
+        elif id.startswith("e"):
+            return self.env_json['areas'][id]['name']
 
     def broadcast_observations(self, agent, targets, content=""):
         logger.debug(f"Environment receives action: {agent.name} -> {targets} : {content}")
@@ -268,25 +278,28 @@ class GPTWorldEnv:
         else:
             logger.warning("No invoice files")
         
-    
+    def send_system_message(self, id, message):
+        invoice_prompt = "Here is a system message that is of highest priority. Who observe it should strict follows the message until it is completed: "
+        if id.startswith('a'):
+                self.agents[id].set_invoice(invoice_prompt + message)
+        elif id.startswith('o'):
+                self.objects[id].set_invoice(invoice_prompt + message)
+        logger.debug(f"broadcast {message} to {id}")
+
+
     def broadcast_invoice(self, incoming_invoice):
         objectlist = [(aid, self.agents[aid].name) for aid in self.agents] + [(oid, self.objects[oid].name) for oid in self.objects]  
-        prompt = f"You are now simulating an environment, in which there are several agents and objects. {objectlist}. Here is a comming message that comes from the system: {incoming_invoice} You need to broadcast the message to the direct target(s) of this message. You should broadcast in a list of tuple: [('id', 'message'),]. Do not broadcast to agent or object that is not the target of this message."
+        prompt_template = load_prompt(self.file_dir, key='system_message_broadcast')
+        prompt = prompt_template.format(objectlist=objectlist, system_message=incoming_invoice)
 
-        return_value = chat(prompt)
-        try:
-            broadcast_list = eval(return_value)
-        except:
-            logger.warning("Cannot parse broadcast_list: {}".format(return_value))
-            return
-
-        invoice_prompt = "Here is a system message that is of highest priority. Who observe it should strict follows the message until it is completed: "
-        for item in broadcast_list:
-            item_id, message = item
-            if item_id.startswith('a'):
-                self.agents[item_id].set_invoice(invoice_prompt + message)
-            elif item_id.startswith('o'):
-                self.objects[item_id].set_invoice(invoice_prompt + message)
+        return_value = chat(prompt, stop="END")
+        return_value = [x.strip() for x in return_value.split("\n")]
+        for line in return_value:
+            try:
+                eval("self."+line)
+            except:
+                logger.warning("Send system message error: {}".format(line))
+                continue
 
     def get_system_message(self, ):
         system_message = self.env_json.get('system_message', {}).get(datetime.datetime.strftime(self.current_time, "%Y-%m-%d %H:%M:%S"), '')
@@ -294,7 +307,15 @@ class GPTWorldEnv:
             logger.critical("find system_message: {}".format(system_message))
             self.broadcast_invoice(system_message)
 
-
+    def fetch_elem_info(self, typeset=['a','o'], return_info='name'):
+        elems = {}
+        if 'o' in typeset:
+            for id, info in self.env_json['objects'].items():
+                elems[id] = info[return_info]
+        elif 'a' in typeset:
+            for id, info in self.env_json['agents'].items():
+                elems[id] = info[return_info]
+        return elems
 
     def step(self, debug=False):
         """ For each time frame, call step method for agents

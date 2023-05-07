@@ -50,7 +50,7 @@ class EnvElem:
         prompt_template: str -> a template for prompt
         """
         # base system 
-        self.observation = []
+        self.observation = [] # TODO to remove
         self.agent_file = agent_file
         self.file_dir = os.path.dirname(self.agent_file)
         self.id = os.path.splitext(os.path.basename(self.agent_file))[0]
@@ -77,7 +77,6 @@ class EnvElem:
         # 直接根据len判断自己是否在对话中
         self.incoming_interactions = state_dict.get('incoming_interactions',[])
         # 记录下一轮需要处理的新observation
-        # self.observation进行过去重，incoming_observation没有去重
         self.incoming_observation = state_dict.get('incoming_observation',[])
         self.pending_observation = []  # active observation will first go here, then go to incomming observation
         self.background_observation = []  # passive observation will go here
@@ -99,6 +98,8 @@ class EnvElem:
         # the agent is calling language model
         self.blocking = False
 
+        self.max_observation_handle = 2 # handle at most N incoming observation each step.
+
 
         # the total number of steps the agent has gone through
         self.step_cnt = 0  # TODO: Later add this key into the dictionary of agent static files and import that value
@@ -111,9 +112,6 @@ class EnvElem:
 
         return
     
-    def invoice(self, ):
-        # 往incomming_invoice里 加一个invoice，并让agent能够最高优先级地响应这个输入
-        pass
 
 
     def load_from_file(self, agent_file):
@@ -161,9 +159,7 @@ class EnvElem:
             import math; limit=math.inf
         
         if self.environment is not None:
-            self.background_observation.extend(self.environment.get_neighbor_environment(self.id))
-        
-        prompt = "" # TODO: add observation summarization?
+            self.background_observation = self.environment.get_neighbor_environment(self.id)
 
         # dropout
         import random;r=[random.random() for _ in range(len(self.short_term_memory))]
@@ -177,9 +173,8 @@ class EnvElem:
                 # observation在这里不能直接拉进记忆，否则query出来的全是observation，没有意义
                 # 在reaction判定结束以后再拉近记忆比较好。
         # logger.info(self.name + f"short-term memory: {self.short_term_memory}")
-        self.observation = self.incoming_observation + self.background_observation
         logger.debug("incoming_observation: {}\nbackground_observation: {}".format(self.incoming_observation, self.background_observation))
-        return self.observation
+
     
     def reflect(self,time:datetime):
         """ While the time is right, do reflection for memory
@@ -198,13 +193,13 @@ class EnvElem:
         if len(self.incoming_invoice) > 0:
             self.incoming_observation.append(self.incoming_invoice[0])
             self.incoming_invoice.pop(0)
-            return 
-        if len(self.pending_observation) > 0:
-            self.incoming_observation.extend(self.pending_observation)
-            self.pending_observation = []
-        logger.debug(f"{self.name} now has incomming observation: {self.incoming_observation}")
+        elif len(self.pending_observation) > 0:
+            self.incoming_observation.extend(self.pending_observation[:self.max_observation_handle])
+            self.pending_observation = self.pending_observation[self.max_observation_handle:]
+        logger.debug(f"{self.name} now has incoming observation: {self.incoming_observation}")
         
     def set_invoice(self, message):
+        logger.debug("Adding invoice: {} to {}".format(message, self.name))
         self.incoming_invoice.append(message)
         
 
@@ -261,7 +256,7 @@ class GPTAgent(EnvElem):
         # format: [{"task": "XXX", "start_time": str(datetime.datetime(2023,4, 1)), "end_time": str(datetime.datetime(2023,4, 1))}]
         self.plan = self.state_dict.get('plan',[])
         if self.environment is not None:
-            logger.info(f"Agent {self.name} mounted into area {self.environment.get_area_name(self.eid)}")
+            logger.info(f"Agent {self.name} mounted into area {self.environment.get_elem_by_id(self.eid)}")
 
     def print(self):
         logger.info(f"{self.name}'s log: \n" +
@@ -590,29 +585,29 @@ Summarize the dialog above.
 #        self.observe()  # TODO: 为什么这里要 observe
         self.environment.uilogging(self.name, "Target {} is unreacable.".format(target))
 
-    def fetch_objects(self):
-        objects = {}
-        for id, info in self.environment.env_json['objects'].items():
-            objects[id] = info['name']
-        return objects
 
     def analysis_movement_target(self, target_description):
-        objects = self.fetch_objects()
+        elems = self.environment.fetch_elem_info()
         prompt = """Now you want to perform a movement action. I will give you a list of 
                 objects and agents that you might be your target. 
                 List: {}
                 You target movement is : {}
                 Give me the id of the movement target (with out `id` prefix). 
                 Note that you can only give ONE movement target.
-                """.format(json.dumps(objects), target_description)
+                """.format(json.dumps(elems), target_description)
 
         self.target_id = 'ERROR'
         RETRY_LIMIT = 3
+        found = False
         for tid in range(RETRY_LIMIT):
             self.target_id = chat(prompt)
-            self.environment.uilogging(self.name, ">>>>>>> target prompt: {}".format(target_description))
-            self.environment.uilogging(self.name, ">>>>>>> target id: {}".format(self.target_id))
-            if self.target_id in objects: break
+            if self.target_id in elems: 
+                logger.info("{} find target : {} in description: {}".format(self.name, self.environment.get_elem_by_id(self.target_id), target_description))
+                found = True
+                break
+        if not found:
+            logger.debug("{} didn't find valid target id: {} in description: {}".format(self.name, self.target_id, target_description))
+
 
     def find_movement(self):
         target_id = self.target_id
@@ -841,7 +836,9 @@ Summarize the dialog above.
             change_status_prompt_template = load_prompt(file_dir=self.file_dir, key='change_status')
             change_status_prompt = change_status_prompt_template.format(**query_sources, reaction=reaction_result)
             chat(change_status_prompt)
-            self.environment.uilogging(self.name, self.reaction_content)
+            
+            if len(self.reaction_content) > 0:
+                self.environment.uilogging(self.name, self.reaction_content)
 
 
             if self.terminate:
@@ -859,9 +856,11 @@ Summarize the dialog above.
             if self.movement:
                 self.analysis_movement_target(self.movement_description)
 
-        # 3.5 observation拉入记忆
-        for ob in self.observation:
+        # 3.5 add observation to memory
+        for ob in self.incoming_observation:
             self.long_term_memory.add(ob,current_time,['observation'])
+        self.incoming_observation = [] # empty the incoming observation
+
 
         # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) 
 

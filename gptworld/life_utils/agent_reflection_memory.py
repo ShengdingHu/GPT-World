@@ -260,6 +260,7 @@ class ReflectionMemory():
                 option=SAVE_OPTIONS
             )
             f.write(out)
+        logger.debug("write the following content: {} to memory file {}.".format(text, self.memory_id))
         return text
 
     def check_repeat(self, text: str, time: datetime):

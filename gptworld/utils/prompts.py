@@ -138,6 +138,15 @@ Note that the first plan must be current status, if current status is not none.
 Now generate the plan during this coarse period, which the agent is roughly doing {hourplan}.
 
 Now begin:
+""",
+
+"system_message_broadcast": """You are now simulating an environment, in which there are several agents and objects. Here is a comming message that comes from the system. Who or what should receive and execute this message? Please provide the executor of this command, and also paraphrase to the executor if necessary. Do not broadcast to agent or object that is not the target of this message.
+You should broadcast using function `send_system_message(id=id, message=message)`, write one call in a line. End with END.
+for example:
+send_system_message(id="o_001", "message": "turn off immediately")
+END
+
+Now: the agents and objects are {objectlist}. The system message is: {system_message}.  Begin to broadcast:
 """
 }
 
