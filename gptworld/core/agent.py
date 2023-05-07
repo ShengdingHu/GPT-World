@@ -722,44 +722,26 @@ Summarize the dialog above.
         if might_react:
             self.reflect(current_time)
 
-        sSummary = f"Brief description of {self.name}:\n{self.summary}"
-        sTime = current_time.strftime("It is %B %d, %Y, %I:%M %p.")
-        sStatus = f"{self.name}'s status: {self.status}."
+    def move(self, description):
+        if description is None:
+            self.movement=False
+        else:
+            self.movement=True
+            self.movement_description = description
 
-        # do each react to every observation
+    def move_async(self):
+        for s in range(10):
+            next_step, next_area = self.find_movement()
+            if next_step != None: map_editor.move_agent(self, next_step, next_area)
+        logger.debug(
+            self.name + " position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
 
-        for observation in self.observation:
-            sObservation = f"{self.name}'s observations: {observation}"
-
-            # disposed query methods
-            # queries = self.observation
-            # if len(self.incoming_interactions) > 0:
-            #     for i, interaction in reversed(self.incoming_interactions):
-            #         if i >= 2:
-            #             break
-            #         queries.append(interaction['sender'] + ':' + interaction['content'])
-            # 一点小修改：加上对话的最后几轮作为query
-
-            # query the agent's relevant memories
-
-            observer = self.name
-            prompt_asking_the_observed_entity = ("You are a robot for extracting subjects of sentences." +
-                                                 "Extract the subject of the following sentence:\n" +
-                                                 observation +
-                                                 "\n[e.g.: Given 'Eddy is eating icecream.', you have to say: 'Eddy'." +
-                                                 "The answer should only include a name]")
-            observed_entity = chat(prompt_asking_the_observed_entity).strip('. ')
-            # logger.debug(f"The observation of {self.name}: {observation}")
-            # logger.debug(f"The observed entity of {self.name}: {observed_entity}")
-
-            queries = [
-                f"What is the {observer}'s relationship with {observed_entity}?",
-                f"{observation}"
-            ]
-            memory_string = ' '.join(sum([self.long_term_memory.query(q, 2, current_time) for q in queries], [])).strip()
-            if not memory_string:
-                memory_string = "Empty"
-            sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
+    def change_status(self, change):
+        if change==True:
+            self.terminate=True
+        else:
+            self.terminate=False
+            
 
             # sPrompt = f"""
             #             1. Should {self.name} react to the observation? Say yes or no.
@@ -920,7 +902,95 @@ Summarize the dialog above.
             self.status_duration=next_plan['duration']
             self.environment.uilogging(f"{self.name}", f"status: {self.status}, duration: {self.status_duration}")
 
-        self.react(current_time)
+        subject_prompt = load_prompt(file_dir=self.file_dir, key='subject_parsing')
+
+        if might_react:
+            self.reflect(current_time)
+
+            sSummary = self.summary
+            sTime = current_time.strftime("%B %d, %Y, %I:%M %p.")
+            sStatus= f"{self.name}'s status: {self.status}."
+            observation_string = '\n'.join(self.observation) if len(self.observation) > 0 else "none"
+            sObservation = f"Observation: {observation_string}"
+
+            subjects=list(set([chat(subject_prompt.format(sentence=ob)).strip('". ')
+                               for ob in self.observation]))
+
+            queries_ob = self.observation.copy()
+            queries_sub = [f"What is the {self.name}'s relationship with {sub}?" for sub in subjects]
+
+            logger.debug("{} | queries_sub: {}".format(self.name, queries_sub))
+   
+
+            # memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in chain(queries_ob,queries_sub)],[])).strip()
+            memory_string = ' '.join(self.long_term_memory.query(queries_ob+queries_sub,len(queries_ob)*4,current_time)).strip()
+            if not memory_string:
+                memory_string = "Empty"
+            sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
+
+
+            query_sources = {}
+            query_sources['name'] = self.name
+            query_sources['summary'] = sSummary # 论文
+            query_sources['time'] = sTime
+            query_sources['status'] = sStatus
+            query_sources['observation'] = sObservation
+            query_sources['context'] = sContext # 长期记忆
+            query_sources['background_observation'] = self.background_observation
+
+            logger.debug(f"{self.name} | query_sources {query_sources}")
+
+            reaction_prompt_template = load_prompt(file_dir=self.file_dir, key='reaction_prompt')
+
+            end = False
+            count = 0
+            reaction_prompt = reaction_prompt_template.format(**query_sources)
+            self.reaction_content = ""
+            self.terminate = False
+            self.movement = False
+            
+            while not end and count < 2:
+                reaction_result = chat(reaction_prompt, stop=["Observation:"])
+                logger.debug(f"Reaction output: {reaction_result}")
+                match = re.search(r'Action:\s*(.*)', reaction_result)
+                if match:
+                    content = match.group(1)
+                    # eval(content)
+                    # print(content)
+                else:
+                    print('No match found.')
+                
+                if 'say(' in content:
+                    eval("self."+content.strip())
+                elif 'act(' in content:
+                    eval("self."+content.strip())
+                elif 'move(' in content:
+                    eval("self."+content.strip())
+                elif 'change_status(' in content:
+                    eval("self."+content.strip())
+                elif 'end(' in content:
+                    end = True
+                count += 1
+                reaction_prompt += reaction_result + "Observation: [Omitted for short]\n"
+
+
+            self.environment.uilogging(self.name, self.reaction_content)
+
+
+            if self.terminate:
+                self.plan_in_detail(current_time, reaction = self.reaction_content)
+                next_plan=self.get_next_plan(current_time)
+                self.status_start_time = current_time
+                self.status = next_plan['status']
+                self.status_duration = next_plan['duration']
+                self.environment.uilogging(f"{self.name}",
+                                           f"status: {self.status}, duration: {self.status_duration}")
+                self.status=self.reaction_content
+                self.status_duration=0
+                self.status_start_time=current_time
+
+            if self.movement:
+                self.analysis_movement_target(self.movement_description)
 
         # 3.5 observation拉入记忆
         for ob in self.observation:
@@ -934,13 +1004,6 @@ Summarize the dialog above.
 
         if self.step_cnt % self.reflection_interval == 0:
             self.reflect(current_time)
-
-
-        # 5. 每个帧都要跑下寻路系统。 @TODO xingyu
-
-        next_step, next_area = self.find_movement()
-        print(self.name, "MOVING!!! position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
-        if next_step != None: map_editor.move_agent(self, next_step, next_area)
 
         return
 

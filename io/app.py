@@ -50,9 +50,30 @@ text_to_tile = TextToImage(ASSETS_DIR, "tile")
 @app.route('/text_to_icon', methods=['GET'])
 def text_to_icon_route():
     name = request.args.get('name')
+<<<<<<< Updated upstream
     if name == []:
         return "Failed to find image for your requested text."
     image = text_to_icon.query(name)[0]
+=======
+    print(name)
+    print(predefined_text_to_image_mapping)
+    if environment_config_file is None:
+        read_environment()
+    
+    predefined_relative_path = predefined_text_to_image_mapping.get(name, None)
+    
+    if predefined_relative_path is not None:
+        # Case 1: If the texture is predefined, use predefined texture
+        full_path = os.path.join(ENV_PATH, predefined_relative_path)
+        print("123")
+    else:
+        # Case 2: If no predefined texture, use semantic matching
+        full_path = text_to_icon.query(name)
+        print("456")
+    
+    # Load image from file system and return to clients
+    image = Image.open(full_path)
+>>>>>>> Stashed changes
     img_io = BytesIO()
     image.save(img_io, 'PNG')
     img_io.seek(0)
@@ -161,6 +182,18 @@ def read_environment():
     environment_main_path = os.path.join(ENV_PATH, 'environment.json')
     with open(environment_main_path, 'r') as f:
         content = json.load(f)
+        environment_config_file = content
+    
+    # Build predefined text to image mapping (if exist)
+    predefined_text_to_image_mapping = {}
+    for key in environment_config_file["objects"]:
+        value = environment_config_file["objects"][key]  # value is the object dictionary
+        predefined_text_to_image_mapping[value["name"]] = value.get("predefined_texture", None)
+    for key in environment_config_file["areas"]:
+        value = environment_config_file["areas"][key]
+        predefined_text_to_image_mapping[value["name"]] = value.get("predefined_texture", None)
+    
+
     data = {'message': content}
     return jsonify(data)
 

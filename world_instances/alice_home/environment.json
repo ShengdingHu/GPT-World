@@ -164,41 +164,101 @@
             "color": "0xD3D3D3"
         }
     },
-    "objects": { 
+    "objects": {
+        "a_001": {
+            "id": "a_001",
+            "name": "Alice",
+            "eid": "e_005",
+            "location": [
+                93,
+                54
+            ],
+            "size": [
+                7, 13
+            ],
+            "predefined_texture": "DIY/alice.png"
+        },
+        "a_002": {
+            "id": "a_002",
+            "name": "Bob",
+            "eid": "e_006",
+            "location": [
+                89,
+                25
+            ],
+            "size": [
+                10, 10
+            ],
+            "predefined_texture": "DIY/Santa.png"
+        },
         "o_001": {
             "id": "o_001",
             "name": "apple tree",
             "eid": "e_002",
-            "location": [10, 130],
+            "location": [
+                10,
+                130
+            ],
+            "size": [
+                15,
+                15
+            ],
             "engine": "object"
         },
         "o_002": {
             "id": "o_002",
             "name": "apple tree",
             "eid": "e_002",
-            "location": [20, 130],
+            "location": [
+                20,
+                130
+            ],
+            "size": [
+                15,
+                15
+            ],
             "engine": "object"
         },
         "o_003": {
             "id": "o_003",
             "name": "chair",
             "eid": "e_002",
-            "location": [30, 80], 
+            "location": [
+                30,
+                80
+            ],
+            "size": [
+                10,
+                10
+            ],
             "engine": "environment"
         },
         "o_004": {
             "id": "o_004",
             "name": "sofa",
             "eid": "e_004",
-            "location": [25, 45],
-            "size": [10, 5],
+            "location": [
+                104,
+                140
+            ],
+            "size": [
+                10,
+                10
+            ],
             "engine": "environment"
         },
         "o_005": {
             "id": "o_005",
             "name": "television",
             "eid": "e_004",
-            "location": [25, 5],
+            "location": [
+                104,
+                104
+            ],
+            "size": [
+                15,
+                15
+            ],
             "engine": "object"
         },
         "o_006": {
@@ -209,24 +269,18 @@
             "size": [10, 10],
             "engine": "environment"
         },
-        "a_001": {
-            "id": "a_001",
-            "name": "Alice",
-            "eid": "e_005",
-            "location": [10, 15]
-        },
-        "a_002": {
-            "id": "a_002",
-            "name": "Bob",
-            "eid": "e_006",
-            "location": [10, 15]
-        },
         "o_007": {
             "id": "o_007",
             "name": "Alarm",
             "eid": "e_005",
-            "location": [10, 20],
-            "size": [1, 1],
+            "location": [
+                84,
+                59
+            ],
+            "size": [
+                8,
+                8
+            ],
             "engine": "object"
         },
         "o_008": {
