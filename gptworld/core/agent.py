@@ -119,6 +119,7 @@ class EnvElem:
     def load_from_file(self, agent_file):
         if os.path.exists(agent_file):
             with open(agent_file, 'r') as f:
+                print(agent_file)
                 data = json.load(f)
             state_dict = data
             return state_dict
