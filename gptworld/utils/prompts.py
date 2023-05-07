@@ -5,13 +5,9 @@ from gptworld.utils.logging import get_logger
 logger = get_logger(__name__)
 
 base_prompt = {
-<<<<<<< HEAD
 "subject_parsing": """
 {sentence} The subject of the sentence above is "
 """,
-=======
-"subject_parsing": """What is the subject for the following sentence, i.e., the following sentence describes whom? Just give me the subject concisely. Sentence: {sentence}. Subject:""",
->>>>>>> main
 
 "reaction_prompt": """Now you are performing actions as an agent named {name} in a virtual world. Your mission to take the agent as yourself and directly provide what the agent will do based on the following information:
 (1) The agent's description: {summary}
