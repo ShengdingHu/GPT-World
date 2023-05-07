@@ -619,9 +619,6 @@ Summarize the dialog above.
                 target = info['location']
                 break
 
-#        self.environment.uilogging(self.name, ">>> find_movement target_id: {}".format(target_id))
-#        self.environment.uilogging(self.name, ">>> find_movement target_pos: {}".format(target))
-
         if target_id == "ERROR" or target == None:
             self.unreachable_signal("[N/A]")
             return None, None
@@ -646,8 +643,6 @@ Summarize the dialog above.
         next_step = current_pos
         if next_step == target: return None, None
 
-#        self.environment.uilogging(self.name, ">>> find_movement cur_pos: {}, {}".format(self.location, self.eid))
-#        self.environment.uilogging(self.name, ">>> find_movement current_pos: {}".format(next_step))
         
         Q = Queue(maxsize=0)
         Q.put(target)
