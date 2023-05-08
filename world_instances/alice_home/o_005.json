@@ -13,12 +13,6 @@
     "max_velocity": "0/s",
     "moving": "false",
     "status": "off",
-    "memory": [
-        "television has 10 channel.",
-        "Channel 1: History Channel",
-        "Channel 2: Entertainment Channel",
-        "Channel 3: Science Chaneel"
-    ],
     "incoming_observation": [],
     "description": [
         "1. A television is an electronic device that displays video and audio content.", 
@@ -28,6 +22,11 @@
         "5. TVs can automatically switch to different inputs when detecting a signal from a connected device.",
         "6. Some smart TVs can update their software and apps without human intervention.",
         "7. Screen size, resolution, and sound quality are important characteristics of a television.",
-        "8. A television should be used in appropriate lighting conditions and at a reasonable volume to reduce eye strain and hearing damage."
+        "8. A television should be used in appropriate lighting conditions and at a reasonable volume to reduce eye strain and hearing damage.",
+        "television has 10 channel.",
+        "Channel 1: History Channel",
+        "Channel 2: Entertainment Channel",
+        "Channel 3: Science Chaneel"
+        
     ]
 }

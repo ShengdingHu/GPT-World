@@ -21,10 +21,10 @@
 
 .area-label {
     content: attr(data-tooltip);
-    top: 50%;
-    left: 50%;
+    top: 12px;
+    left: 30px;
     transform: translate(-50%, -50%);
-    font-size: 15px;
+    font-size: 12px;
     position: absolute;
     padding: 4px;
     background-color: white;

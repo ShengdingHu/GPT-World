@@ -47,6 +47,7 @@ class GPTWorldEnv:
         self.uilogging = UILogging(file_dir)
 
         self.agents, self.objects = {}, {}
+        self.elems = {}
 
         self.clear_memory=clear_memory
 
@@ -54,15 +55,6 @@ class GPTWorldEnv:
         
         logger.info("Complete environment initialization.")
         
-        # TODO: grid mapping from position tuple to agent id
-        # self.grid: Dict[Tuple[int, int], str] = {}
-
-        # TODO: movement manager thread object
-        # self.movement_manager = MovementManagementThread(self.grid, self.agents)
-
-        # TODO: control mode mapping from agent id to mode (either 'auto' or 'human')
-        # self.control_mode: Dict[str, str] = {}
-
         pass
 
 
@@ -85,15 +77,10 @@ class GPTWorldEnv:
         number = 1
         agents_and_objects = "["
 
-        for a_id in self.agents:
-            ag = self.agents[a_id]
-            if ag.eid == agent.eid and a_id != agent.id:
-                agents_and_objects += f"{ag.name} (location: {ag.location}),"
-                number += 1
-        for o_id in self.objects:
-            obj = self.objects[o_id]
-            if obj.eid == agent.eid and o_id != agent.id:
-                agents_and_objects += f"{obj.name} (location: {ag.location}),"
+        for id in self.elems:
+            el = self.elems[id]
+            if el.eid == agent.eid and id != agent.id:
+                agents_and_objects += f"{el.name} (location: {el.location}),"
                 number += 1
         
         agents_and_objects += "]"
@@ -115,18 +102,11 @@ class GPTWorldEnv:
                 continue
             send_content[target] = content
 
-        for a_id in self.agents:
-            ag = self.agents[a_id]
-            if ag.eid == agent.eid and a_id != agent.id:
-                if ag.name in send_content:
-                    ag.add_observation(send_content[ag.name])
-  
-        for o_id in self.objects:
-            obj = self.objects[o_id]
-            if obj.eid == agent.eid and o_id != agent.id:
-                if obj.name in send_content:
-                    if isinstance(obj, GPTObject):
-                        obj.add_observation(send_content[obj.name])
+        for id in self.elems:
+            el = self.elems[id]
+            if el.eid == agent.eid and id != agent.id:
+                if el.name in send_content:
+                    el.add_observation(send_content[el.name])
         
 
 
@@ -137,19 +117,7 @@ class GPTWorldEnv:
             data = json.load(f)
         return cls(**{"env_json": data, "file_dir": file_dir,"clear_memory":clear_memory})
         
-      
-    def initialize_web(self, ):
-        return RuntimeError("Disabled")
-        import multiprocessing
-    
-        # process_backend = multiprocessing.Process(target=run_backend)
-        # process_frontend = multiprocessing.Process(target=run_frontend)
-        # process_backend.start()
-        # process_frontend.start()
 
-        # logger.critical("\n\033[1m\033[93m"+"-"*20 + "\nView your little world at http://localhost:5001\n" + "-"*20)
-
-        return
 
     def get_neighbor_environment(self, agent_id :str = None, critical_distance = -1):
         '''Provide the local environment of the location.
@@ -165,33 +133,27 @@ class GPTWorldEnv:
             critical_distance = 999999999
 
  
-        location = self.env_json['objects'][agent_id]['location']
-        env_id = self.env_json['objects'][agent_id]['eid']
+        location = self.elems[agent_id].location
+        env_id = self.elems[agent_id].eid
 
         at_area = self.env_json['areas'][env_id]['name']
         
         # Find objects within the agent's reach in distance
         objects_within_distance = []
         
-        for obj_id, obj in self.env_json['objects'].items():
+        for obj_id, obj in self.elems.items():
             if obj_id != agent_id:
-                obj_location = obj['location']
+                obj_location = obj.location
                 distance = abs(obj_location[0] - location[0]) + abs(obj_location[1] - location[1])
-                if distance <= critical_distance and env_id == obj['eid']:
+                if distance <= critical_distance and env_id == obj.eid:
                     objects_within_distance.append(obj_id)
         
         observations = []
         template = "{} is at location {} of {}, status: {}."
         for obj_id in objects_within_distance:
-            if obj_id.startswith('a'):
-                agent = self.agents[obj_id]
-                filled = template.format(agent.name, agent.location, at_area,  agent.status)
-                observations.append(filled)
-            elif obj_id.startswith('o') and  obj_id in self.objects:
-                agent = self.objects[obj_id]
-                filled = template.format(agent.name, agent.location, at_area, agent.status)
-                observations.append(filled)
-
+            agent = self.elems[obj_id]
+            filled = template.format(agent.name, agent.location, at_area,  agent.status)
+            observations.append(filled)
 
         return observations
     
@@ -229,8 +191,10 @@ class GPTWorldEnv:
         for obj_id, obj in self.env_json['objects'].items():
             if obj_id.startswith('a'):
                 self.agents[obj_id] = GPTAgent(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self,clear_memory=self.clear_memory)
+                self.elems[obj_id] = self.agents[obj_id]
             elif obj['id'].startswith('o') and obj['engine'] == 'object':
                 self.objects[obj_id] = GPTObject(os.path.join(self.file_dir, '{}.json'.format(obj_id)), environment=self)
+                self.elems[obj_id] = self.objects[obj_id]
             elif obj['id'].startswith('o') and obj['engine'] == 'environment':
                 # self.objects[obj_id] = GPTEnvObject(obj, environment=self)
                 pass
@@ -281,14 +245,14 @@ class GPTWorldEnv:
     def send_system_message(self, id, message):
         invoice_prompt = "Here is a system message that is of highest priority. Who observe it should strict follows the message until it is completed: "
         if id.startswith('a'):
-                self.agents[id].set_invoice(invoice_prompt + message)
+                self.elems[id].set_invoice(invoice_prompt + message)
         elif id.startswith('o'):
-                self.objects[id].set_invoice(invoice_prompt + message)
+                self.elems[id].set_invoice(invoice_prompt + message)
         logger.debug(f"broadcast {message} to {id}")
 
 
     def broadcast_invoice(self, incoming_invoice):
-        objectlist = [(aid, self.agents[aid].name) for aid in self.agents] + [(oid, self.objects[oid].name) for oid in self.objects]  
+        objectlist = [(id, self.elems[id].name) for id in self.elems]
         prompt_template = load_prompt(self.file_dir, key='system_message_broadcast')
         prompt = prompt_template.format(objectlist=objectlist, system_message=incoming_invoice)
 
@@ -307,87 +271,66 @@ class GPTWorldEnv:
             logger.critical("find system_message: {}".format(system_message))
             self.broadcast_invoice(system_message)
 
-    def fetch_elem_info(self, typeset=['a','o'], return_info='name'):
+    def fetch_elem_info(self, typeset=['a','o']):
         elems = {}
-        if 'o' in typeset:
-            for id, info in self.env_json['objects'].items():
-                elems[id] = info[return_info]
-        elif 'a' in typeset:
-            for id, info in self.env_json['agents'].items():
-                elems[id] = info[return_info]
+        for id, elem in self.env_json['objects'].items():
+            elems[id] = elem['name']
         return elems
+
 
     def step(self, debug=False):
         """ For each time frame, call step method for agents
         """
 
-        # self.movement_manager.start()
-        logger.info(f"New environment step starts. Current environment time: {self.current_time}")
+
+        self.uilogging("World", "current time: {}".format(self.current_time))
 
         thread_pool = []
         self.get_invoice()
         self.get_system_message()
 
         # sync between frames
-        for agent_id in self.agents:
-            agent = self.agents[agent_id]
+        for elem_id in self.elems:
+            elem = self.elems[elem_id]
             # run agent as thread
             if debug:
-                agent.sync(self.current_time)
+                elem.sync()
             else:
-                thread = threading.Thread(target=agent.sync, args=(self.current_time,))
+                thread = threading.Thread(target=elem.sync, args=())
                 thread_pool.append(thread)
                 thread.start() 
         
-        for obj_id in self.objects:
-            object = self.objects[obj_id]
-            if isinstance(object, GPTObject):
-                if debug:
-                    object.sync(self.current_time)
-                else:
-                    thread = threading.Thread(target=object.sync, args=(self.current_time,))
-                    thread_pool.append(thread)
-                    thread.start() 
-        
         if not debug:
             for thread in thread_pool:
                 thread.join()
 
+        thread_pool = []
         # perform step
-        for agent_id in self.agents:
-            agent = self.agents[agent_id]
+        for elem_id in self.elems:
+            elem = self.elems[elem_id]
             # run agent as thread
             if debug:
-                agent.step(self.current_time)
+                elem.step(self.current_time)
             else:
-                thread = threading.Thread(target=agent.step, args=(self.current_time,))
+                thread = threading.Thread(target=elem.step, args=(self.current_time,))
                 thread_pool.append(thread)
                 thread.start()
-                # 5. 每个帧都要跑下寻路系统。
-                move_thread = threading.Thread(target=agent.move_async, args=())
-                thread_pool.append(move_thread)
-                move_thread.start()
+                # The pathfinding system needs to be run for each frame.
         
-        for obj_id in self.objects:
-            object = self.objects[obj_id]
-            if isinstance(object, GPTObject):
-                if debug:
-                    object.step(self.current_time)
-                else:
-                    thread = threading.Thread(target=object.step, args=(self.current_time,))
-                    thread_pool.append(thread)
-                    thread.start()
-
         if not debug:
             for thread in thread_pool:
                 thread.join()
-
         
+        # move
+        thread_pool = []
+        for elem_id in self.elems:
+            elem = self.elems[elem_id]
+            move_thread = threading.Thread(target=elem.move_async, args=())
+            thread_pool.append(move_thread)
+            move_thread.start()
+        for thread in thread_pool:
+            thread.join()
         
-            # 同步操作  @TODO bokai
-
-            
-
         
         # TODO: save the state of all agents to dump files
 

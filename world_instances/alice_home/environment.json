@@ -107,7 +107,7 @@
                     30
                 ]
             ],
-            "name": "Bob and Carot's BedRoom",
+            "name": "Bob's BedRoom",
             "id": "e_006",
             "border": 3,
             "entrance": [
@@ -344,6 +344,8 @@
         }
     },
     "system_message": {
-        "2023-04-01 07:02:00": "To Alice: please walk to the sofa and watch TV now."
+        "2023-04-01 07:00:00": "To Clock: you are set to ring at 7:00 ",
+        "2023-04-01 07:04:00": "To Alice: please walk to the sofa and watch TV now; To Bob: please go to book shelf and read",
+        "2023-04-01 07:10:00": "To Alice: go to bob and ask him to go to dinning room to each breakfast"
     }
 }

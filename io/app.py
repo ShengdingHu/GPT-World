@@ -26,7 +26,7 @@ args = parser.parse_args()
 PARENT_DIR = os.path.abspath(os.path.dirname(__file__))
 
 # Pre-compiled frontend path
-FRONTEND_PATH = os.path.join(PARENT_DIR, "frontend_new/rpg-game/build")
+FRONTEND_PATH = os.path.join(PARENT_DIR, "frontend/rpg-game/build")
 
 # Include assets including icons, tiles
 ASSETS_DIR = os.path.join(PARENT_DIR, "assets")
@@ -38,7 +38,12 @@ ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", f".{args.world_inst
 if not os.path.exists(ENV_PATH):
     if os.path.exists(os.path.join(f"{PARENT_DIR}/../world_instances/", args.world_instance)):
         # raise RuntimeError(f"Found static files of world: {args.world_instance}, but it has been copied into the running folder. Please start the engine by running `python gptworld/run.py -W {args.world_instance}` first.")
-        print("Warning: You are under static viewing mode, the world instance is frozen.")
+        answer = input(f"You might forget to run the world instance. Are you sure to view the static environment? input Y/N\n")
+        if answer == 'Y':
+            pass
+        else:
+            print(f"Please run the world with `python gptworld/run.py -W {args.world_instance}")
+            exit(0)
         ENV_PATH = os.path.join(f"{PARENT_DIR}/../world_instances/", f"{args.world_instance}")
     else:
         raise RuntimeError(f"No world instance named {args.world_instance} has been found.")

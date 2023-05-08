@@ -13,6 +13,7 @@ base_prompt = {
 (1) The agent's description: {summary}
 (2) Current time is {time}
 (3) Your current status is {status}
+(4) Your memory is {context}
 
 Now the observation has two types, incomming observation is the ones that other does to you, you are more likely to react to them.  Background observation are the background, which does not need to be responded. For example, view an alarm clock does not imply turning it off. However, some background observation might trigger your attention, like an alarming clock or a firing book.
 
@@ -49,7 +50,43 @@ Thought: I think I've finished my action as the agent.
 Action: end()
 Observation:
 
-Now begin your actions as the agent. """,
+Now begin your actions as the agent. Remember only write one function call after `Action:` """,
+
+"reaction_prompt_object": """Now you are act for as an object named {name} in a virtual world. You might need to performing reaction to the observation. Your mission to take the agent as yourself and directly provide what the agent will do to the observations based on the following information:
+(1) Current time is {time}
+(2) Your current status is {status}
+
+Now the observation has two types, incomming observation is the ones that other does to you, you are more likely to react to them.  Background observation are the background, which does not need to be responded. For example, view an alarm clock does not imply turning it off. However, some background observation might trigger your attention, like an alarming clock or a firing book.
+
+So now:
+The incoming observation is {observation}
+The Some background observation is {background_observation}.
+
+In terms of how you actually perform the action in the virtual world, you take action for the agent by calling functions. Currently, there are the following functions that can be called.
+
+- act(description, target=None): do some action. `description` describes the action, set `description` to None for not act. `target` should be the concrete name, for example, Tim is a teacher, then set `target` to `Tim`, not `teacher`. 
+- move(description): move to somewhere. `description` describes the movement, set description to None for not move.
+- do_nothing(): Do nothing. There is nothing that you like to respond to, this will make you stick to your original status and plan.
+
+Some actions may not be needed in this situation. Call one function at a time, please give a thought before calling these actions, i.e., use the following format strictly:
+            
+Thought: None of the observation attract my attention, I need to:
+Action: do_nothing()
+Observation: [Observations omited]
+[or]
+Thought: due to observation `xxx`, I need to:
+Action: act(None)
+Observation: [Observations omited]
+[or]
+Thought: due to observation `xxx`, I need to:
+Action: move(None)
+Observation: [Observations omited]
+[or]
+Thought: I think I've finished my action as the object. 
+Action: end()
+Observation:
+
+Now begin your actions as the agent. Remember only write one function call after `Action:` """,
 
 "change_status": """Now you have act for as an agent named {name} in a virtual world. You have performed reaction to the observation for {name}. Currently you need to determine whether you need to change status. Here are some following information for:
 (1) The agent's description: {summary}
@@ -58,7 +95,12 @@ Now begin your actions as the agent. """,
 
 Your reaction to observation: {reaction}
 
-Directly tell me whether the status should be changed. If yes, output the new status in `New status: xxx`. If no, output `NOTCHANGE`.
+Directly tell me whether the status should be changed. Use the following function to change (or not change).
+
+- status_unchange()
+- change_status(new_status: str, duration: int) : new_status: A string describes the new_status. duration: the estimated duration of this status.
+
+Now give me the funcation call:
 """,
 
 "broadcast_observations": """You are simulating an environment. When an action happens in your environment, you should paraphrase the action to (and only to) the potential receivers in your environment. Please judge whether you should broadcast the message when meets one of the following principles:
@@ -149,6 +191,16 @@ send_system_message(id="o_001", "message": "turn off immediately")
 END
 
 Now: the agents and objects are {objectlist}. The system message is: {system_message}.  Begin to broadcast:
+""", 
+
+"movement_target": """You are now simulating an environment, an agent in you want to perform a movement. I will give you a list of 
+objects and agents that might be the target. Your job is to set the movement target for the agent by calling function:
+movement_target(id, name)
+
+Now here is the list and movment:
+List: {elems}
+Movement is : {target_description}
+Now call the function:
 """
 }
 

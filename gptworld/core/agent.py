@@ -67,7 +67,7 @@ class EnvElem:
         self.location = state_dict.get('location',None)
         self.target_id = self.id
         self.eid = state_dict.get('eid',None)
-        self.movement = self.state_dict.get("movement", "static")
+        self.movement = self.state_dict.get("movement", False)
         self.max_velocity = self.state_dict.get("max_velocity", 1)
 
         # interaction
@@ -177,16 +177,16 @@ class EnvElem:
         logger.debug("incoming_observation: {}\nbackground_observation: {}".format(self.incoming_observation, self.background_observation))
 
     
-    def reflect(self,time:datetime):
+    def reflect(self,):
         """ While the time is right, do reflection for memory
         """
         logger.debug(f"{self.name} maybe reflect...")
-        return self.long_term_memory.maybe_reflect(time)
+        return self.long_term_memory.maybe_reflect(self.current_time)
     
     def add_observation(self, observation):
         self.pending_observation.append(observation)
     
-    def sync(self, current_time):
+    def sync(self,):
         self._move_pending_observation_or_invoice()
 
 
@@ -382,18 +382,10 @@ participating algorithm competition in the lab room at 14:00
         self.hourly_plan[combined_datetime]=task
 
 
-    def plan_in_chunk(self, time:dt):
+    def plan_in_chunk(self, ):
         """
         update hourly plans from time(including this hour)
         """
-        hour=time.hour
-        if self.summary is not None:
-            summary = self.summary
-        else:
-            logger.warning("Abnormal: summary not exist.")
-            summary = self.generate_summary(time)
-       
-        sWhole= '\n'.join([str(i+1)+') ' + s for i,s in enumerate(self.whole_day_plan[dt.strftime(time,"%Y-%m-%d")])])
         prompt_template=load_prompt(file_dir=self.file_dir, key='chunk_plan')
         time_granularity = str(min(1, 60 * self.environment.env_json.get("time_delta", 60) // 3600))  + "hour(s)"
         prompt = prompt_template.format(name=self.name, time_granularity=time_granularity, whole_day_plan=self.whole_day_plan, summary=self.summary, status=self.status, current_time=self.current_time )
@@ -416,7 +408,7 @@ participating algorithm competition in the lab room at 14:00
         return {'start_time':start_time,'end_time':end_time,'task':plan_description}
 
 
-    def plan_in_detail(self, time:dt, time_granularity: datetime.timedelta=datetime.timedelta(minutes=10),reaction=None):
+    def plan_in_detail(self, time_granularity: datetime.timedelta=datetime.timedelta(minutes=10),reaction=None):
         """
         generate more detailed plan on the basis of a broad stroke plan(or just a relatively not detailed plan)
         If reaction is not None, the first plan must be reaction
@@ -437,7 +429,7 @@ participating algorithm competition in the lab room at 14:00
                     found = True
                     sHourPlan.append((k,v))
             if not found:
-                self.plan_in_chunk(time)
+                self.plan_in_chunk()
 
         detailed_plan_template=load_prompt(file_dir=self.file_dir, key="detailed_plan")  #
         time_granularity = str(10 * self.environment.env_json.get("time_delta", 60) // 60 ) + "min" # temperarily, every 10 frame has a plan.
@@ -461,9 +453,9 @@ participating algorithm competition in the lab room at 14:00
         return new_plans[0]
 
     
-    def get_next_plan(self,current_time:dt):
+    def get_next_plan(self,):
         """
-        给出下一个plan用于立刻更新状态。如果plan用完了，立刻生成一些fine-grained plan
+        Provide the next plan for immediate update of the status. If the plan is used up, generate some fine-grained plans immediately.
         """
         # default result.
         # return {'status': 'idle', 'duration': 3600}
@@ -472,14 +464,14 @@ participating algorithm competition in the lab room at 14:00
         # format: [{"task": "XXX", "start_time": str(datetime.datetime(2023, 4, 1)),
         #           "end_time": str(datetime.datetime(2023, 4, 1))}]
         for plan_entry in self.plan:
-            logger.debug("!!!!! plan_entry: "+plan_entry+str(type(plan_entry)))
+            logger.debug("plan_entry: "+plan_entry+str(type(plan_entry)))
             s,e=dt.strptime(plan_entry['start_time'],'%Y-%m-%d %H:%M:%S'),dt.strptime(plan_entry['end_time'],'%Y-%m-%d %H:%M:%S')
             # we reject the plan that end at this time. So make sure don't generate plan with 0 duration!!!!
-            if e>current_time and s<=current_time:
-                return {'status':plan_entry['task'],'duration':(e-current_time).total_seconds()}
+            if e>self.current_time and s<=self.current_time:
+                return {'status':plan_entry['task'],'duration':(e-self.current_time).total_seconds()}
         # not found, generate new plans. We rely on plan_in_detail to remove conflicting plans
-        first_plan_entry=self.plan_in_detail(current_time)
-        return {'status':first_plan_entry['task'],'duration':(dt.strptime(first_plan_entry['end_time'],'%Y-%m-%d %H:%M:%S')-current_time).total_seconds()}
+        first_plan_entry=self.plan_in_detail(self.current_time)
+        return {'status':first_plan_entry['task'],'duration':(dt.strptime(first_plan_entry['end_time'],'%Y-%m-%d %H:%M:%S')-self.current_time).total_seconds()}
 
 
 
@@ -515,7 +507,7 @@ participating algorithm competition in the lab room at 14:00
         """
         return self.incoming_interactions[-1] if len(self.incoming_interactions)>0 else []
 
-    def minimal_init(self,current_time: dt):
+    def minimal_init(self, ):
         """If the agent has no long_term_memory initially, we add the description about 
         the agent as the long_term_memory. Also we generate summary and whole day plan if it's empty.
         """
@@ -526,18 +518,18 @@ participating algorithm competition in the lab room at 14:00
                 sPlan=f"This is {self.name}'s plan for {k}: "+','.join(v)
                 self.long_term_memory.add(sPlan,dt.strptime(k,"%Y-%m-%d"),['plan'])
             for des in self.description:
-                self.long_term_memory.add(des,current_time,['description'])
+                self.long_term_memory.add(des,self.current_time,['description'])
 
         if self.summary is None:
-            self.generate_summary(current_time)        
-        self.plan_in_broad_strokes(current_time)
+            self.generate_summary(self.current_time)        
+        self.plan_in_broad_strokes(self.current_time)
 
-    def end_interaction(self,current_time:dt):
+    def end_interaction(self,):
         """
         结束当前对话，为自己生成对话摘要并放在自己的状态中。依靠环境将此对话摘要存入自己记忆
         """
 
-        self.status_start_time = current_time
+        self.status_start_time = self.current_time
         sDial='\n'.join([interaction['sender']+':' +interaction['content'] for interaction in self.incoming_interactions])
         sPrompt="""\
 Summarize the dialog above.
@@ -583,26 +575,29 @@ Summarize the dialog above.
         return ret_location, ret_eid
                 
     def unreachable_signal(self, target):
-#        self.observe()  # TODO: 为什么这里要 observe
-        self.environment.uilogging(self.name, "Target {} is unreacable.".format(target))
+        logger.debug(self.name + ": movement target {} is unreacable.".format(target))
 
+    def _movement_target(self, id, name):
+        self.target_id = id
 
     def analysis_movement_target(self, target_description):
         elems = self.environment.fetch_elem_info()
-        prompt = """Now you want to perform a movement action. I will give you a list of 
-                objects and agents that you might be your target. 
-                List: {}
-                You target movement is : {}
-                Give me the id of the movement target (with out `id` prefix). 
-                Note that you can only give ONE movement target.
-                """.format(json.dumps(elems), target_description)
+        prompt = load_prompt(file_dir=self.file_dir, key='movement_target').format(elems = json.dumps(elems), target_description=target_description)
 
+        logger.debug("prompt for {}'s movement: {}".format(self.name, prompt))
         self.target_id = 'ERROR'
         RETRY_LIMIT = 3
         found = False
         for tid in range(RETRY_LIMIT):
-            self.target_id = chat(prompt)
-            if self.target_id in elems: 
+            result = chat(prompt)
+            logger.debug("prompt for {}'s movement: {}, result {}".format(self.name, prompt, result))
+            for line in result.split("\n"):
+                try:
+                    eval("self._"+line)
+                except:
+                    continue
+            logger.debug(f"{self.name} movement prediction: {self.target_id}")
+            if self.target_id in elems:
                 logger.info("{} find target : {} in description: {}".format(self.name, self.environment.get_elem_by_id(self.target_id), target_description))
                 found = True
                 break
@@ -613,11 +608,20 @@ Summarize the dialog above.
     def find_movement(self):
         target_id = self.target_id
         target = None
-        for id, info in self.environment.env_json['objects'].items():
+        
+        for id in self.environment.elems:
+            elem = self.environment.elems[id]
 #            self.environment.uilogging(self.name, "compare id: {}, target_id: {}".format(id, target_id))
             if id == target_id:
-                target = info['location']
+                target = elem.location
                 break
+        
+        if target is None:
+            for id, info in self.environment.env_json['objects'].items():
+                if id == target_id:
+                    target = info['location']
+                    break
+
 
         if target_id == "ERROR" or target == None:
             self.unreachable_signal("[N/A]")
@@ -669,46 +673,101 @@ Summarize the dialog above.
 
         return self.get_area_location(next_step)
     
-    def act(self, description=None, target=None):
+    def _act(self, description=None, target=None):
         if description is None:
-            return
+            return ""
         if target is None:
             reaction_content = f"{self.name} performs action: '{description}'."
         else:
             reaction_content = f"{self.name} performs action to {target}: '{description}'."
-        self.reaction_content += reaction_content
-        logger.info(reaction_content)
         self.environment.broadcast_observations(self, target, reaction_content)
+        return reaction_content
         
 
-    def say(self, description, target=None):
+    def _say(self, description, target=None):
         if description is None:
-            return
+            return ""
         if target is None:
             reaction_content = f"{self.name} says: '{description}'."
         else:
             reaction_content = f"{self.name} says to {target}: '{description}'."
-        self.reaction_content += reaction_content
-        logger.info(reaction_content)
         self.environment.broadcast_observations(self, target, reaction_content)
+        return reaction_content
 
 
-    def move(self, description):
+    def _move(self, description):
         if description is None:
             self.movement=False
         else:
             self.movement=True
             self.movement_description = description
+        return description
     
-    def change_status(self, change):
-        if change==True:
-            self.terminate=True
+
+    def move_async(self):
+        for s in range(50):
+            next_step, next_area = self.find_movement()
+            if next_step != None: map_editor.move_agent(self, next_step, next_area)
+        logger.debug(
+            self.name + " position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
+
+
+        
+    def check_status_passive(self, ):
+        """Check if the current status needs to be finished. If so, examine the plan and initiate the next action.
+        """
+        if self.status_start_time is None: # fixing empty start time
+            self.status_start_time = self.current_time
+
+        if self.status_start_time+datetime.timedelta(self.status_duration) <= self.current_time:
+            # 根据reverie，不产生新观察
+            # 对话过程不会随便转状态，因此把对话duration直接设置无限
+            next_plan=self.get_next_plan()
+            self.status_start_time=self.current_time
+            self.status=next_plan['status']
+            self.status_duration=next_plan['duration']
+            self.environment.uilogging(f"{self.name}", f"status: {self.status}, duration: {self.status_duration}")
         else:
-            self.terminate=False
-            
+            logger.debug(f"{self.name} don't change status by plan: {self.status_start_time}, {datetime.timedelta(self.status_duration)}, {self.current_time}")
+
+    def prepare_react_memory(self, ):
+        self.reflect() # TODO: check necessary?
 
 
-    def react(self, current_time):
+        subject_prompt =  load_prompt(file_dir=self.file_dir, key='subject_parsing')
+
+        observation = self.incoming_observation + self.background_observation
+
+        subjects=list(set([chat(subject_prompt.format(sentence=ob)).strip('". ')
+                            for ob in self.observation]))
+
+        queries_ob = observation.copy()
+        queries_sub = [f"What is the {self.name}'s relationship with {sub}?" for sub in subjects]
+
+        logger.debug("{} | queries_sub: {}".format(self.name, queries_sub))
+
+        # memory_string = ' '.join(sum([self.long_term_memory.query(q,2,self.current_time) for q in chain(queries_ob,queries_sub)],[])).strip()
+        memory_string = ' '.join(self.long_term_memory.query(queries_ob+queries_sub,len(queries_ob)*4,self.current_time)).strip()
+
+        logger.debug("-"*20+"\nUse the following queries to query {}:\n {}\n Get the following memories: {}\n".format(self.name, queries_sub, memory_string ))
+
+        if not memory_string:
+            memory_string = "Empty"
+        return memory_string
+
+
+    def _status_unchange(self,):
+        pass
+
+    def _change_status(self, new_status, duration):
+        self.status = new_status
+        self.status_duration = duration
+        logger.debug("change to new status: {}".format(self.status))
+
+    def might_react(self):
+        return len(self.incoming_observation)>0 or len(self.background_observation)>0
+
+    def react(self):
         """
         react.
         检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。
@@ -718,310 +777,131 @@ Summarize the dialog above.
         当前设计思路 interaction不做特殊处理，防止阻塞自身和他人动作，同时支持多人讨论等场景。
         """
 
-        self.observe()
-        might_react = len(self.incoming_interactions) > 0 or len(self.observation) > 0
-        might_react = False  # TODO: This is a debugging trial
-        if might_react:
-            self.reflect(current_time)
+        sSummary = self.summary
+        sTime = self.current_time.strftime("%B %d, %Y, %I:%M %p.")
+        sStatus= f"{self.name}'s status: {self.status}."
 
-    def move(self, description):
-        if description is None:
-            self.movement=False
-        else:
-            self.movement=True
-            self.movement_description = description
+        memory_string = self.prepare_react_memory()
+        
+        sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
 
-    def move_async(self):
-        for s in range(10):
-            next_step, next_area = self.find_movement()
-            if next_step != None: map_editor.move_agent(self, next_step, next_area)
-        logger.debug(
-            self.name + " position {} in {}, next_step: {} in {}".format(self.location, self.eid, next_step, next_area))
 
-    def change_status(self, change):
-        if change==True:
-            self.terminate=True
-        else:
-            self.terminate=False
+        query_sources = {}
+        query_sources['name'] = self.name
+        query_sources['summary'] = sSummary # 论文
+        query_sources['time'] = sTime
+        query_sources['status'] = sStatus
+        query_sources['observation'] = self.incoming_observation
+        query_sources['context'] = sContext # 长期记忆
+        query_sources['background_observation'] = self.background_observation
+
+        logger.debug(f"{self.name} reaction prompt sources {query_sources}")
+
+        reaction_prompt_template = load_prompt(file_dir=self.file_dir, key='reaction_prompt')
+
+        end = False
+        count = 0
+        reaction_prompt = reaction_prompt_template.format(**query_sources)
+
+        self.terminate = False
+        self.movement = False
+        
+        reaction_logs = []
+        while not end and count < 1:
+            reaction_result = chat(reaction_prompt, stop=["Observation:"])
+            logger.debug(f"Reaction output: {reaction_result}")
+            match = re.search(r'Action:\s*(.*)', reaction_result)
+            if match:
+                content = match.group(1)
+            else:
+                print('No match found.')
             
+            if 'do_nothing(' in content:
+                end = True
+                reaction_log = "{}".format(self.status)
+            if 'say(' in content:
+                reaction_log = eval("self._"+content.strip())
+            elif 'act(' in content:
+                reaction_log = eval("self._"+content.strip())
+            elif 'move(' in content:
+                reaction_log = eval("self._"+content.strip())
+            elif 'end(' in content:
+                end = True
+            count += 1
+            reaction_logs.append(reaction_log)
+            reaction_prompt += reaction_result + "\nObservation: [Observation omitted]\n"
 
-            # sPrompt = f"""
-            #             1. Should {self.name} react to the observation? Say yes or no.
-            #             If yes, tell me about the reaction, omitting the subjective. For example, say 'eating' instead of '{self.name} eats'.
-            #             2. Is this reaction about saying something? Say yes or no.
-            #             If yes, tell me the content being said in double quotes.
-            #             3. Does this reaction has a specific target? Say yes or no.
-            #             If yes, tell me the name or how would {self.name} call it.
-            #             4. Also tell me if this reaction terminates {self.name}'s status, Say yes or no.
-            #             5. Does this reaction involve {self.name} moving to a new location? Say yes or no.
-            #             Strictly obeying the Output format, and don't omit answer to any of questions above
-            #
-            #             ```
-            #             1. <Yes/No for being a reaction> : <reaction>
-            #             2. <Yes/No for saying something> : <content being said>
-            #             3. <Yes/No for targeting> : <target name>
-            #             4. <Yes/No for terminating self status>
-            #             5. <Yes/No for movement>
-            #             ```
-            #             """
+        reaction_logs = " & ".join(reaction_logs)
+        if len(reaction_logs) > 0:
+            self.environment.uilogging(self.name, reaction_logs)
+            logger.info(f"{self.name} react: {reaction_logs}")
+            self.status = reaction_logs
 
-            sPrompt = (f"{self.name} will do the following reactions(The reaction maybe initialize dialogues, " +
-                       "or move to somewhere: 1)")
-
-            send_message = '\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPrompt])
-            # logger.debug(f"Prompt of {self.name}'s reaction: {send_message}")
-
-            action_result = chat(send_message)
-            logger.info(f"{self.name} is going to 1){action_result}")
-
-            # let LLM determine whether the action includes speach or movement
-
-            # speech detection
-            send_message = (f"{action_result}" +
-                            "Does the content above include the intention of saying something?\n" +
-                            "Use Yes/No to answer."
-                            )
-            result = chat(send_message).strip('. ')
-            logger.debug(f"{self.name} will {result} say something.")
-            is_going_to_say_something = (result == "Yes")
-            if is_going_to_say_something:
-                sPrompt = (f"Now {self.name} is going to 1){action_result}," +
-                           f'{self.name} will say:"')
-                send_message = '\n'.join([sSummary, sTime, sStatus, sObservation, sContext, sPrompt])
-                dialogue_result = chat(send_message).strip('" ')  # only contains clean words. no quots.
-                logger.info(f'{self.name} says: "{dialogue_result}"')
-
-            # movement detection
-            send_message = (f"{action_result}" +
-                            "Does the content above include the intention of moving to somewhere?\n" +
-                            "Use Yes/No to answer."
-                            )
-            result = chat(send_message).strip('. ')
-            logger.debug(f"{self.name} will {result} move.")
-            is_going_to_move_to_somewhere = (result == "Yes")
-
-            if is_going_to_move_to_somewhere:
-                # TODO: query LLM to get the target location. and call movement functions
-                pass
-
-            # TODO: get the reaction target by requesting LLM.
-            # TODO: add reactions into the enviroment broadcasting system.
+        # # change status active # TODO: currently not in use!
+        # change_status_prompt_template = load_prompt(file_dir=self.file_dir, key='change_status')
+        # change_status_prompt = change_status_prompt_template.format(**query_sources, reaction=reaction_result)
+        # result = chat(change_status_prompt)
+        # for line in result.split("\n"):
+        #     eval("self._"+line)
 
 
-            # try_num = 0
-            # while try_num < 3:
-            #     result = chat(send_message)
-            #     logger.debug(f"[Reaction]The {try_num}th trial result:\n{result}")
-            #     try:
-            #         lines = result.split('\n')
-            #         if len(lines) < 5:
-            #             logger.warning('abnormal reaction:' + result)
-            #         finds = [line.find('Yes') for line in lines]
-            #         should_react, reaction = finds[0] >= 0, lines[0][finds[0] + 4:].strip().strip(':').strip()
-            #         should_oral, oral = finds[1] >= 0, lines[1][finds[1] + 4:].strip().strip(':').strip()
-            #         have_target, target = finds[2] >= 0, lines[2][finds[2] + 4:].strip().strip(':').strip()
-            #         terminate = finds[3] >= 0
-            #         #                    movement=finds[4]>=0
-            #         movement = 1
-            #         break
-            #     except IndexError:
-            #         logger.debug(f"Generated reaction {result}. Retrying...", )
-            #         try_num += 1
-            #         should_react = False
-            #         pass
+        # TODO: check if the old plan is invalid, if it is, generate new plan.
+        if self.terminate:
+            self.plan_in_detail(self.current_time, reaction = reaction_logs)
+            next_plan=self.get_next_plan(self.current_time)
+            self.status_start_time = self.current_time
+            self.status = next_plan['status']
+            self.status_duration = next_plan['duration']
+            self.environment.uilogging(f"{self.name}",
+                                        f"status: {self.status}, duration: {self.status_duration}")
+            self.status=reaction_logs
+            self.status_duration=0
+            self.status_start_time=self.current_time
 
-                # should_react, reaction=line_split[0][1], line_split[0][2].strip(':').strip()
-                # should_oral,oral=line_split[1][1], line_split[1][2].strip(':').strip()
-                # have_target,target=line_split[2][1], line_split[2][2].strip(':').strip()
-                # terminate =line_split[3][1]
+   
 
-                # if should_react:
-                #     if should_oral:
-                #         reaction_content = reaction + ' Also saying: ' + oral
-                #     else:
-                #         reaction_content = reaction
-                #     if not have_target:
-                #         target = None
-                #
-                #     self.environment.uilogging(self.name, reaction_content)
-                #     if self.environment is not None:
-                #         self.environment.parse_action(self, target, reaction_content)
-                #     if terminate:
-                #         self.plan_in_detail(current_time, reaction=reaction)
-                #         next_plan = self.get_next_plan(current_time)
-                #         self.status_start_time = current_time
-                #         self.status = next_plan['status']
-                #         self.status_duration = next_plan['duration']
-                #         self.environment.uilogging(f"{self.name}",
-                #                                    f"status: {self.status}, duration: {self.status_duration}")
-                #         # self.status=reaction
-                #         # self.status_duration=0
-                #         # self.status_start_time=current_time
-                #
-                # if movement:
-                #     self.analysis_movement_target(reaction)
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
         目前尽量塞主step函数简化变量调用，TODO:后期切成几个子函数方便维护
         """
         self.current_time = current_time
-        # 产生observation的条件： following reverie, 所有observation都是主体或客体的状态，所以这一步暂时直接交给环境处理。
-        # 一类特殊状态，observation of interaction在对话结束给出摘要时才可以确定，此前不能被环境获取。reverie如何在对话开始时生成一个完整对话暂时没看明白
-        # short time observation 应该屏蔽掉同主体同状态防止冗余
 
-        logger.debug("Agent {}, Time: {}, Status {}, Status Start: {}, Will last: {}".format(self.state_dict['name'], str(current_time), self.status, self.status_start_time, datetime.timedelta(self.status_duration)))
+        logger.debug("Agent {}, Time: {}, Status {}, Status Start: {}, Will last: {}".format(self.state_dict['name'], str(self.current_time), self.status, self.status_start_time, datetime.timedelta(seconds=self.status_duration)))
         
-        # # 测试异步
-        # if self.state_dict['name'].startswith("A"):
-        #     time.sleep(20)
-        # logger.debug("Agent {} is done".format(self.state_dict['name']))
+        # To ensure the proper functioning of the agent, the memory, plan, and summary cannot be empty. Therefore, it is necessary to perform an initialization similar to what should be done at the beginning of each day.
+        self.minimal_init()
 
-        # 为了让agent正常工作，memory, plan, summary不能是空的。因此做一次类似于每日开始时应该进行的初始化
-        self.minimal_init(current_time)
+        # before we handle any observation, we first check the status. 
+        self.check_status_passive()
 
-        # TODO LIST， 每个人写一个if, 然后if里面用自己的成员函数写，避免大面积冲突。
-        # 0. If incoming_invoice is available, process it with the highest priority
-    
-        # 1. 如果当前正在向openai请求，调过这一步
-        # if not self.incoming_invoice:  # Only move the pending observation without any incoming invoice
-
-        # self._move_pending_observation_or_invoice()
-        # 2. 检查自己当前动作是否需要结束，如果需要，则检查plan，开启下一个动作 （如果下一步没有 fine-grained sroke, 就plan）。 @TODO jingwei
-        if self.status_start_time is None: # fixing empty start time
-            self.status_start_time = current_time
-
-        if self.status_start_time+datetime.timedelta(self.status_duration) <= current_time:
-            # 根据reverie，不产生新观察
-            # 对话过程不会随便转状态，因此把对话duration直接设置无限
-            next_plan=self.get_next_plan(current_time)
-            self.status_start_time=current_time
-            self.status=next_plan['status']
-            self.status_duration=next_plan['duration']
-            self.environment.uilogging(f"{self.name}", f"status: {self.status}, duration: {self.status_duration}")
+        # handle observations (including incoming observations or background observations)
         # 3. 检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
         #    多个observation一起处理，处理过就扔进短期记忆。
         #    短期记忆是已经处理过的observation。
         #    这里假定环境的observation是完整的，查重任务交给short time memory
         #    当前设计思路 interaction不做特殊处理，防止阻塞自身和他人动作，同时支持多人讨论等场景。
         self.observe()
-        might_react=len(self.incoming_observation)>0 or len(self.background_observation)>0
 
-        
+        if self.might_react():
+            self.react()
 
-        if might_react:
-            self.reflect(current_time)
-
-            sSummary = self.summary
-            sTime = current_time.strftime("%B %d, %Y, %I:%M %p.")
-            sStatus= f"{self.name}'s status: {self.status}."
-
-
-            subject_prompt =  load_prompt(file_dir=self.file_dir, key='subject_parsing')
-
-            observation = self.incoming_observation + self.background_observation
-
-            subjects=list(set([chat(subject_prompt.format(sentence=ob)).strip('". ')
-                               for ob in self.observation]))
-
-            queries_ob = observation.copy()
-            queries_sub = [f"What is the {self.name}'s relationship with {sub}?" for sub in subjects]
-
-            logger.debug("{} | queries_sub: {}".format(self.name, queries_sub))
-
-            # memory_string = ' '.join(sum([self.long_term_memory.query(q,2,current_time) for q in chain(queries_ob,queries_sub)],[])).strip()
-            memory_string = ' '.join(self.long_term_memory.query(queries_ob+queries_sub,len(queries_ob)*4,current_time)).strip()
-
-            logger.debug("-"*20+"\nUse the following queries to query {}:\n {}\n Get the following memories: {}\n".format(self.name, queries_sub, memory_string ))
-
-            if not memory_string:
-                memory_string = "Empty"
-            sContext = f"Summary of relevant context from {self.name}'s memory: " + memory_string
-
-
-            query_sources = {}
-            query_sources['name'] = self.name
-            query_sources['summary'] = sSummary # 论文
-            query_sources['time'] = sTime
-            query_sources['status'] = sStatus
-            query_sources['observation'] = self.incoming_observation
-            query_sources['context'] = sContext # 长期记忆
-            query_sources['background_observation'] = self.background_observation
-
-            logger.debug(f"{self.name} reaction prompt sources {query_sources}")
-
-            reaction_prompt_template = load_prompt(file_dir=self.file_dir, key='reaction_prompt')
-
-            end = False
-            count = 0
-            reaction_prompt = reaction_prompt_template.format(**query_sources)
-            self.reaction_content = ""
-            self.terminate = False
-            self.movement = False
-            
-            all_reactions = ""
-            while not end and count < 1:
-                reaction_result = chat(reaction_prompt, stop=["Observation:"])
-                all_reactions += reaction_result
-                logger.debug(f"Reaction output: {reaction_result}")
-                match = re.search(r'Action:\s*(.*)', reaction_result)
-                if match:
-                    content = match.group(1)
-                    # eval(content)
-                    # print(content)
-                else:
-                    print('No match found.')
-                
-                if 'do_nothing(' in content:
-                    end = True
-                if 'say(' in content:
-                    eval("self."+content.strip())
-                elif 'act(' in content:
-                    eval("self."+content.strip())
-                elif 'move(' in content:
-                    eval("self."+content.strip())
-                elif 'end(' in content:
-                    end = True
-                count += 1
-                reaction_prompt += reaction_result + "\nObservation: [Observation omitted]\n"
-
-            change_status_prompt_template = load_prompt(file_dir=self.file_dir, key='change_status')
-            change_status_prompt = change_status_prompt_template.format(**query_sources, reaction=reaction_result)
-            chat(change_status_prompt)
-            
-            if len(self.reaction_content) > 0:
-                self.environment.uilogging(self.name, self.reaction_content)
-
-
-            if self.terminate:
-                self.plan_in_detail(current_time, reaction = self.reaction_content)
-                next_plan=self.get_next_plan(current_time)
-                self.status_start_time = current_time
-                self.status = next_plan['status']
-                self.status_duration = next_plan['duration']
-                self.environment.uilogging(f"{self.name}",
-                                           f"status: {self.status}, duration: {self.status_duration}")
-                self.status=self.reaction_content
-                self.status_duration=0
-                self.status_start_time=current_time
-
-            if self.movement:
-                self.analysis_movement_target(self.movement_description)
+        if self.movement:
+            self.analysis_movement_target(self.movement_description)
 
         # 3.5 add observation to memory
         for ob in self.incoming_observation:
-            self.long_term_memory.add(ob,current_time,['observation'])
+            self.long_term_memory.add(ob,self.current_time,['observation'])
         self.incoming_observation = [] # empty the incoming observation
-
 
         # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) 
 
         self.step_cnt += 1
         if self.step_cnt % self.summary_interval == 0:
-            self.generate_summary(current_time)
+            self.generate_summary(self.current_time)
 
         if self.step_cnt % self.reflection_interval == 0:
-            self.reflect(current_time)
+            self.reflect(self.current_time)
 
         return
 

@@ -8,12 +8,12 @@
         130
     ],
     "engine": "object",
-    "VelocityUpperBound": "0/s",
-    "Moving": "false",
+    "velocityUpperBound": "0/s",
+    "moving": "false",
     "Schedule": {
         "timepoint1": "Growing"
     },
-    "Status": "none",
+    "status": "Flowering",
     "description": [
         "1. Apple trees typically grow slowly, taking several years to reach maturity.",
         "2. Apple trees are stationary and cannot move from their location once planted.",

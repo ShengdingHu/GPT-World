@@ -9,7 +9,7 @@
         15
     ],
     "max_velocity": "0.8/s",
-    "moving": "false",
+    "movement": false,
     "status": "sleeping",
     "status_duration": 0,
     "status_start_time": null,

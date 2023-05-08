@@ -7,12 +7,12 @@
         80
     ],
     "engine": "environment",
-    "VelocityUpperBound": "0/s",
-    "Moving": "false",
-    "Schedule": {
+    "velocityUpperBound": "0/s",
+    "moving": "false",
+    "schedule": {
         "timepoint1": "Growing"
     },
-    "Status": "none",
+    "status": "none",
     "description": [
         "It is only a chair and can not give active feedback."
     ]
