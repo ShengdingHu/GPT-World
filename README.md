@@ -24,7 +24,7 @@ Through this easy-to-use **world creation** feature, we hope to inspire **everyo
 🗣️ **Create with NL:** Creating environments with natural languages.
 
 ### 3. TODOS!
-❗️ **Polishing:** Feeling that the current behavior of agents is not very sentient? Don't worry, we are using [AgentVese](https://github.com/OpenBMB/AgentVerse) to refactor and polish the behavior of agents! COMING SOON!
+❗️ **Polishing:** Feeling that the current behavior of agents is not very sentient? Don't worry, we are using [AgentVerse](https://github.com/OpenBMB/AgentVerse) to refactor and polish the behavior of agents! COMING SOON!
 
 🤝 **Distributed:** Allowing players to build and share environments in a distributed way.
 
@@ -47,7 +47,7 @@ git clone https://github.com/ShengdingHu/GPT-World.git
 ```
 conda create -n gptworld python=3.8
 ```
-* Note that python3.8 support websockiet the best, other python versions may encounter issues in web display currently. *
+* Please note that Python 3.8 provides the best support for `flask-socketio`, whereas other versions of Python may currently encounter issues with web display. *
 
 3. Go to project directory by 
 

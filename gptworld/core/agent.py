@@ -1,219 +1,16 @@
 import re
 import json
-import copy
 from typing import Dict, List
-import tiktoken
-# import logging # importing identical named modules.....XD
 import datetime
-from time import sleep
 from datetime import datetime as dt
-# from gptworld.core.environment import GPTWorldEnv
-from gptworld.life_utils.agent_reflection_memory import ReflectionMemory
-from gptworld.life_utils.agent_tool import as_tool, Tool
-# from gptworld.utils import request_GPT
 
-import os
 from gptworld.models.openai_api import chat
-from itertools import chain
 import gptworld.utils.logging as logging
 import gptworld.utils.map_editor as map_editor
 from gptworld.utils.prompts import load_prompt
+from gptworld.core.element import EnvElem
 
 logger = logging.get_logger(__name__)
-
-
-
-
-# print(os.path.exists(INVOICE_PATH))
-
-"""
-Agent class implements the static, mind, inner, and cognitive process
-"""
-
-class EnvElem:
-    """A basic implementation of environment element.
-    """
-    def __init__(self,
-                 agent_file,
-                 environment,
-                 clear_memory=False,
-                 # llm: callable,
-                 # tools: List[Tool],
-                 # prompt_template: str
-                 ):
-        """ Intialize an agent.
-        state_dict: Dict -> a state dict which contains all the information about the agent
-            Note that the state_dict of a agent will be directly used in environment. I.e., any
-            modifications to state_dict will be reflected in environemt.env_json.
-        llm: callable -> a function which could call llm and return response
-        tools: List[Tool] -> a list of Tool
-        prompt_template: str -> a template for prompt
-        """
-        # base system 
-        self.observation = [] # TODO to remove
-        self.agent_file = agent_file
-        self.file_dir = os.path.dirname(self.agent_file)
-        self.id = os.path.splitext(os.path.basename(self.agent_file))[0]
-        new_state_dict = self.load_from_file(agent_file)
-        state_dict = new_state_dict
-        self.state_dict = state_dict
-        self.environment = environment
-
-        self.name = self.state_dict.get("name", None)
-        self.traits = self.state_dict.get("traits",None)
-        self.description = self.state_dict.get("description",[])
-
-        # geography
-        self.location = state_dict.get('location',None)
-        self.target_id = self.id
-        self.eid = state_dict.get('eid',None)
-        self.movement = self.state_dict.get("movement", False)
-        self.max_velocity = self.state_dict.get("max_velocity", 1)
-
-        # interaction
-        self.incoming_invoice = []  # empty str represents no invoice, later can be changed to list
-
-        # 记录当前对话历史，不止包括别人说的，也包括自己说的
-        # 直接根据len判断自己是否在对话中
-        self.incoming_interactions = state_dict.get('incoming_interactions',[])
-        # 记录下一轮需要处理的新observation
-        self.incoming_observation = state_dict.get('incoming_observation',[])
-        self.pending_observation = []  # active observation will first go here, then go to incomming observation
-        self.background_observation = []  # passive observation will go here
-
-        # current status information
-        self.default_status = "none"
-        self.status = self.state_dict.get('status', self.default_status)
-        if len(self.status.strip(''))==0:
-            self.status = self.default_status
-        self.status_duration = self.state_dict.get('status_duration',0)
-        self.status_start_time = self.state_dict.get('status_start_time',None)
-
-        # memory
-        # Long term memory is serialized/deserialized by orjson so only file name is provided here.
-        self.long_term_memory=ReflectionMemory(self.state_dict, os.path.dirname(agent_file), self.environment.uilogging,clear_memory=clear_memory)
-        # Short term memory is a queue of observations recording recent observations.
-        self.short_term_memory=self.state_dict.get('short_term_memory',[])
-
-        # the agent is calling language model
-        self.blocking = False
-
-        self.max_observation_handle = 2 # handle at most N incoming observation each step.
-
-
-        # the total number of steps the agent has gone through
-        self.step_cnt = 0  # TODO: Later add this key into the dictionary of agent static files and import that value
-
-        # how many logical frames to do a summary
-        self.summary_interval = 1000
-
-        # how many logical frames to do a reflection
-        self.reflection_interval = 100
-
-        return
-    
-
-
-    def load_from_file(self, agent_file):
-        if os.path.exists(agent_file):
-            with open(agent_file, 'r') as f:
-                print(agent_file)
-                data = json.load(f)
-            state_dict = data
-            return state_dict
-        else:
-            logger.warning(f"No config of {agent_file} found!")
-            return {}
-    
-    def mount_to_environment(self, environment, environment_id: str = None, location: List[List[int]] = None):
-        """ Mount the agent to the environment
-        :param environment: the environment to which the agent will be mounted
-        :param environment_id: the unique id of this environment
-        :param location: the initial location of this agent in the environment
-        """
-
-        self.environment = environment
-        self.environment_id = environment_id
-
-        # If location is not specified, allocate an available seat to this agent
-        if location is None:
-            location = self.environment.pop_available_seats()
-        self.location = location
-
-        # Call environment method to sync the change to environment
-        self.environment.mount_agent(self, self.location)
-
-        return
-    
-    def observe(self,limit=None,dropout=0.0):
-        """ Update observation of around environment
-        Should return string, or subject predicate object/predicative
-        observation has a upper limit
-        Agent has a chance to react to old incoming observations for a second time by dropping out short term memory
-
-
-        Observations : list[dict], each item of list is a dict of {observed_entity: "doing something"}
-        """
-        logger.debug(f"{self.name} is observing and generate short-term memory...")
-
-        if limit is None:
-            import math; limit=math.inf
-        
-        if self.environment is not None:
-            self.background_observation = self.environment.get_neighbor_environment(self.id)
-
-        # dropout
-        import random;r=[random.random() for _ in range(len(self.short_term_memory))]
-        self.short_term_memory=[s for i,s in enumerate(self.short_term_memory) if r[i]>dropout]
-
-        
-        for ob in self.incoming_observation:
-            if ob not in self.short_term_memory:
-                self.short_term_memory=[s for s in self.short_term_memory if not s.split('is')[0] == ob.split('is')[0]]
-                self.short_term_memory.append(ob)
-                # observation在这里不能直接拉进记忆，否则query出来的全是observation，没有意义
-                # 在reaction判定结束以后再拉近记忆比较好。
-        # logger.info(self.name + f"short-term memory: {self.short_term_memory}")
-        logger.debug("incoming_observation: {}\nbackground_observation: {}".format(self.incoming_observation, self.background_observation))
-
-    
-    def reflect(self,):
-        """ While the time is right, do reflection for memory
-        """
-        logger.debug(f"{self.name} maybe reflect...")
-        return self.long_term_memory.maybe_reflect(self.current_time)
-    
-    def add_observation(self, observation):
-        self.pending_observation.append(observation)
-    
-    def sync(self,):
-        self._move_pending_observation_or_invoice()
-
-
-    def _move_pending_observation_or_invoice(self):
-        if len(self.incoming_invoice) > 0:
-            self.incoming_observation.append(self.incoming_invoice[0])
-            self.incoming_invoice.pop(0)
-        elif len(self.pending_observation) > 0:
-            self.incoming_observation.extend(self.pending_observation[:self.max_observation_handle])
-            self.pending_observation = self.pending_observation[self.max_observation_handle:]
-        logger.debug(f"{self.name} now has incoming observation: {self.incoming_observation}")
-        
-    def set_invoice(self, message):
-        logger.debug("Adding invoice: {} to {}".format(message, self.name))
-        self.incoming_invoice.append(message)
-        
-
-    
-    
-
-        
-
-
-
-
-    
-
 
 class GPTAgent(EnvElem):
     """ Simple Implementation of Chain of Thought & Task Based Agent
@@ -225,13 +22,6 @@ class GPTAgent(EnvElem):
                  clear_memory=False
                  ):
         """ Intialize an agent.
-        state_dict: Dict -> a state dict which contains all the information about the agent
-            Note that the state_dict of a agent will be directly used in environment. I.e., any
-            modifications to state_dict will be reflected in environemt.env_json.
-        llm: callable -> a function which could call llm and return response
-        tools: List[Tool] -> a list of Tool
-        prompt_template: str -> a template for prompt
-
         """
         super().__init__(agent_file=agent_file, environment=environment,clear_memory=clear_memory)
 
@@ -473,39 +263,11 @@ participating algorithm competition in the lab room at 14:00
         first_plan_entry=self.plan_in_detail(self.current_time)
         return {'status':first_plan_entry['task'],'duration':(dt.strptime(first_plan_entry['end_time'],'%Y-%m-%d %H:%M:%S')-self.current_time).total_seconds()}
 
-
-
     def reprioritize(self, **kwargs):
         """ Reprioritize task list
         """
         # TODO: implement reprioritize : 凡哥、京伟
         return
-
-    def action(self, receiver: str, action_type: str, content: str):
-        """ Create an action targeted on other agents
-        :param receiver: the name of receiver like "Alex", "Tree", "Starship"
-        :param action_type: if you want to use a function of that agent, use the name of the function, otherwise use "misc"
-        :param content: the content of the action like "Hi, how is it going?" (should be complete and in natural language.)
-        """
-        self.outgoing_interactions.append(
-            {"sender": self.name, "action_type": action_type, "receiver": receiver, "content": content})
-        return
-
-
-
-    def post_in_interaction(self, action_type: str, content: str, sender: str):
-        """ Handle the action from other agents and store in queue
-        :param action_type: the type of the action, either tool names or "misc"
-        :param content: the content of action
-        :param sender: the sender of action
-        """
-        self.incoming_interactions.append({"sender": sender, "content": content})
-
-
-    def get_out_interaction(self) -> List:
-        """ Get my outgoing interactions queue
-        """
-        return self.incoming_interactions[-1] if len(self.incoming_interactions)>0 else []
 
     def minimal_init(self, ):
         """If the agent has no long_term_memory initially, we add the description about 
@@ -523,22 +285,6 @@ participating algorithm competition in the lab room at 14:00
         if self.summary is None:
             self.generate_summary(self.current_time)        
         self.plan_in_broad_strokes(self.current_time)
-
-    def end_interaction(self,):
-        """
-        结束当前对话，为自己生成对话摘要并放在自己的状态中。依靠环境将此对话摘要存入自己记忆
-        """
-
-        self.status_start_time = self.current_time
-        sDial='\n'.join([interaction['sender']+':' +interaction['content'] for interaction in self.incoming_interactions])
-        sPrompt="""\
-Summarize the dialog above.
-        """
-        sSummary=chat(sDial+sPrompt)
-        self.status = 'finishing conserving about '+sSummary
-        self.status_duration = 10
-        self.incoming_interactions.clear()
-
 
     def initialize_map_status(self):
         N = self.environment.env_json['size'][0]
@@ -608,7 +354,7 @@ Summarize the dialog above.
     def find_movement(self):
         target_id = self.target_id
         target = None
-        
+
         for id in self.environment.elems:
             elem = self.environment.elems[id]
 #            self.environment.uilogging(self.name, "compare id: {}, target_id: {}".format(id, target_id))
@@ -769,12 +515,8 @@ Summarize the dialog above.
 
     def react(self):
         """
-        react.
-        检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。
-        多个observation一起处理，处理过就扔进短期记忆。
-        短期记忆是已经处理过的observation。
-        这里假定环境的observation是完整的，查重任务交给short time memory
-        当前设计思路 interaction不做特殊处理，防止阻塞自身和他人动作，同时支持多人讨论等场景。
+        1. Check if there is a new observation (or incoming interaction or invoice) and react if there is. 
+        2. memory stores processed observations. 
         """
 
         sSummary = self.summary
@@ -863,7 +605,6 @@ Summarize the dialog above.
 
     def step(self, current_time:dt):
         """ Call this method at each time frame
-        目前尽量塞主step函数简化变量调用，TODO:后期切成几个子函数方便维护
         """
         self.current_time = current_time
 
@@ -875,12 +616,6 @@ Summarize the dialog above.
         # before we handle any observation, we first check the status. 
         self.check_status_passive()
 
-        # handle observations (including incoming observations or background observations)
-        # 3. 检查当前有没有new_observation (或 incoming的interaction 或 invoice), 如果有要进行react, react绑定了reflect和plan的询问。 @TODO zefan
-        #    多个observation一起处理，处理过就扔进短期记忆。
-        #    短期记忆是已经处理过的observation。
-        #    这里假定环境的observation是完整的，查重任务交给short time memory
-        #    当前设计思路 interaction不做特殊处理，防止阻塞自身和他人动作，同时支持多人讨论等场景。
         self.observe()
 
         if self.might_react():
@@ -894,7 +629,7 @@ Summarize the dialog above.
             self.long_term_memory.add(ob,self.current_time,['observation'])
         self.incoming_observation = [] # empty the incoming observation
 
-        # 4. 周期性固定工作 reflect, summary. (暂定100个逻辑帧进行一次) 
+        # 4. Periodic fixed work of reflection and summary (tentatively set to be done every 100 logical frames).
 
         self.step_cnt += 1
         if self.step_cnt % self.summary_interval == 0:
