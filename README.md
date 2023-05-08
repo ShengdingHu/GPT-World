@@ -24,7 +24,9 @@ Through this easy-to-use **world creation** feature, we hope to inspire **everyo
 🗣️ **Create with NL:** Creating environments with natural languages.
 
 ### 3. TODOS!
-❗️ **Polishing:** Feeling that the current behavior of agents is not very sentient? Don't worry, we are using [AgentVerse](https://github.com/OpenBMB/AgentVerse) to refactor and polish the behavior of agents! COMING SOON!
+❗️ **Polishing:** Feeling that the current behavior of agents is not very reasonable? Don't worry, we are improving it! 
+
+❗️ **Refactoring:** We are also using [AgentVerse](https://github.com/OpenBMB/AgentVerse) to refactor the behavior of agents!
 
 🤝 **Distributed:** Allowing players to build and share environments in a distributed way.
 
