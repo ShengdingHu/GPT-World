@@ -120,7 +120,7 @@ export GPTWORLD_LOG_LEVEL=<log_level>
 export OPENAI_API_KEY=<your_openai_api_key>
 export OPENAI_METHOD=api_key
 ```
-`<your_openai_api_key` refers to your own api key to access to the ChatGPT.
+`<your_openai_api_key>` refers to your own api key to access to the ChatGPT.
 
 `OPENAI_METHOD=api_key` means we are using api key method to access ChatGPT.
 
