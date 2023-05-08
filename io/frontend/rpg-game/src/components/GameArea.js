@@ -66,9 +66,9 @@ const GameArea = () => {
 
   const getZIndex = (object) => {
     if (object.id.startsWith("a")) {
-      return { zIndex: 1000 };
+      return { zIndex: 90 };
     } else {
-      return { zIndex: 0 };
+      return { zIndex: 30 };
     }
   };
 
