@@ -1,5 +1,7 @@
 # 🌎GPTWorld: an experimental multi-agent sandbox world.
 
+![Screenshot](.github/images/screenshot.png)
+
 
 🌎GPTWorld is an experimental multi-agent sandbox world. 🔬 Unlike typical sandbox games, interactions in GPTWorld are not fully defined by pre-written scripts 📜 and rules, but rather **inferred by a world engine based on large models 🤖.**. In this world, virtual agents and objects are equipped with long term memory, they can act, react, and communicate with each other, all supported by AI 🤯. 
 
