@@ -2,6 +2,10 @@
 
 We have designed a web interface for users to view and interact with a world instance. The server should be started by specifying a `world_instance`, after that, users (including remote users) could use a url to access the web interface.
 
+<br/>
+<br/>
+
+
 ## Usage
 
 1. Make sure you have install `requirements.txt` in project root directory.
@@ -20,7 +24,10 @@ Go to `http://localhost:5001` to view your world, others could use `http://{Your
 
 4. Distribute the URL to others.
 
----
+<br/>
+<br/>
+<br/>
+
 
 ## For Developer
 
@@ -65,3 +72,14 @@ npm run build
 ```
 
 It will produce a `build` folder under `frontend_new/rpg-game`. Then you are done, the backend server will automatically read it.
+
+<br/>
+<br/>
+<br/>
+
+
+## Attribute
+
+Many thanks to Freepik's icons, we are able to create an extensive web interface according to various world instance, here is the link:
+
+<a href="https://www.flaticon.com/free-icons/hangar" title="hangar icons">Hangar icons created by Freepik - Flaticon</a>

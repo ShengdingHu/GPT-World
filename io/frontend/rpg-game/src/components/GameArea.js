@@ -90,11 +90,13 @@ const GameArea = () => {
                     height: (area.location[1][1] - area.location[0][1]) * scale,
                 }}
           >
-            <div className="wall-topborder"></div>
+            
             <div className="wall-top"></div>
             <div className="wall-left"></div>
             <div className="wall-right"></div>
+            <div className="wall-top-left"></div>
             <div className="wall-bottom-left"></div>
+            <div className="wall-top-right"></div>
             <div className="wall-bottom-right"></div>
 
             <span className="area-label" data-tooltip={area.name}>{area.name}</span>

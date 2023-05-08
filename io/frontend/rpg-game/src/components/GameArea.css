@@ -17,6 +17,7 @@
 
 .object:hover {
     z-index: 200;
+    cursor: pointer;
 }
 
 .area-label {
