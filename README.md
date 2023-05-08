@@ -141,6 +141,8 @@ This project is for academic and experimental purposes only. We currently suspec
 
 ## Contributor
 
-<a href = "https://github.com/ShengdingHu/GPT-World/graphs/contributors">
-  <img src = "https://contrib.rocks/image?repo = GitHub_username/repository_name"/>
+<a href="https://github.com/ShengdingHu/GPT-World/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ShengdingHu/GPT-World" />
 </a>
+
+Made with [contrib.rocks](https://contrib.rocks).
