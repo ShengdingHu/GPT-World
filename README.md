@@ -1,4 +1,4 @@
-# 🌎GPTWorld: An Experimental Multi-agent Sandbox World
+# 🌎GPTWorld: An Experimental AI-engined Sandbox World
 
 ![Screenshot](.github/images/screenshot.png)
 
@@ -15,7 +15,9 @@ Through this easy-to-use **world creation** feature, we hope to inspire **everyo
 ### 1. Currently, 🌍GPTWorld Supports:
 
 👨‍💻 **Create with JSON:** Easily creating your environment and entities using JSON and mounting them onto your world
+
 🏃 **Start World Engine:** Starting the environment's autonomous operation with just one command.
+
 👀 **Demo:** Observing the behavior of the agent in your web browser.
 
 ### 2. Experimental Feature
@@ -23,6 +25,7 @@ Through this easy-to-use **world creation** feature, we hope to inspire **everyo
 
 ### 3. TODOS!
 ❗️ **Polishing:** Feeling that the current behavior of agents is not very sentient? Don't worry, we are using [AgentVese](https://github.com/OpenBMB/AgentVerse) to refactor and polish the behavior of agents! COMING SOON!
+
 🤝 **Distributed:** Allowing players to build and share environments in a distributed way.
 
 
