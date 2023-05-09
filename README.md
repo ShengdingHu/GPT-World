@@ -1,32 +1,36 @@
-# 🌎GPTWorld: An Experimental Multi-agent Sandbox World
+# 🌎GPTWorld: An Experimental AI-engined Sandbox World
 
 ![Screenshot](.github/images/screenshot.png)
 
 
-🌎**GPTWorld** is an experimental **multi-agent sandbox** world. 🔬 Unlike typical sandbox games, interactions in GPTWorld are not fully defined by pre-written scripts 📜 and rules, but rather **inferred by a world engine based on large models 🤖.**. In this world, virtual agents and objects are equipped with long term memory, they can act, react, and communicate with each other, all supported by AI 🤯. 
+🌎**GPTWorld** is an experimental **multi-agent sandbox** world.  Unlike typical sandbox games, interactions in GPTWorld are not fully defined by pre-written scripts 📜 and rules📏, but rather **inferred by a world engine based on large models 🤖**. In this world, the whole environment, including agents and objects, is supported by large models, providing great autonomy and diversity.
 
-The creation of a sandbox world is often considered to require advanced game development techniques that are beyond the reach of most individuals. This is where 🌎GPTWorld comes to the rescue! 🛠️ Our goal is to make the process of creating a diverse range of sandboxes more accessible by enabling players to construct **custom worlds** using simple configuration files or even **natural language** 🤩.
+The **creation of a sandbox world** is often considered to require advanced game development techniques that are beyond the reach of most individuals. This is where 🌎GPTWorld comes to the rescue! 🛠️ Our goal is to make the process of creating a diverse range of sandboxes more accessible by enabling players to construct custom worlds using simple configuration files or even **natural language** 🤩.
 
-Through this easy-to-use **world creation** feature, we hope to inspire **everyone** to construct their **own unique** worlds. As a result, a vibrant sandbox environment will emerge, allowing intelligent agents to explore various creations through community sharing 🤝.
+Through this easy-to-use **world creation** feature, we hope to inspire **everyone** to construct their **own unique** worlds. As a result, a vibrant sandbox environment community will emerge, allowing intelligent agents to explore various creations through community sharing 🤝.
 
 👨‍💻👩‍💻 Join us on this exciting journey of creating a groundbreaking sandbox world with limitless possibilities 🚀!
 
 ## Project Status
 ### 1. Currently, 🌍GPTWorld Supports:
 
-👨‍💻 Easily creating your environment and entities using JSON and mounting them onto your world
-🏃 Starting the environment's autonomous operation with just one command
-👀 Observing the behavior of the agent in your web browser.
+👨‍💻 **Create with JSON:** Easily creating your environment and entities using JSON and mounting them onto your world
+
+🏃 **Start World Engine:** Starting the environment's autonomous operation with just one command.
+
+👀 **Demo:** Observing the behavior of the agent in your web browser.
 
 ### 2. Experimental Feature
-🗣️ Creating environments with natural languages.
+🗣️ **Create with NL:** Creating environments with natural languages.
 
 ### 3. TODOS!
-🤝 Allowing players to build and share environments in a distributed way.
+❗️ **Polishing:** Feeling that the current behavior of agents is not very reasonable? Don't worry, we are improving it! 
+
+❗️ **Refactoring:** We are also using [AgentVerse](https://github.com/OpenBMB/AgentVerse) to refactor the behavior of agents!
+
+🤝 **Distributed:** Allowing players to build and share environments in a distributed way.
 
 
-
-<br/>
 
 ## Usage
 
@@ -40,14 +44,12 @@ We strongly recommend to use `python=3.8` on all platforms.
 git clone https://github.com/ShengdingHu/GPT-World.git
 ```
 
-or download zip file and unzip it.
-
 2. (Optional) Create a python virtual enviornment by 
 
 ```
 conda create -n gptworld python=3.8
 ```
-* Note that python3.8 support websockiet the best, other python versions may encounter issues in web display currently. *
+* Please note that Python 3.8 provides the best support for `flask-socketio`, whereas other versions of Python may currently encounter issues with web display. *
 
 3. Go to project directory by 
 
@@ -116,17 +118,19 @@ the more detailed, the better.
 [//]: # (```)
 
 ## Global Configs
+1. Log Level:
 ```bash
 export GPTWORLD_LOG_LEVEL=<log_level>
-# (<log_level> can be DEBUG, INFO, WARNING ...) to set the logging level
+```
+ <log_level> can be DEBUG, INFO, WARNING ...) to set the logging level, DEBUG will have a lot of print in command line :
+
+2. OpenAI Key
+```bash
 export OPENAI_API_KEY=<your_openai_api_key>
-export OPENAI_METHOD=api_key
 ```
 `<your_openai_api_key>` refers to your own api key to access to the ChatGPT.
 
-`OPENAI_METHOD=api_key` means we are using api key method to access ChatGPT.
-
-In windows, please add environment variables instead of `export` methods.
+In Windows OS, please add environment variables instead of `export` methods.
 
 ## 🙏Acknowledgements
 
@@ -136,18 +140,11 @@ In windows, please add environment variables instead of `export` methods.
 This project is for academic and experimental purposes only. We currently suspect that it is far from a usable game product.
 
 
-## Star History
-
-<br>
-<div align="center">
-
-<img src="https://api.star-history.com/svg?repos=THUNLP/GPTWorld&type=Date" width="600px">
-
-</div>
-<br>
 
 ## Contributor
 
-<a href = "https://github.com/ShengdingHu/GPT-World/graphs/contributors">
-  <img src = "https://contrib.rocks/image?repo = GitHub_username/repository_name"/>
+<a href="https://github.com/ShengdingHu/GPT-World/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ShengdingHu/GPT-World" />
 </a>
+
+Made with [contrib.rocks](https://contrib.rocks).

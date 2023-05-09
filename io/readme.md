@@ -2,9 +2,6 @@
 
 We have designed a web interface for users to view and interact with a world instance. The server should be started by specifying a `world_instance`, after that, users (including remote users) could use a url to access the web interface.
 
-<br/>
-<br/>
-
 
 ## Usage
 
@@ -40,7 +37,7 @@ For develooment, we should seperately handle frontend and backend.
 2. Install frontend development environment by
 
 ```bash
-cd frontend_new/rpg-game
+cd frontend/rpg-game
 npm install
 ```
 
@@ -54,7 +51,7 @@ python app.py -W alice_home
 4. Start frontend development server by
 
 ```bash
-cd frontend_new/rpg-game
+cd frontend/rpg-game
 npm start
 ```
 
@@ -67,11 +64,11 @@ View demo in your browser at `http://localhost:3000`
 If you would like to release your work, please pre-compile your frontend client by
 
 ```bash
-cd frontend_new/rpg-game
+cd frontend/rpg-game
 npm run build
 ```
 
-It will produce a `build` folder under `frontend_new/rpg-game`. Then you are done, the backend server will automatically read it.
+It will produce a `build` folder under `frontend/rpg-game`. Then you are done, the backend server will automatically read it.
 
 <br/>
 <br/>

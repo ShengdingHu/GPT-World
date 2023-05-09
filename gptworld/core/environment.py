@@ -22,14 +22,6 @@ logger = logging.get_logger(__name__)
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-# def run_backend():
-#     subprocess.run(['python app.py'], cwd=f'{CURRENT_DIR}/../../io', capture_output=True, shell=True)
-
-# def run_frontend():
-#     subprocess.run(['npm run --silent dev'], cwd=f'{CURRENT_DIR}/../../io/frontend', capture_output=True, shell=True)
-
-
-
 
 class GPTWorldEnv:
     """ The envirnment simulator
@@ -156,17 +148,6 @@ class GPTWorldEnv:
             observations.append(filled)
 
         return observations
-    
-    # def get_observation_text(self, observation):
-    #     prompt_template = "Now you are at {}. There are {} around you."
-    
-    #     object_text = []
-    #     for obj_id in observation['objects_within_distance']:
-    #         object_text.append(self.env_json['objects'][obj_id]['name'])
-    #     object_text = ", ".join(object_text) if len(object_text) > 0 else "nothing"
-
-    #     prompt = prompt_template.format(observation['agent_location'], object_text)
-    #     return prompt
 
 
     def show(self):
@@ -207,29 +188,7 @@ class GPTWorldEnv:
         '''
         return
 
-    def load_agent(self, agent_id, **kwargs):
-        """ Load an agent from a dump file
-        """
-        # TODO: load agent from a dump file, the format will approximately be a JSON formatted file? then add to self.agents
-        agent_state_dict = {}
-        with open("./agent_format.json", "r") as f:
-            agent_state_dict = json.load(f)
-        
-        agent = GPTAgent(state_dict=agent_state_dict, mode="auto")
-
-        return
     
-    def action_handler(self, sender: GPTAgent, receiver: str, content: str):
-        """ For an agent thread to invoke, in order to call another agent thread
-        """
-        # TODO: implement the message passing
-        receiver_agent = self.agents.get(receiver, None)
-        if receiver_agent is None:
-            # fuzzy match
-            pass
-        else:
-            receiver_agent.incoming_interactions.append({"sender": sender, "content": content})
-        return
 
     def get_invoice(self, ):
         INVOICE_PATH = os.path.join(self.file_dir, "invoice.txt")
