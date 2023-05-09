@@ -357,7 +357,6 @@ participating algorithm competition in the lab room at 14:00
 
         for id in self.environment.elems:
             elem = self.environment.elems[id]
-#            self.environment.uilogging(self.name, "compare id: {}, target_id: {}".format(id, target_id))
             if id == target_id:
                 target = elem.location
                 break
