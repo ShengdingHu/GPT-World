@@ -1,19 +1,22 @@
+import json
 import os
 import sys
-import json
-from typing import List, Dict
-from gptworld.create.tool_agent import as_tool # Import function decorator
-from gptworld.create.tool_agent import ToolAgent # Import Agent who can use tools
-
-# Import OpenAI language model
-from gptworld.models.openai_api import chat as llm 
+from typing import List
 
 # Import Tokenizer for OpenAI language model
-import tiktoken 
-tokenizer = tiktoken.get_encoding("cl100k_base").encode
+import tiktoken
 
+import gptworld.utils.logging as logging
 # Import named entity embedding tool
 from gptworld.create.entity_embedding import make_entity_embedding
+from gptworld.create.tool_agent import ToolAgent  # Import Agent who can use tools
+from gptworld.create.tool_agent import as_tool  # Import function decorator
+# Import OpenAI language model
+from gptworld.models.openai_api import chat as llm
+
+tokenizer = tiktoken.get_encoding("cl100k_base").encode
+
+logger = logging.get_logger(__name__)
 
 # Define prompt for environment generation agent (root agent)
 ROOT_PROMPT = """You are a environment designer who can create a complete environment according to user's request in natural language using provided API functions.
@@ -79,6 +82,7 @@ num_agents = 0
 result = {}
 object_detailed = {}
 
+
 # Define multiple APIs for environment creation
 @as_tool("create_sub_task")
 def create_sub_task(task: str, action_boundary: List[int]) -> str:
@@ -95,15 +99,16 @@ def create_sub_task(task: str, action_boundary: List[int]) -> str:
     Returns:
         A message shows whether the task is completed.
     """
-    subagent = ToolAgent(llm=llm, 
-        tokenizer=tokenizer, 
-        tools=child_tools, 
-        prompt_template=CHILD_PROMPT, 
-        task=task, 
-        action_boundary=action_boundary
-    )
+    subagent = ToolAgent(llm=llm,
+                         tokenizer=tokenizer,
+                         tools=child_tools,
+                         prompt_template=CHILD_PROMPT,
+                         task=task,
+                         action_boundary=action_boundary
+                         )
     subagent.multiple_actions(max_step=10)
     return "Subtask finished."
+
 
 @as_tool("add_area")
 def add_area(name: str, area_boundary: List[int]) -> str:
@@ -128,14 +133,15 @@ def add_area(name: str, area_boundary: List[int]) -> str:
     ]
     area_blob = {
         "name": name,
-        "id": area_id, 
+        "id": area_id,
         "location": location,
         "border": 1,
     }
     result["areas"].append(area_blob)
     return f"Added area {name}"
 
-def find_eid(c:List[int]):
+
+def find_eid(c: List[int]):
     """Given a coordinate c of an object, find the first k from the back such that c is inside the rectangular region defined by k["location"], and return k["eid"]. 
     
     Args:
@@ -149,6 +155,7 @@ def find_eid(c:List[int]):
         if x1 <= c[0] <= x2 and y1 <= c[1] <= y2:
             return k["id"]
     return ""
+
 
 @as_tool("add_object")
 def add_object(name: str, location: List[int], engine: str, traits: str, status: str, memory: List[str]) -> str:
@@ -171,7 +178,7 @@ def add_object(name: str, location: List[int], engine: str, traits: str, status:
     eid = find_eid(location)
     object_blob = {
         "name": name,
-        "id": object_id, 
+        "id": object_id,
         "location": location,
         "engine": engine,
         "eid": eid
@@ -195,8 +202,10 @@ def add_object(name: str, location: List[int], engine: str, traits: str, status:
     result["objects"].append(object_blob)
     return f"Added object {name}"
 
+
 @as_tool("add_agent")
-def add_agent(name: str, location: List[int], traits: str, status: str, age: int, max_velocity: int, plan: List[str], description: List[str]) -> str:
+def add_agent(name: str, location: List[int], traits: str, status: str, age: int, max_velocity: int, plan: List[str],
+              description: List[str]) -> str:
     """ This API allows you to add an agent to the environment.
     
     Args:
@@ -218,7 +227,7 @@ def add_agent(name: str, location: List[int], traits: str, status: str, age: int
     eid = find_eid(location)
     object_blob = {
         "name": name,
-        "id": agent_id, 
+        "id": agent_id,
         "location": location,
         "eid": eid
     }
@@ -232,7 +241,7 @@ def add_agent(name: str, location: List[int], traits: str, status: str, age: int
         "max_velocity": f"{max_velocity}/s",
         "moving": "false",
         "status": status,
-        "status_duration" : 0,
+        "status_duration": 0,
         "status_start_time": None,
         "plan": plan,
         "memory": f"{name}_LTM",
@@ -242,6 +251,7 @@ def add_agent(name: str, location: List[int], traits: str, status: str, age: int
     object_detailed[agent_id] = detailed_blob
     result["objects"].append(object_blob)
     return f"Added agent {name}"
+
 
 @as_tool("submit_job", tool_type="finish")
 def submit_job() -> str:
@@ -256,12 +266,20 @@ def submit_job() -> str:
 
     return "Submitted job"
 
+
 # Gather the tool to a list
 root_tools = [add_area, add_object, add_agent, create_sub_task, submit_job]
 child_tools = [add_area, add_object, add_agent, submit_job]
 
+
 # Define main function
-def create_world(name: str, task: str, size: List[int]=[400, 300], max_step: int=40, output_path: str="") -> None:
+def create_world(name: str,
+                 task: str,
+                 size: List[int] = [400, 300],
+                 max_step: int = 40,
+                 output_path: str = "",
+                 time_delta=120
+                 ) -> None:
     """ Create a world using natural language instruction
     
     Args:
@@ -270,37 +288,37 @@ def create_world(name: str, task: str, size: List[int]=[400, 300], max_step: int
         size: Size of your world
         max_step: Maximum actions of root agent
         output_path: Saving path of output json file
-    
+        time_delta: The time delta between steps in seconds.
     Returns:
         None
     """
     global result
-    
+
     # Initialize a dict to store all results
     result = {
         "name": name,
-        "current_time": "2023-04-01T07:00:00",
+        "current_time": "2023-04-01 07:00:00",
         "id": "e_001",
         "size": size,
         "areas": [],
         "objects": [],
     }
-    
+
     world_width = size[0]
     world_height = size[1]
-    
+
     # Create an agent to finish the user's request
-    agent = ToolAgent(llm=llm, 
-        tokenizer=tokenizer, 
-        tools=root_tools, 
-        prompt_template=ROOT_PROMPT, 
-        task=task,
-        action_boundary=[0, 0, world_width, world_height]
-    )
-    
+    agent = ToolAgent(llm=llm,
+                      tokenizer=tokenizer,
+                      tools=root_tools,
+                      prompt_template=ROOT_PROMPT,
+                      task=task,
+                      action_boundary=[0, 0, world_width, world_height]
+                      )
+
     # Run the agent
     agent.multiple_actions(max_step=max_step)
-    
+
     # Convert result["objects"] and result["areas"] into Dict[str, Dict]
     objects_dict = {}
     areas_dict = {}
@@ -310,35 +328,34 @@ def create_world(name: str, task: str, size: List[int]=[400, 300], max_step: int
         areas_dict[i["id"]] = i
     result["objects"] = objects_dict
     result["areas"] = areas_dict
-    
+    result["time_delta"] = time_delta
+
     # Save environment.json
     json_str = json.dumps(result, indent=4)
     if not os.path.exists(output_path):
         os.mkdir(output_path)
-    
+
     with open(os.path.join(output_path, 'environment.json'), 'w') as f:
         f.write(json_str)
 
     print(f"Successfully saved environment.json at {output_path}")
-    
+
     # Save detailed json for each object and agent
     for key in object_detailed:
         json_str = json.dumps(object_detailed[key], indent=4)
         with open(os.path.join(output_path, f'{key}.json'), 'w') as f:
             f.write(json_str)
-    
+
     print(f"Successfully saved detailed json for objects at {output_path}")
-    
+
     # Make embeddings for named entities
     make_entity_embedding(output_path)
     print(f"Successfully saved named entity embedding json at {output_path}")
-    
+
     return
+
 
 if __name__ == "__main__":
     # Get user's request
     task = sys.argv[1]
-    
-    data = create_world(name="new_environment", task=task, size=[200, 150], max_step=40, output_path='./outputs')
-
-    
+    create_world(name="new_environment", task=task, size=[200, 150], max_step=40, output_path='./outputs')

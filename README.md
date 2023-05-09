@@ -87,8 +87,10 @@ python gptworld/run.py -W alice_home
 ```
 python io/app.py -W alice_home
 ```
-now open the 5001 port of your localhost(`http://0.0.0.0:5001/`), and you will be able to see a wonderful 
+now open the 5001 port of your localhost(`http://0.0.0.0:5001/`), and you will be able to see a wonderful
 environment full of GPT-drived agents and objects!
+
+> If `http://0.0.0.0:5001/` is not working, you may try `http://127.0.0.1:5001/`.
 
 ### (🧪Experimental) Create Your Own World
 If you want to create your world instance,
