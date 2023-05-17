@@ -2,6 +2,7 @@
 
 ![Screenshot](.github/images/screenshot.png)
 
+**NOTE:** We are now integrated into [AgentVerse](https://github.com/OpenBMB/AgentVerse)! 
 
 🌎**GPTWorld** is an experimental **multi-agent sandbox** world.  Unlike typical sandbox games, interactions in GPTWorld are not fully defined by pre-written scripts 📜 and rules📏, but rather **inferred by a world engine based on large models 🤖**. In this world, the whole environment, including agents and objects, is supported by large models, providing great autonomy and diversity.
 
