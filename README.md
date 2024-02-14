@@ -1,3 +1,7 @@
+
+>[!warning] 
+>This project has been archieved! Please use [AgentVerse](https://github.com/OpenBMB/AgentVerse) instead. Thanks for your interest and let's fight for the future that autonomous agent live in the game sandbox!
+
 # 🌎GPTWorld: An Experimental AI-engined Sandbox World
 
 ![Screenshot](.github/images/screenshot.png)
